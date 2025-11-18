@@ -1,0 +1,249 @@
+<!-- [1/3 - START] -->
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8" />
+    <title>Megrendelő regisztráció – Szaki-App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            margin: 0;
+            padding: 30px 10px;
+        }
+
+        .csomagolas {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 30px 25px 35px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .alcim {
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: #555;
+        }
+
+        .mezo-csoport {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        label span.kotelezo {
+            color: #e53935;
+            font-weight: normal;
+            font-size: 13px;
+            margin-left: 4px;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .sor-2 {
+            display: flex;
+            gap: 15px;
+        }
+
+        .sor-2 .mezo-csoport {
+            flex: 1;
+        }
+
+        .checkbox-sor {
+            margin: 10px 0 20px;
+        }
+
+        .checkbox-sor label {
+            font-weight: normal;
+            display: inline-block;
+            margin-left: 6px;
+        }
+
+        .fo-gomb {
+            background: #f57c00;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .fo-gomb:hover {
+            background: #e56f00;
+        }
+
+        .lablec-szoveg {
+            margin-top: 18px;
+            font-size: 13px;
+            color: #666;
+            text-align: center;
+        }
+
+        .vissza-link {
+            margin-top: 14px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .vissza-link a {
+            color: #f57c00;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .vissza-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<!-- [1/3 - END] -->
+
+<!-- [2/3 - START] -->
+<div class="csomagolas">
+    <h1>Megrendelő regisztráció</h1>
+    <p class="alcim">Ingyenes, becsületes szakember-kereső rendszer</p>
+
+    <div class="mezo-csoport">
+        <label for="nev">Teljes név <span class="kotelezo">(kötelező)</span></label>
+        <input type="text" id="nev" placeholder="Pl.: Kiss János" />
+    </div>
+
+    <div class="mezo-csoport">
+        <label for="varos">Város / Település <span class="kotelezo">(kötelező)</span></label>
+        <input type="text" id="varos" placeholder="Pl.: Budapest XIII." />
+    </div>
+
+    <div class="mezo-csoport">
+        <label for="elerhetoseg">Elérhetőség <span class="kotelezo">(kötelező)</span></label>
+        <input type="text" id="elerhetoseg" placeholder="Telefonszám vagy e-mail (pl.: +36 30..., vagy valaki@example.com)" />
+    </div>
+
+    <div class="mezo-csoport">
+        <label for="munka-leiras">Milyen munkára keresel szakembert? <span class="kotelezo">(kötelező)</span></label>
+        <textarea id="munka-leiras" placeholder="Pl.: 40 m² nappali festése vagy komplett fürdőszoba burkolás, bontás nélkül / bontással..."></textarea>
+    </div>
+
+    <div class="sor-2">
+        <div class="mezo-csoport">
+            <label for="kezdes-leghamarabb">Leghamarabb mikor indulhat a munka? <span class="kotelezo">(kötelező)</span></label>
+            <input type="date" id="kezdes-leghamarabb" />
+        </div>
+        <div class="mezo-csoport">
+            <label for="kezdes-legkesobb">Legkésőbb mikor indulhat a munka? <span class="kotelezo">(kötelező)</span></label>
+            <input type="date" id="kezdes-legkesobb" />
+        </div>
+    </div>
+
+    <div class="mezo-csoport">
+        <label for="hatarido">Meddig kellene kész lenni? <span class="kotelezo">(kötelező)</span></label>
+        <input type="date" id="hatarido" />
+    </div>
+
+    <div class="mezo-csoport">
+        <label for="munka-meret">Munka nagysága (érzéssel)</label>
+        <select id="munka-meret">
+            <option value="">Válassz (nem kötelező)</option>
+            <option value="rovid">Rövid, kicsi, pár napos / 1 napos munka</option>
+            <option value="kozepes">Közepes (kb. 1–2 hét)</option>
+            <option value="nagy">Nagyobb projekt (2+ hét, komplett felújítás)</option>
+        </select>
+    </div>
+
+    <div class="checkbox-sor">
+        <input type="checkbox" id="rovid-munka" />
+        <label for="rovid-munka">
+            Kifejezetten rövid, kicsi, pár napos vagy egy napos munkáról van szó.
+        </label>
+    </div>
+
+    <button class="fo-gomb" onclick="kuldesMegrendelo()">Regisztráció elküldése</button>
+
+    <p class="lablec-szoveg">
+        A regisztrációval elfogadod, hogy valós adatokat és elérhetőséget adsz meg.
+        A végleges Szaki-App rendszerben az admin először ellenőrzi a munkát,
+        és csak utána jelenik meg a szakik felé.
+    </p>
+
+    <p class="vissza-link">
+        <a href="index.html">← Vissza a kezdőoldalra</a>
+    </p>
+</div>
+<!-- [2/3 - END] -->
+
+<!-- [3/3 - START] -->
+<script>
+function kuldesMegrendelo() {
+    const nev = document.getElementById("nev").value.trim();
+    const varos = document.getElementById("varos").value.trim();
+    const elerhetoseg = document.getElementById("elerhetoseg").value.trim();
+    const munkaLeiras = document.getElementById("munka-leiras").value.trim();
+    const kezdesLeghamarabb = document.getElementById("kezdes-leghamarabb").value;
+    const kezdesLegkesobb = document.getElementById("kezdes-legkesobb").value;
+    const hatarido = document.getElementById("hatarido").value;
+    const munkaMeret = document.getElementById("munka-meret").value;
+    const rovidMunka = document.getElementById("rovid-munka").checked;
+
+    if (!nev || !varos || !elerhetoseg || !munkaLeiras ||
+        !kezdesLeghamarabb || !kezdesLegkesobb || !hatarido) {
+        alert("Kérlek tölts ki minden kötelező mezőt (név, város, elérhetőség, munka leírása, kezdés-időpontok, határidő).");
+        return;
+    }
+
+    let osszefoglalo = "Köszönjük, " + nev + "!\n\n";
+    osszefoglalo += "Város / település: " + varos + "\n";
+    osszefoglalo += "Elérhetőség: " + elerhetoseg + "\n\n";
+    osszefoglalo += "Munka leírása:\n" + munkaLeiras + "\n\n";
+    osszefoglalo += "Leghamarabb indulhat: " + kezdesLeghamarabb + "\n";
+    osszefoglalo += "Legkésőbb indulhat: " + kezdesLegkesobb + "\n";
+    osszefoglalo += "Meddig kellene kész lenni: " + hatarido + "\n\n";
+
+    if (munkaMeret) {
+        osszefoglalo += "Munka nagysága (érzésre): " + munkaMeret + "\n";
+    }
+    if (rovidMunka) {
+        osszefoglalo += "Megjegyzés: kifejezetten rövid / kicsi / pár napos munkáról van szó.\n";
+    }
+
+    osszefoglalo += "\n(A végleges rendszerben ez az adatlap először az adminhoz kerül jóváhagyásra, ";
+    osszefoglalo += "és csak utána kapják meg a szakik.)";
+
+    alert(osszefoglalo);
+}
+</script>
+
+</body>
+</html>
+<!-- [3/3 - END] -->

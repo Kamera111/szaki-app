@@ -9,454 +9,613 @@
       margin: 0;
       font-family: Arial, sans-serif;
       background: #f2f2f2;
+      color: #333;
     }
-    header {
-      background: #f57c00;
-      color: white;
-      padding: 15px;
-      font-size: 20px;
+
+    /* FELSŐ FEJLÉC */
+    .header {
+      background: #ff8800;
+      color: #fff;
+      padding: 16px 10px 10px;
       text-align: center;
     }
-    header small {
-      display: block;
-      font-size: 12px;
-      opacity: 0.9;
+    .header h1 {
+      margin: 0 0 4px;
+      font-size: 24px;
     }
-    .menu {
-      background: white;
-      padding: 10px;
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-      border-bottom: 1px solid #ddd;
-    }
-    .menu button {
-      padding: 8px 12px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      background: #eee;
+    .header p {
+      margin: 0;
       font-size: 14px;
     }
-    .menu button.active {
-      background: #f57c00;
-      color: white;
+
+    /* NAV GOMBOK (fülek) */
+    .nav-bar {
+      background: #ffe0b2;
+      padding: 10px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .wrapper {
-      max-width: 960px;
-      margin: 20px auto;
-      padding: 0 10px 30px;
+    .nav-btn {
+      border: none;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      background: #f5f5f5;
+      transition: background 0.2s, box-shadow 0.2s;
     }
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      margin-bottom: 18px;
+    .nav-btn.active {
+      background: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
-    h2 {
+
+    /* FŐ TARTALOM DOBOZ */
+    .main {
+      max-width: 1100px;
+      margin: 20px auto 40px;
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 20px 24px 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .section {
+      display: none;
+    }
+    .section.active {
+      display: block;
+    }
+
+    h2.section-title {
       margin-top: 0;
-      font-size: 20px;
+      margin-bottom: 10px;
     }
+    p.section-sub {
+      margin-top: 0;
+      margin-bottom: 20px;
+      color: #666;
+      font-size: 14px;
+    }
+
     label {
       display: block;
-      font-size: 13px;
-      margin-top: 10px;
-      margin-bottom: 4px;
-      font-weight: bold;
+      font-size: 14px;
+      margin: 10px 0 4px;
     }
-    input, select, textarea {
+    input[type="text"],
+    input[type="file"],
+    select,
+    textarea {
       width: 100%;
+      box-sizing: border-box;
       padding: 8px 10px;
       border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 14px;
-      box-sizing: border-box;
-      margin-bottom: 6px;
     }
     textarea {
-      min-height: 70px;
+      min-height: 90px;
       resize: vertical;
     }
-    .row {
+
+    .row-2 {
       display: flex;
+      gap: 16px;
       flex-wrap: wrap;
-      gap: 12px;
     }
     .col {
-      flex: 1 1 220px;
+      flex: 1 1 250px;
+      min-width: 0;
     }
-    .hint {
-      font-size: 11px;
-      color: #666;
-      margin-bottom: 6px;
-    }
-    .btn-primary {
-      background: #f57c00;
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px;
+
+    .checkbox-line {
+      margin-top: 14px;
       font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: #ff8800;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 15px;
       cursor: pointer;
-      margin-top: 10px;
+      margin-top: 18px;
     }
     .btn-primary:hover {
-      background: #e36d00;
+      background: #f57c00;
     }
-    .pill {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: #f2f2f2;
-      font-size: 11px;
-      margin: 2px 4px 0 0;
-    }
-    .danger {
-      color: #b91c1c;
+
+    .note {
       font-size: 12px;
-      margin-top: 6px;
-    }
-    .success {
-      color: #166534;
-      font-size: 12px;
-      margin-top: 6px;
-    }
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 8px;
+      color: #777;
       margin-top: 10px;
     }
-    .day-box {
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 8px;
-      font-size: 12px;
-      background: #fafafa;
+
+    .divider {
+      margin: 24px 0;
+      border-top: 1px solid #eee;
     }
-    .day-box header {
-      font-weight: bold;
-      margin-bottom: 4px;
-      font-size: 12px;
-      background: none;
-      color: #111;
-      padding: 0;
-      text-align: left;
-    }
-    .badge-free {
-      display: inline-block;
-      margin-top: 4px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: #dcfce7;
-      color: #166534;
-      font-size: 11px;
-    }
-    .chat-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .chat-item {
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 10px;
-      font-size: 13px;
-      background: #fafafa;
-    }
-    .chat-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-      font-weight: bold;
-    }
-    .chat-status {
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: #e5e7eb;
-    }
-    .btn-small {
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: none;
-      cursor: pointer;
-      font-size: 12px;
-      margin-right: 6px;
-    }
-    .btn-win {
-      background: #16a34a;
-      color: white;
-    }
-    .btn-lose {
-      background: #9ca3af;
-      color: white;
-    }
-    .info-text {
-      font-size: 12px;
-      color: #4b5563;
-      margin-top: 6px;
-    }
-  </style>
-</head>
 <!-- [1/5 - END] -->
 
 <!-- [2/5 - START] -->
-<body>
+    /* NAPTÁR KÁRTYÁK */
+    .calendar-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .day-card {
+      flex: 1 1 260px;
+      background: #fafafa;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      padding: 10px 12px;
+      box-sizing: border-box;
+      min-width: 0;
+    }
+    .day-card h4 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+    .day-card .checkbox-line {
+      margin: 6px 0;
+    }
+    .badge-free {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 3px 8px;
+      background: #c8e6c9;
+      color: #2e7d32;
+      border-radius: 999px;
+      font-size: 11px;
+    }
 
-<header>
-  Szaki Profil – Vezérlőpult
-  <small>Csak becsületes, precíz és pontos szakiknak</small>
-</header>
+    /* CHAT KÁRTYÁK */
+    .chat-info-top {
+      font-size: 13px;
+      margin-bottom: 15px;
+      color: #555;
+    }
 
-<div class="menu">
-  <button class="active" data-section="profile">Profil adatok</button>
-  <button data-section="docs">Dokumentumok</button>
-  <button data-section="calendar">Naptár</button>
-  <button data-section="refs">Referenciák</button>
-  <button data-section="chat">Chat (max. 3 munka)</button>
-</div>
+    .chat-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
 
-<div class="wrapper">
-  <!-- Profil adatok szekció -->
-  <div class="card section" id="section-profile">
-    <h2>Profil adatok</h2>
-    <p class="hint">
-      Ezek az adatok jelennek meg a megrendelőknek. Később még bővíthetjük.
-    </p>
+    .chat-card {
+      background: #fafafa;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      padding: 12px 14px;
+      position: relative;
+    }
 
-    <div class="row">
-      <div class="col">
-        <label>Név</label>
-        <input type="text" placeholder="Pl.: Kovács Béla">
-      </div>
-      <div class="col">
-        <label>Szakma</label>
-        <input type="text" placeholder="Pl.: burkoló, festő, gipszkarton">
-      </div>
-    </div>
+    .chat-title {
+      font-weight: bold;
+      margin: 0 0 4px;
+    }
+    .chat-sub {
+      margin: 0 0 4px;
+      font-size: 13px;
+    }
+    .chat-last-msg {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: #555;
+    }
 
-    <div class="row">
-      <div class="col">
-        <label>Vármegyék ahol dolgozol</label>
-        <input type="text" placeholder="Pl.: Pest, Fejér">
-      </div>
-      <div class="col">
-        <label>Városok / kerületek</label>
-        <input type="text" placeholder="Pl.: Budapest XIII., Dunakeszi">
-      </div>
-    </div>
+    .chat-status-pill {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+    .chat-status-pill.active {
+      background: #c8e6c9;
+      color: #2e7d32;
+    }
+    .chat-status-pill.closed {
+      background: #eeeeee;
+      color: #666;
+    }
 
-    <label>Rövid bemutatkozás</label>
-    <textarea placeholder="Pár mondat arról, hogyan dolgozol, mennyi tapasztalatod van..."></textarea>
+    .chat-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn-win {
+      background: #4caf50;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-notmine {
+      background: #9e9e9e;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-win:hover {
+      background: #43a047;
+    }
+    .btn-notmine:hover {
+      background: #8d8d8d;
+    }
 
-    <label>
-      <input type="checkbox" />
-      Rövid, kicsi, pár napos vagy 1 napos munkát is vállalok, ha belefér két nagy közé.
-    </label>
+    .chat-card.closed {
+      background: #f3f3f3;
+      border-style: dashed;
+      opacity: 0.9;
+    }
+    .chat-footer-note {
+      margin-top: 18px;
+      font-size: 12px;
+      color: #777;
+    }
 
-    <button class="btn-primary" type="button">Profil mentése (demo)</button>
-    <div class="info-text">
-      A valódi mentés később Firebase-be kerül, most csak a felületet rakjuk össze.
-    </div>
-  </div>
+    @media (max-width: 700px) {
+      .main {
+        margin: 10px;
+        padding: 16px;
+      }
+      .nav-bar {
+        justify-content: flex-start;
+      }
+      .chat-status-pill {
+        position: static;
+        display: inline-block;
+        margin-bottom: 6px;
+      }
+    }
+  </style>
+</head>
 <!-- [2/5 - END] -->
 
 <!-- [3/5 - START] -->
-  <!-- Dokumentumok szekció -->
-  <div class="card section" id="section-docs" style="display:none;">
-    <h2>Dokumentumok – Mester szint és szakmunkás igazolás</h2>
-    <p class="hint">
-      A dokumentumokat csak az admin látja. A megrendelők felé csak jelvény jelenik meg
-      (pl. <b>Mester igazolt</b>, <b>Szakképzett igazolt</b>).
-    </p>
-
-    <label>Profilkép (kötelező)</label>
-    <input type="file" />
-
-    <label>Mesterlevél feltöltése (ha van)</label>
-    <input type="file" />
-    <div class="hint">Ha igazolt mester vagy, ez a legmagasabb rang. Az admin ellenőrzi.</div>
-
-    <label>Szakmunkás bizonyítvány feltöltése (nem kötelező)</label>
-    <input type="file" />
-    <div class="hint">
-      A szakmunkás bizonyítvánnyal rendelkező, ellenőrzött szakik előbb kapnak munkát a rendszerben.
-    </div>
-
-    <button class="btn-primary" type="button">Dokumentumok mentése (demo)</button>
-    <div class="info-text">
-      Később itt lesz az admin visszajelzés is: elfogadva / elutasítva / ellenőrzés alatt.
-    </div>
+<body>
+  <div class="header">
+    <h1>Szaki Profil – Vezérlőpult</h1>
+    <p>Csak becsületes, precíz és pontos szakiknak</p>
   </div>
 
-  <!-- Naptár szekció -->
-  <div class="card section" id="section-calendar" style="display:none;">
-    <h2>Naptár – Mikor tudsz új munkát vállalni?</h2>
-    <p class="hint">
-      Egyszerre maximum <b>3 hétre előre</b> jelölhetsz be szabad napokat.
-      Hetente egyszer tudod hosszabbítani 1 héttel. Ez kiszűri, hogy mindenki mindent "szabadnak"
-      jelöljön be.
-    </p>
-
-    <div class="calendar-grid">
-      <div class="day-box">
-        <header>2025-03-01</header>
-        <label>
-          <input type="checkbox" checked />
-          Szabad nap új munkára
-        </label>
-        <textarea placeholder="Megjegyzés erre a napra (pl. csak délelőtt, csak kisebb munka)..."></textarea>
-        <div class="badge-free">Szabadnak jelölve</div>
-      </div>
-
-      <div class="day-box">
-        <header>2025-03-02</header>
-        <label>
-          <input type="checkbox" />
-          Szabad nap új munkára
-        </label>
-        <textarea placeholder="Megjegyzés (opcionális)"></textarea>
-      </div>
-
-      <div class="day-box">
-        <header>2025-03-03</header>
-        <label>
-          <input type="checkbox" />
-          Szabad nap új munkára
-        </label>
-        <textarea placeholder="Megjegyzés (opcionális)"></textarea>
-      </div>
-
-      <!-- Itt majd generálva lesz a további nap lista -->
-    </div>
-
-    <button class="btn-primary" type="button">Naptár mentése (demo)</button>
-    <div class="danger">
-      Figyelem: a végleges rendszer figyelni fogja, hogy egyszerre max. 21 szabad nap legyen
-      előre bejelölve, és hetente csak egyszer lehessen hosszabbítani.
-    </div>
+  <div class="nav-bar">
+    <button class="nav-btn active" data-target="profil">Profil adatok</button>
+    <button class="nav-btn" data-target="dok">Dokumentumok</button>
+    <button class="nav-btn" data-target="naptar">Naptár</button>
+    <button class="nav-btn" data-target="ref">Referenciák</button>
+    <button class="nav-btn" data-target="chat">Chat (max. 3 munka)</button>
   </div>
+
+  <div class="main">
+    <!-- PROFIL ADATOK -->
+    <section id="profil" class="section active">
+      <h2 class="section-title">Profil adatok</h2>
+      <p class="section-sub">
+        Ezek az adatok jelennek meg a megrendelőknek. Később még bővíthetjük.
+      </p>
+
+      <div class="row-2">
+        <div class="col">
+          <label>Név</label>
+          <input type="text" placeholder="Pl.: Kovács Béla" />
+        </div>
+        <div class="col">
+          <label>Szakma</label>
+          <input type="text" placeholder="Pl.: burkoló, festő, gipszkarton" />
+        </div>
+      </div>
+
+      <div class="row-2">
+        <div class="col">
+          <label>Vármegyék ahol dolgozol</label>
+          <input type="text" placeholder="Pl.: Pest, Fejér" />
+        </div>
+        <div class="col">
+          <label>Városok / kerületek</label>
+          <input type="text" placeholder="Pl.: Budapest XIII., Dunakeszi" />
+        </div>
+      </div>
+
+      <label>Rövid bemutatkozás</label>
+      <textarea placeholder="Pár mondat arról, hogyan dolgozol, mennyi tapasztalatod van..."></textarea>
+
+      <div class="checkbox-line">
+        <input type="checkbox" id="smallJobs" />
+        <label for="smallJobs">
+          Rövid, kicsi, pár napos vagy 1 napos munkát is vállalok, ha belefér két nagy közé.
+        </label>
+      </div>
+
+      <button class="btn-primary" type="button">Profil mentése (demo)</button>
+      <div class="note">
+        A valódi mentés később Firebase-be kerül, most csak a felületet rakjuk össze.
+      </div>
+    </section>
 <!-- [3/5 - END] -->
 
 <!-- [4/5 - START] -->
-  <!-- Referenciák szekció -->
-  <div class="card section" id="section-refs" style="display:none;">
-    <h2>Referenciák – Képek a munkáidról</h2>
-    <p class="hint">
-      Itt tudod feltölteni a legjobb munkáidat. A megrendelő ezt fogja nézni, mielőtt választ.
-    </p>
+    <!-- DOKUMENTUMOK -->
+    <section id="dok" class="section">
+      <h2 class="section-title">Dokumentumok – Mester szint és szakmunkás igazolás</h2>
+      <p class="section-sub">
+        A dokumentumokat csak az admin látja. A megrendelők felé csak jelvény jelenik meg
+        (pl. <b>Mester igazolt</b>, <b>Szakkképzett igazolt</b>).
+      </p>
 
-    <label>Új referencia fotó</label>
-    <input type="file" />
-    <label>Rövid leírás</label>
-    <textarea placeholder="Pl.: 40 m² nappali burkolás, Budapest XIII., 2024"></textarea>
+      <label>Profilkép (kötelező)</label>
+      <input type="file" />
 
-    <button class="btn-primary" type="button">Referencia hozzáadása (demo)</button>
+      <label>Mesterlevél feltöltése (ha van)</label>
+      <input type="file" />
+      <div class="note">
+        Ha igazolt mester vagy, ez a legmagasabb rang. Az admin ellenőrzi.
+      </div>
 
-    <div class="info-text">
-      Később itt listázva lesznek a már feltöltött referencia képeid is.
-    </div>
+      <label>Szakmunkás bizonyítvány feltöltése (nem kötelező)</label>
+      <input type="file" />
+      <div class="note">
+        A szakmunkás bizonyítvánnyal rendelkező, ellenőrzött szakik előbb kapnak munkát a rendszerben.
+      </div>
+
+      <button class="btn-primary" type="button">Dokumentumok mentése (demo)</button>
+      <div class="note">
+        Később itt lesz az admin visszajelzés is: elfogadva / elutasítva / ellenőrzés alatt.
+      </div>
+    </section>
+
+    <!-- NAPTÁR -->
+    <section id="naptar" class="section">
+      <h2 class="section-title">Naptár – Mikor tudsz új munkát vállalni?</h2>
+      <p class="section-sub">
+        Egyszerre maximum <b>3 hétre előre</b> jelölhetsz be szabad napokat. Hetente egyszer
+        tudod hosszabbítani 1 héttel. Ez kiszűri, hogy mindenki mindent "szabadnak" jelöljön be.
+      </p>
+
+      <div class="calendar-grid">
+        <div class="day-card">
+          <h4>2025-03-01</h4>
+          <div class="checkbox-line">
+            <input type="checkbox" id="free1" checked />
+            <label for="free1">Szabad nap új munkára</label>
+          </div>
+          <textarea placeholder="Megjegyzés erre a napra (pl. csak délelőtt, csak kisebb munka)..."></textarea>
+          <div class="badge-free">Szabadnak jelölve</div>
+        </div>
+
+        <div class="day-card">
+          <h4>2025-03-02</h4>
+          <div class="checkbox-line">
+            <input type="checkbox" id="free2" />
+            <label for="free2">Szabad nap új munkára</label>
+          </div>
+          <textarea placeholder="Megjegyzés (opcionális)"></textarea>
+        </div>
+
+        <div class="day-card">
+          <h4>2025-03-03</h4>
+          <div class="checkbox-line">
+            <input type="checkbox" id="free3" />
+            <label for="free3">Szabad nap új munkára</label>
+          </div>
+          <textarea placeholder="Megjegyzés (opcionális)"></textarea>
+        </div>
+      </div>
+
+      <button class="btn-primary" type="button">Naptár mentése (demo)</button>
+      <div class="note">
+        Figyelem: a végleges rendszer figyelni fogja, hogy egyszerre max. 21 szabad nap legyen
+        előre bejelölve, és hetente csak egyszer lehessen hosszabbítani.
+      </div>
+    </section>
+
+    <!-- REFERENCIÁK -->
+    <section id="ref" class="section">
+      <h2 class="section-title">Referenciák – Képek a munkáidról</h2>
+      <p class="section-sub">
+        Itt tudod feltölteni a legjobb munkáid. A megrendelő ezt fogja nézni, mielőtt választ.
+      </p>
+
+      <label>Új referencia fotó</label>
+      <input type="file" />
+
+      <label>Rövid leírás</label>
+      <textarea placeholder="Pl.: 40 m² nappali burkolás, Budapest XIII., 2024"></textarea>
+
+      <button class="btn-primary" type="button">Referencia hozzáadása (demo)</button>
+      <div class="note">
+        Később itt listázva lesznek a már feltöltött referencia képeid is.
+      </div>
+    </section>
+
+    <!-- CHAT -->
+    <section id="chat" class="section">
+      <h2 class="section-title">Chat – Kapcsolat a megrendelőkkel</h2>
+      <p id="chatInfoText" class="chat-info-top">
+        Jelenleg 3 aktív megrendelővel beszélsz. Ha lezársz egy munkát (Megnyertem / Nem az enyém),
+        felszabadul egy hely egy új megrendelőnek.
+      </p>
+
+      <div class="chat-list">
+
+        <!-- CHAT KÁRTYA 1 -->
+        <div class="chat-card" data-status="active">
+          <div class="chat-status-pill active">AKTÍV</div>
+          <p class="chat-title">🧱 Nappali festés – Budapest XIII.</p>
+          <p class="chat-sub">Megrendelő: János (tel.: +36 30 ...)</p>
+          <p class="chat-last-msg">Utolsó üzenet (demo): "Küldene képet a falak állapotáról?"</p>
+
+          <div class="chat-actions">
+            <button class="btn-win">Ezt a munkát megnyertem</button>
+            <button class="btn-notmine">Ez a munka nem az enyém</button>
+          </div>
+        </div>
+
+        <!-- CHAT KÁRTYA 2 -->
+        <div class="chat-card" data-status="active">
+          <div class="chat-status-pill active">AKTÍV</div>
+          <p class="chat-title">🚿 Fürdőszoba burkolás – Dunakeszi</p>
+          <p class="chat-sub">Megrendelő: Mária (tel.: +36 20 ...)</p>
+          <p class="chat-last-msg">
+            Utolsó üzenet (demo): "Mennyi lenne kb. m² ár anyag nélkül?"
+          </p>
+
+          <div class="chat-actions">
+            <button class="btn-win">Ezt a munkát megnyertem</button>
+            <button class="btn-notmine">Ez a munka nem az enyém</button>
+          </div>
+        </div>
+
+        <!-- CHAT KÁRTYA 3 -->
+        <div class="chat-card" data-status="active">
+          <div class="chat-status-pill active">AKTÍV</div>
+          <p class="chat-title">🏠 Komplett felújítás – Budapest XI.</p>
+          <p class="chat-sub">Megrendelő: Tamás (tel.: +36 70 ...)</p>
+          <p class="chat-last-msg">
+            Utolsó üzenet (demo): "Meg tudjuk nézni személyesen a héten?"
+          </p>
+
+          <div class="chat-actions">
+            <button class="btn-win">Ezt a munkát megnyertem</button>
+            <button class="btn-notmine">Ez a munka nem az enyém</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="chat-footer-note">
+        A végleges logika: ha bármelyik munkát lezárod
+        (<b>megnyertem</b> / <b>nem az enyém</b>), a chat lezárul, nem tudtok tovább
+        írni, és egy új megrendelő tud majd ide bekerülni. Itt most a logika
+        csak demo – a gombok lezárják a panelt vizuálisan.
+      </div>
+    </section>
   </div>
-
-  <!-- Chat szekció -->
-  <div class="card section" id="section-chat" style="display:none;">
-    <h2>Chat – Kapcsolat a megrendelőkkel</h2>
-    <p class="hint">
-      Egy szakember egyszerre maximum <b>3 aktív megrendelővel</b> tud beszélgetni.
-      Ha egy munkára rányomsz, hogy <b>"megnyertem"</b> vagy <b>"nem az enyém"</b>,
-      a beszélgetés lezárul, és felszabadul egy hely egy új megrendelőnek.
-    </p>
-
-    <div class="chat-list">
-      <div class="chat-item">
-        <div class="chat-header">
-          <span>🏠 Nappali festés – Budapest XIII.</span>
-          <span class="chat-status">AKTÍV</span>
-        </div>
-        <div>Megrendelő: János (tel.: +36 30 ...)</div>
-        <div class="info-text">
-          Utolsó üzenet (demo): "Küldene képet a falak állapotáról?"
-        </div>
-        <div style="margin-top:8px;">
-          <button class="btn-small btn-win" onclick="chatWin()">Ezt a munkát megnyertem</button>
-          <button class="btn-small btn-lose" onclick="chatLose()">Ez a munka nem az enyém</button>
-        </div>
-      </div>
-
-      <div class="chat-item">
-        <div class="chat-header">
-          <span>🛁 Fürdőszoba burkolás – Dunakeszi</span>
-          <span class="chat-status">AKTÍV</span>
-        </div>
-        <div>Megrendelő: Mária (tel.: +36 20 ...)</div>
-        <div class="info-text">
-          Utolsó üzenet (demo): "Mennyi lenne kb. m2 ár anyag nélkül?"
-        </div>
-        <div style="margin-top:8px;">
-          <button class="btn-small btn-win" onclick="chatWin()">Ezt a munkát megnyertem</button>
-          <button class="btn-small btn-lose" onclick="chatLose()">Ez a munka nem az enyém</button>
-        </div>
-      </div>
-
-      <div class="chat-item">
-        <div class="chat-header">
-          <span>🏗️ Komplett felújítás – Budapest XI.</span>
-          <span class="chat-status">AKTÍV</span>
-        </div>
-        <div>Megrendelő: Tamás (tel.: +36 70 ...)</div>
-        <div class="info-text">
-          Utolsó üzenet (demo): "Meg tudjuk nézni személyesen a hetén?"
-        </div>
-        <div style="margin-top:8px;">
-          <button class="btn-small btn-win" onclick="chatWin()">Ezt a munkát megnyertem</button>
-          <button class="btn-small btn-lose" onclick="chatLose()">Ez a munka nem az enyém</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="info-text" style="margin-top:10px;">
-      A végleges logika: ha bármelyik munkát lezárod (megnyertem / nem az enyém),
-      a chat lezárul, nem tudtok tovább írni, és egy új megrendelő tud majd ide bekerülni.
-    </div>
-  </div>
-</div>
 <!-- [4/5 - END] -->
 
 <!-- [5/5 - START] -->
-<script>
-  // Menügombok – szekcióváltás
-  const menuButtons = document.querySelectorAll('.menu button');
-  const sections = document.querySelectorAll('.section');
+  <script>
+    // FÜL VÁLTÁS
+    document.addEventListener("DOMContentLoaded", function () {
+      const navButtons = document.querySelectorAll(".nav-btn");
+      const sections = document.querySelectorAll(".section");
 
-  menuButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.getAttribute('data-section');
-      menuButtons.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      sections.forEach(sec => {
-        if (sec.id === 'section-' + target) {
-          sec.style.display = 'block';
+      function showSection(targetId) {
+        sections.forEach(sec => {
+          sec.classList.toggle("active", sec.id === targetId);
+        });
+        navButtons.forEach(btn => {
+          btn.classList.toggle("active", btn.dataset.target === targetId);
+        });
+      }
+
+      navButtons.forEach(btn => {
+        btn.addEventListener("click", () => {
+          showSection(btn.dataset.target);
+        });
+      });
+
+      // CHAT LOGIKA – max. 3 aktív munka, lezárás gombokkal
+      const chatCards = document.querySelectorAll(".chat-card");
+
+      function updateChatInfo() {
+        const info = document.getElementById("chatInfoText");
+        if (!info) return;
+
+        const activeCount = document.querySelectorAll(
+          '.chat-card[data-status="active"]'
+        ).length;
+        const freeSlots = 3 - activeCount;
+
+        let text = "";
+        if (activeCount === 3) {
+          text =
+            "Jelenleg 3 aktív megrendelővel beszélsz. Ha lezársz egy munkát (Megnyertem / Nem az enyém), új hely szabadul fel.";
+        } else if (activeCount === 0) {
+          text =
+            "Jelenleg nincs aktív beszélgetésed. A rendszer legfeljebb 3 új megrendelőt enged egyszerre.";
         } else {
-          sec.style.display = 'none';
+          text =
+            "Jelenleg " +
+            activeCount +
+            " aktív megrendelővel beszélsz. Szabad helyek új megrendelőnek: " +
+            freeSlots +
+            ".";
+        }
+        info.textContent = text;
+      }
+
+      function closeChat(card, reason) {
+        if (!card || card.dataset.status !== "active") return;
+
+        card.dataset.status = "closed";
+        card.classList.add("closed");
+
+        const pill = card.querySelector(".chat-status-pill");
+        if (pill) {
+          pill.classList.remove("active");
+          pill.classList.add("closed");
+          if (reason === "win") {
+            pill.textContent = "LEZÁRVA – Megnyerted";
+          } else {
+            pill.textContent = "LEZÁRVA – Nem a tiéd";
+          }
+        }
+
+        const actions = card.querySelector(".chat-actions");
+        if (actions) {
+          actions.remove();
+        }
+
+        const lastMsg = card.querySelector(".chat-last-msg");
+        if (lastMsg) {
+          if (reason === "win") {
+            lastMsg.textContent =
+              'Lezárva: ezt a munkát MEGNYERTED. A chat archiválva lesz, és felszabadult 1 hely új megrendelőnek.';
+          } else {
+            lastMsg.textContent =
+              'Lezárva: EZ A MUNKA NEM A TIED. A chat lezárva, felszabadult 1 hely új megrendelőnek.';
+          }
+        }
+
+        updateChatInfo();
+      }
+
+      chatCards.forEach(card => {
+        const winBtn = card.querySelector(".btn-win");
+        const notMineBtn = card.querySelector(".btn-notmine");
+
+        if (winBtn) {
+          winBtn.addEventListener("click", () => closeChat(card, "win"));
+        }
+        if (notMineBtn) {
+          notMineBtn.addEventListener("click", () =>
+            closeChat(card, "notmine")
+          );
         }
       });
+
+      // inicializálás
+      updateChatInfo();
     });
-  });
-
-  // Chat logika – most még csak demo alert
-  function chatWin() {
-    alert('✅ Ezt a munkát megnyerted. A végleges rendszerben a chat lezárul, és a státusz "Megnyert munka" lesz.');
-  }
-
-  function chatLose() {
-    alert('❌ Ezt a munkát lezártad: "nem az enyém". A végleges rendszerben nem tudsz tovább beszélgetni erről a munkáról, és felszabadul egy hely egy új megrendelőnek.');
-  }
-</script>
-
+  </script>
 </body>
 </html>
 <!-- [5/5 - END] -->

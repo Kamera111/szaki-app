@@ -151,10 +151,25 @@
         <input type="text" id="elerhetoseg" placeholder="Telefonszám vagy e-mail (pl.: +36 30..., vagy valaki@example.com)" />
     </div>
 
-    <div class="mezo-csoport">
-        <label for="munka-leiras">Milyen munkára keresel szakembert? <span class="kotelezo">(kötelező)</span></label>
-        <textarea id="munka-leiras" placeholder="Pl.: 40 m² nappali festése vagy komplett fürdőszoba burkolás, bontás nélkül / bontással..."></textarea>
-    </div>
+   <div class="mezo-csoport">
+  <label for="jobType">
+    Milyen szakembert keresel? <span class="kotelezo">(kötelező)</span>
+  </label>
+  <select id="jobType" name="jobType" required>
+    <option value="">Válassz szakmát…</option>
+    <option value="Kőműves">Kőműves</option>
+    <option value="Szobafestő-tapétázó">Szobafestő-tapétázó</option>
+    <option value="Burkoló">Burkoló</option>
+    <option value="Hidegburkoló">Hidegburkoló</option>
+    <option value="Melegburkoló">Melegburkoló</option>
+    <option value="Villanyszerelő">Villanyszerelő</option>
+    <option value="Vízszerelő">Vízszerelő</option>
+    <option value="Gázszerelő">Gázszerelő</option>
+    <option value="Fűtésszerelő">Fűtésszerelő</option>
+    <option value="Gipszkartonos">Gipszkartonos</option>
+    <option value="Klímaszerelő">Klímaszerelő</option>
+  </select>
+</div>
 
     <div class="sor-2">
         <div class="mezo-csoport">

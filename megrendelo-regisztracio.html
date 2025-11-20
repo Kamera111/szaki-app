@@ -21,7 +21,7 @@
         }
 
         h1 {
-            margin: 0 0 6px;
+            margin: 0 0 8px;
             text-align: center;
         }
 
@@ -34,7 +34,7 @@
         .szekcio-cim {
             font-size: 18px;
             font-weight: bold;
-            margin: 20px 0 8px;
+            margin: 22px 0 10px;
         }
 
         .mezo-csoport {
@@ -55,8 +55,8 @@
         }
 
         input[type="text"],
-        input[type="tel"],
         input[type="email"],
+        input[type="tel"],
         input[type="date"],
         select {
             width: 100%;
@@ -65,6 +65,12 @@
             border: 1px solid #ccc;
             font-size: 14px;
             box-sizing: border-box;
+        }
+
+        .info-szoveg {
+            font-size: 13px;
+            color: #777;
+            margin-top: 4px;
         }
 
         .fo-gomb {
@@ -83,25 +89,14 @@
             opacity: 0.6;
             cursor: not-allowed;
         }
-
-        .info-szoveg {
-            font-size: 13px;
-            color: #777;
-            margin-top: 4px;
-        }
-
-        @media (max-width: 600px) {
-            .wrap {
-                padding: 20px 14px 24px;
-            }
-        }
     </style>
 </head>
+
 <body>
 
 <div class="wrap">
     <h1>Megrendelő – 1. lépés</h1>
-    <p class="alcim">Alapadatok a munkádról és az elérhetőségedről.</p>
+    <p class="alcim">Kérlek add meg az alapadatokat.</p>
 
     <!-- 1. Kapcsolati adatok -->
     <div class="szekcio-cim">1. Kapcsolati adatok</div>
@@ -114,9 +109,7 @@
     <div class="mezo-csoport">
         <label for="elerhetoseg">Telefonszám vagy e-mail <span class="kotelezo">(kötelező)</span></label>
         <input type="text" id="elerhetoseg" placeholder="Pl.: +36 30 123 4567 vagy valami@valami.hu" />
-        <div class="info-szoveg">
-            Ezeket az adatokat csak a kiválasztott szakemberek látják majd.
-        </div>
+        <div class="info-szoveg">Ez az adat csak a szakember számára jelenik meg.</div>
     </div>
 
     <!-- 2. Helyszín -->
@@ -124,25 +117,23 @@
 
     <div class="mezo-csoport">
         <label for="varos">Város / kerület <span class="kotelezo">(kötelező)</span></label>
-        <input type="text" id="varos" placeholder="Pl.: Budapest II. kerület" />
+        <input type="text" id="varos" placeholder="Pl.: Budapest XI. kerület" />
     </div>
 
     <div class="mezo-csoport">
-        <label for="cim">Cím (nem kötelező, elég körülbelül)</label>
-        <input type="text" id="cim" placeholder="Pl.: Szilágyi Erzsébet fasor környéke" />
+        <label for="cim">Pontos cím (nem kötelező)</label>
+        <input type="text" id="cim" placeholder="Pl.: Bartók Béla út környéke" />
     </div>
 
     <!-- 3. Szakma -->
-    <div class="szekcio-cim">3. Milyen szakembert keresel?</div>
+    <div class="szekcio-cim">3. Keresett szakma</div>
 
     <div class="mezo-csoport">
         <label for="szakma">Választott fő szakma <span class="kotelezo">(kötelező)</span></label>
         <select id="szakma">
             <option value="">Válassz szakmát…</option>
         </select>
-        <div class="info-szoveg">
-            A következő lépésben majd megadhatsz több szakmát is (burkoló + víz + villany, stb.).
-        </div>
+        <div class="info-szoveg">A 2. lépésben több szakmát is kiválaszthatsz majd.</div>
     </div>
 
     <!-- 4. Időzítés -->
@@ -150,52 +141,48 @@
 
     <div class="mezo-csoport">
         <label for="kezdesMin">Leghamarabb kezdhető</label>
-        <input type="date" id="kezdesMin" />
+        <input type="date" id="kezdesMin">
     </div>
 
     <div class="mezo-csoport">
         <label for="kezdesMax">Legkésőbb elkezdhető</label>
-        <input type="date" id="kezdesMax" />
+        <input type="date" id="kezdesMax">
     </div>
 
     <div class="mezo-csoport">
         <label for="hatarido">Végső határidő</label>
-        <input type="date" id="hatarido" />
+        <input type="date" id="hatarido">
     </div>
 
     <!-- 5. Munka nagysága -->
-    <div class="szekcio-cim">5. A munka nagysága</div>
+    <div class="szekcio-cim">5. Munka nagysága</div>
 
     <div class="mezo-csoport">
-        <label for="meret">Mekkora munkáról van szó?</label>
+        <label for="meret">Körülbelüli méret</label>
         <select id="meret">
-            <option value="">Nem tudom pontosan</option>
-            <option value="Kisebb javítás / 1 helyiség">Kisebb javítás / 1 helyiség</option>
-            <option value="Több helyiség, részleges felújítás">Több helyiség, részleges felújítás</option>
-            <option value="Nagyobb munka, komplett fürdő / konyha">Nagyobb munka, komplett fürdő / konyha</option>
+            <option value="">Nem tudom</option>
+            <option value="Kisebb feladat / 1 helyiség">Kisebb feladat / 1 helyiség</option>
+            <option value="Több helyiség / részfelújítás">Több helyiség / részfelújítás</option>
+            <option value="Komplett fürdő/konyha felújítás">Komplett fürdő/konyha felújítás</option>
             <option value="Teljes lakásfelújítás (80–130 m²)">Teljes lakásfelújítás (80–130 m²)</option>
         </select>
     </div>
 
     <!-- Gomb -->
-    <button class="fo-gomb" id="tovabb-gomb" disabled>Tovább a munka részleteihez</button>
+    <button class="fo-gomb" id="tovabb-gomb" disabled>
+        Tovább a munka részleteihez
+    </button>
 </div>
 
 <script>
+    // Szakma lista
     const SZAKMAK = [
-        "Kőműves",
-        "Szobafestő-tapétázó",
-        "Burkoló",
-        "Hidegburkoló",
-        "Melegburkoló",
-        "Villanyszerelő",
-        "Vízszerelő",
-        "Gázszerelő",
-        "Fűtésszerelő",
-        "Gipszkartonos",
-        "Klímaszerelő"
+        "Kőműves","Szobafestő-tapétázó","Burkoló","Hidegburkoló","Melegburkoló",
+        "Villanyszerelő","Vízszerelő","Gázszerelő","Fűtésszerelő",
+        "Gipszkartonos","Klímaszerelő"
     ];
 
+    // Select feltöltése
     function toltsdFelSzakmaSelectet() {
         const sel = document.getElementById("szakma");
         SZAKMAK.forEach(s => {
@@ -206,68 +193,54 @@
         });
     }
 
+    // Visszatöltés (ha volt kitöltve)
     function visszatoltes() {
-        document.getElementById("nev").value          = localStorage.getItem("mr_nev")          || "";
-        document.getElementById("elerhetoseg").value  = localStorage.getItem("mr_elerhetoseg")  || "";
-        document.getElementById("varos").value        = localStorage.getItem("mr_varos")        || "";
-        document.getElementById("cim").value          = localStorage.getItem("mr_cim")          || "";
-        document.getElementById("kezdesMin").value    = localStorage.getItem("mr_kezdesMin")    || "";
-        document.getElementById("kezdesMax").value    = localStorage.getItem("mr_kezdesMax")    || "";
-        document.getElementById("hatarido").value     = localStorage.getItem("mr_hatarido")     || "";
-        document.getElementById("meret").value        = localStorage.getItem("mr_meret")        || "";
-
-        const szakma = localStorage.getItem("mr_szakma") || "";
-        if (szakma) {
-            document.getElementById("szakma").value = szakma;
-        }
-    }
-
-    function initMezokMentese() {
-        const map = [
-            ["nev","mr_nev"],
-            ["elerhetoseg","mr_elerhetoseg"],
-            ["varos","mr_varos"],
-            ["cim","mr_cim"],
-            ["kezdesMin","mr_kezdesMin"],
-            ["kezdesMax","mr_kezdesMax"],
-            ["hatarido","mr_hatarido"],
-            ["meret","mr_meret"],
-            ["szakma","mr_szakma"]
+        const ids = [
+            "nev","elerhetoseg","varos","cim",
+            "kezdesMin","kezdesMax","hatarido","meret","szakma"
         ];
 
-        map.forEach(([id, key]) => {
+        ids.forEach(id => {
             const el = document.getElementById(id);
-            if (!el) return;
+            const val = localStorage.getItem("mr_" + id);
+            if (val) el.value = val;
+        });
+    }
+
+    // Mentés localStorage-be
+    function initMezokMentese() {
+        const ids = [
+            "nev","elerhetoseg","varos","cim",
+            "kezdesMin","kezdesMax","hatarido","meret","szakma"
+        ];
+
+        ids.forEach(id => {
+            const el = document.getElementById(id);
             el.addEventListener("input", () => {
-                localStorage.setItem(key, el.value);
-                ellenorizKotelezo();
+                localStorage.setItem("mr_" + id, el.value);
+                ellenoriz();
             });
             el.addEventListener("change", () => {
-                localStorage.setItem(key, el.value);
-                ellenorizKotelezo();
+                localStorage.setItem("mr_" + id, el.value);
+                ellenoriz();
             });
         });
     }
 
-    function ellenorizKotelezo() {
+    // Kötelező mezők ellenőrzése
+    function ellenoriz() {
         const nev = document.getElementById("nev").value.trim();
         const eler = document.getElementById("elerhetoseg").value.trim();
         const varos = document.getElementById("varos").value.trim();
         const szakma = document.getElementById("szakma").value;
-
         const gomb = document.getElementById("tovabb-gomb");
-        // minimális feltétel: név + elérhetőség + város + szakma
-        if (nev && eler && varos && szakma) {
-            gomb.disabled = false;
-        } else {
-            gomb.disabled = true;
-        }
+
+        gomb.disabled = !(nev && eler && varos && szakma);
     }
 
-    function initTovabbGomb() {
-        const gomb = document.getElementById("tovabb-gomb");
-        gomb.addEventListener("click", () => {
-            // ide akár még extra validáció is jöhet
+    // Tovább gomb → 2. lépés
+    function initTovabb() {
+        document.getElementById("tovabb-gomb").addEventListener("click", () => {
             window.location.href = "munka-reszletei.html";
         });
     }
@@ -276,8 +249,8 @@
         toltsdFelSzakmaSelectet();
         visszatoltes();
         initMezokMentese();
-        ellenorizKotelezo();
-        initTovabbGomb();
+        ellenoriz();
+        initTovabb();
     });
 </script>
 

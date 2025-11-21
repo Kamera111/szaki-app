@@ -41,6 +41,11 @@
             margin-bottom: 18px;
         }
 
+        /* STAT KÁRTYA – kompakt verzió */
+        .card.stat-blokk {
+            padding: 12px 14px;
+        }
+
         h1 {
             margin: 0 0 4px;
             text-align: center;
@@ -76,6 +81,7 @@
         }
 
         .btn-primary {
+            background: --primary;
             background: var(--primary);
             color: #fff;
         }
@@ -119,25 +125,25 @@
         .stat-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 10px;
+            gap: 6px;
         }
 
         .stat-kartya {
-            border-radius: 12px;
-            padding: 12px 10px;
+            border-radius: 8px;
+            padding: 6px 4px;
             border: 1px solid var(--border-soft);
             background: #fffdfa;
             text-align: center;
         }
 
         .stat-szam {
-            font-size: 18px; /* KISEBB LETT */
+            font-size: 14px;
             font-weight: 700;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .stat-label {
-            font-size: 12px;
+            font-size: 10px;
             color: var(--text-muted);
         }
 
@@ -209,6 +215,14 @@
             color: var(--text-muted);
         }
 
+        /* Admin-only szövegek (alapból rejtve) */
+        .admin-only {
+            display: none;
+        }
+        body.admin .admin-only {
+            display: block;
+        }
+
         @media (max-width: 720px) {
             .page-wrap {
                 padding: 18px 10px 28px;
@@ -275,7 +289,7 @@
         </p>
     </div>
 
-     <!-- [4] KIEMELT VILLANYSZERELŐ – VASKÓ ZSOLT -->
+    <!-- [4] KIEMELT VILLANYSZERELŐ – VASKÓ ZSOLT -->
     <div class="card szaki-blokk">
         <h2>Kiemelt villanyszerelő – Zsolt</h2>
         <div class="szaki-kartya">
@@ -304,21 +318,25 @@
                     >+36 30 *** ** 793</span>
                 </div>
                 <div class="szaki-adat">🏅 Rang: <strong>Igazolt szakember</strong></div>
-                <p class="szaki-kiemelt">
+
+                <!-- EZT A SZÖVEGET CSAK ADMIN LÁSSA -->
+                <p class="szaki-kiemelt admin-only">
                     Minden beérkező <strong>villanyszerelő</strong> munkát elsőként Zsolt kap meg a rendszerben.
                     Ő az egyetlen szakember, aki korlátlanul tud írni a megrendelőknek a chaten (demó szabály).
                 </p>
             </div>
             <div>
-                <p style="font-size:13px;color:var(--text-muted);margin:0 0 8px;">
+                <!-- EZT IS CSAK ADMIN LÁSSA -->
+                <p class="admin-only" style="font-size:13px;color:var(--text-muted);margin:0 0 8px;">
                     Ahogy bővül a rendszer, több igazolt szakember is csatlakozik, de a villanyszerelő munkáknál
                     Zsolt mindig elsőbbséget élvez:
                 </p>
-                <ul style="font-size:13px;color:var(--text-muted);padding-left:20px;margin:0 0 10px;">
+                <ul class="admin-only" style="font-size:13px;color:var(--text-muted);padding-left:20px;margin:0 0 10px;">
                     <li>Elsőként kap értesítést az új villanyszerelő megrendelésekről.</li>
                     <li>Korlátlanul üzenhet a megrendelőknek.</li>
                     <li>Admin jogosultsággal kiemelt, ellenőrzött partnerként jelenik meg.</li>
                 </ul>
+
                 <button class="btn btn-outline" type="button" onclick="nyitMegrendeloRegisztracio()">
                     Villanyszerelőt keresek – írok Zsoltnak is
                 </button>
@@ -390,21 +408,22 @@
         if (sElem) sElem.textContent = STAT_BASE.szaki.toString();
     }
 
-    // [7.3] Elérhetőség – teljes vagy maszkolt?
+    // [7.3] Elérhetőség + admin mód
     function frissitKapcsolatLathatosag() {
         const emailSpan = document.getElementById("zsolt-email");
         const telSpan = document.getElementById("zsolt-tel");
         if (!emailSpan || !telSpan) return;
 
-        // ADMIN gyorshack: ha az URL-ben admin=1, akkor mindig teljesen látszik
         const params = new URLSearchParams(window.location.search);
         const isAdmin = params.get("admin") === "1";
 
-        let contactVisible = localStorage.getItem("szakiapp_contactVisible") === "true";
+        // ha admin, akkor mindig teljes adat + minden admin-only látszik
         if (isAdmin) {
-            contactVisible = true;
+            document.body.classList.add("admin");
             localStorage.setItem("szakiapp_contactVisible", "true");
         }
+
+        let contactVisible = localStorage.getItem("szakiapp_contactVisible") === "true";
 
         const fullEmail = emailSpan.getAttribute("data-full");
         const maskedEmail = emailSpan.getAttribute("data-masked") || "";

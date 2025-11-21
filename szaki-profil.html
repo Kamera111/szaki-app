@@ -1,621 +1,344 @@
-<!-- [1/5 - START] -->
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8" />
-  <title>Szaki Profil – Vezérlőpult</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      color: #333;
-    }
+    <meta charset="UTF-8" />
+    <title>Szaki Profil – Vezérlőpult | Szaki-App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+            margin: 0;
+        }
 
-    /* FELSŐ FEJLÉC */
-    .header {
-      background: #ff8800;
-      color: #fff;
-      padding: 16px 10px 10px;
-      text-align: center;
-    }
-    .header h1 {
-      margin: 0 0 4px;
-      font-size: 24px;
-    }
-    .header p {
-      margin: 0;
-      font-size: 14px;
-    }
+        .topbar {
+            background: #ff9800;
+            color: #fff;
+            padding: 18px 16px 14px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
 
-    /* NAV GOMBOK (fülek) */
-    .nav-bar {
-      background: #ffe0b2;
-      padding: 10px 20px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    .nav-btn {
-      border: none;
-      border-radius: 20px;
-      padding: 8px 16px;
-      font-size: 14px;
-      cursor: pointer;
-      background: #f5f5f5;
-      transition: background 0.2s, box-shadow 0.2s;
-    }
-    .nav-btn.active {
-      background: #ffffff;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    }
+        .topbar-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 0 4px;
+        }
 
-    /* FŐ TARTALOM DOBOZ */
-    .main {
-      max-width: 1100px;
-      margin: 20px auto 40px;
-      background: #ffffff;
-      border-radius: 10px;
-      padding: 20px 24px 30px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
+        .topbar-sub {
+            margin: 0;
+            font-size: 13px;
+            opacity: 0.9;
+        }
 
-    .section {
-      display: none;
-    }
-    .section.active {
-      display: block;
-    }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
 
-    h2.section-title {
-      margin-top: 0;
-      margin-bottom: 10px;
-    }
-    p.section-sub {
-      margin-top: 0;
-      margin-bottom: 20px;
-      color: #666;
-      font-size: 14px;
-    }
+        .tab-btn {
+            border-radius: 999px;
+            border: none;
+            padding: 8px 14px;
+            font-size: 13px;
+            cursor: default;
+            background: rgba(255,255,255,0.8);
+            color: #333;
+        }
 
-    label {
-      display: block;
-      font-size: 14px;
-      margin: 10px 0 4px;
-    }
-    input[type="text"],
-    input[type="file"],
-    select,
-    textarea {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 8px 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-    textarea {
-      min-height: 90px;
-      resize: vertical;
-    }
+        .tab-btn.active {
+            background: #ffffff;
+            font-weight: 600;
+        }
 
-    .row-2 {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .col {
-      flex: 1 1 250px;
-      min-width: 0;
-    }
+        .wrap {
+            max-width: 900px;
+            margin: 18px auto 30px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px 22px 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+        }
 
-    .checkbox-line {
-      margin-top: 14px;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+        h2 {
+            margin-top: 0;
+        }
 
-    .btn-primary {
-      background: #ff8800;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 10px 20px;
-      font-size: 15px;
-      cursor: pointer;
-      margin-top: 18px;
-    }
-    .btn-primary:hover {
-      background: #f57c00;
-    }
+        .alcim {
+            margin: 0 0 18px;
+            color: #555;
+            font-size: 14px;
+        }
 
-    .note {
-      font-size: 12px;
-      color: #777;
-      margin-top: 10px;
-    }
+        .szekcio-cim {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 24px 0 10px;
+        }
 
-    .divider {
-      margin: 24px 0;
-      border-top: 1px solid #eee;
-    }
-<!-- [1/5 - END] -->
+        .mezo-csoport {
+            margin-bottom: 14px;
+        }
 
-<!-- [2/5 - START] -->
-    /* NAPTÁR KÁRTYÁK */
-    .calendar-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-    .day-card {
-      flex: 1 1 260px;
-      background: #fafafa;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      padding: 10px 12px;
-      box-sizing: border-box;
-      min-width: 0;
-    }
-    .day-card h4 {
-      margin: 0 0 8px;
-      font-size: 14px;
-    }
-    .day-card .checkbox-line {
-      margin: 6px 0;
-    }
-    .badge-free {
-      display: inline-block;
-      margin-top: 6px;
-      padding: 3px 8px;
-      background: #c8e6c9;
-      color: #2e7d32;
-      border-radius: 999px;
-      font-size: 11px;
-    }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
 
-    /* CHAT KÁRTYÁK */
-    .chat-info-top {
-      font-size: 13px;
-      margin-bottom: 15px;
-      color: #555;
-    }
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
 
-    .chat-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
 
-    .chat-card {
-      background: #fafafa;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      padding: 12px 14px;
-      position: relative;
-    }
+        .row-2 {
+            display: flex;
+            gap: 12px;
+        }
 
-    .chat-title {
-      font-weight: bold;
-      margin: 0 0 4px;
-    }
-    .chat-sub {
-      margin: 0 0 4px;
-      font-size: 13px;
-    }
-    .chat-last-msg {
-      margin: 0 0 10px;
-      font-size: 13px;
-      color: #555;
-    }
+        .row-2 .mezo-csoport {
+            flex: 1;
+        }
 
-    .chat-status-pill {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 11px;
-      padding: 3px 9px;
-      border-radius: 999px;
-    }
-    .chat-status-pill.active {
-      background: #c8e6c9;
-      color: #2e7d32;
-    }
-    .chat-status-pill.closed {
-      background: #eeeeee;
-      color: #666;
-    }
+        .checkbox-sor {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            margin: 8px 0;
+        }
 
-    .chat-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .btn-win {
-      background: #4caf50;
-      color: #fff;
-      border: none;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-    .btn-notmine {
-      background: #9e9e9e;
-      color: #fff;
-      border: none;
-      padding: 6px 14px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-    }
-    .btn-win:hover {
-      background: #43a047;
-    }
-    .btn-notmine:hover {
-      background: #8d8d8d;
-    }
+        .checkbox-sor input {
+            margin: 0;
+        }
 
-    .chat-card.closed {
-      background: #f3f3f3;
-      border-style: dashed;
-      opacity: 0.9;
-    }
-    .chat-footer-note {
-      margin-top: 18px;
-      font-size: 12px;
-      color: #777;
-    }
+        .info-szoveg {
+            font-size: 12px;
+            color: #777;
+            margin-top: 4px;
+        }
 
-    @media (max-width: 700px) {
-      .main {
-        margin: 10px;
-        padding: 16px;
-      }
-      .nav-bar {
-        justify-content: flex-start;
-      }
-      .chat-status-pill {
-        position: static;
-        display: inline-block;
-        margin-bottom: 6px;
-      }
-    }
-  </style>
+        .fo-gomb {
+            background: #f57c00;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 14px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 18px;
+        }
+
+        .fo-gomb:hover {
+            background: #e56f00;
+        }
+
+        .labjegyzet {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        @media (max-width: 600px) {
+            .wrap {
+                padding: 18px 14px 24px;
+            }
+
+            .row-2 {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
-<!-- [2/5 - END] -->
-
-<!-- [3/5 - START] -->
 <body>
-  <div class="header">
-    <h1>Szaki Profil – Vezérlőpult</h1>
-    <p>Csak becsületes, precíz és pontos szakiknak</p>
-  </div>
 
-  <div class="nav-bar">
-    <button class="nav-btn active" data-target="profil">Profil adatok</button>
-    <button class="nav-btn" data-target="dok">Dokumentumok</button>
-    <button class="nav-btn" data-target="naptar">Naptár</button>
-    <button class="nav-btn" data-target="ref">Referenciák</button>
-    <button class="nav-btn" data-target="chat">Chat (max. 3 munka)</button>
-  </div>
+<div class="topbar">
+    <div class="topbar-title">Szaki Profil – Vezérlőpult</div>
+    <p class="topbar-sub">Csak becsületes, precíz és pontos szakiknak</p>
+    <div class="tabs">
+        <button class="tab-btn active">Profil adatok</button>
+        <button class="tab-btn">Dokumentumok</button>
+        <button class="tab-btn">Naptár</button>
+        <button class="tab-btn">Referenciák</button>
+        <button class="tab-btn">Chat (max. 3 munka)</button>
+    </div>
+</div>
 
-  <div class="main">
-    <!-- PROFIL ADATOK -->
-    <section id="profil" class="section active">
-      <h2 class="section-title">Profil adatok</h2>
-      <p class="section-sub">
+<div class="wrap">
+    <h2>Profil adatok</h2>
+    <p class="alcim">
         Ezek az adatok jelennek meg a megrendelőknek. Később még bővíthetjük.
-      </p>
+    </p>
 
-      <div class="row-2">
-        <div class="col">
-          <label>Név</label>
-          <input type="text" placeholder="Pl.: Kovács Béla" />
-        </div>
-        <div class="col">
-          <label>Szakma</label>
-          <input type="text" placeholder="Pl.: burkoló, festő, gipszkarton" />
-        </div>
-      </div>
+    <!-- 1. Alap profil adatok -->
+    <div class="szekcio-cim">1. Alap adatok</div>
 
-      <div class="row-2">
-        <div class="col">
-          <label>Vármegyék ahol dolgozol</label>
-          <input type="text" placeholder="Pl.: Pest, Fejér" />
+    <div class="row-2">
+        <div class="mezo-csoport">
+            <label for="prof-nev">Név</label>
+            <input type="text" id="prof-nev" placeholder="Pl.: Chisnyán Sándor CSABI" />
         </div>
-        <div class="col">
-          <label>Városok / kerületek</label>
-          <input type="text" placeholder="Pl.: Budapest XIII., Dunakeszi" />
+        <div class="mezo-csoport">
+            <label for="prof-szakma">Szakma</label>
+            <input type="text" id="prof-szakma" placeholder="Pl.: kőműves, burkoló, festő" />
         </div>
-      </div>
+    </div>
 
-      <label>Rövid bemutatkozás</label>
-      <textarea placeholder="Pár mondat arról, hogyan dolgozol, mennyi tapasztalatod van..."></textarea>
+    <div class="row-2">
+        <div class="mezo-csoport">
+            <label for="prof-megye">Vármegyék ahol dolgozol</label>
+            <input type="text" id="prof-megye" placeholder="Pl.: Pest" />
+        </div>
+        <div class="mezo-csoport">
+            <label for="prof-varosok">Városok / kerületek</label>
+            <input type="text" id="prof-varosok" placeholder="Pl.: Budapest és környéke" />
+        </div>
+    </div>
 
-      <div class="checkbox-line">
-        <input type="checkbox" id="smallJobs" />
-        <label for="smallJobs">
-          Rövid, kicsi, pár napos vagy 1 napos munkát is vállalok, ha belefér két nagy közé.
+    <div class="mezo-csoport">
+        <label for="prof-bemutatkozas">Rövid bemutatkozás</label>
+        <textarea id="prof-bemutatkozas"
+                  placeholder="Pl.: Több mint 30 éves tapasztalattal, lakásfelújítással foglalkozom..."></textarea>
+    </div>
+
+    <div class="checkbox-sor">
+        <input type="checkbox" id="prof-kis-munka" />
+        <label for="prof-kis-munka">
+            Rövid, kicsi, pár napos vagy 1 napos munkát is vállalok, ha belefér két nagy közé.
         </label>
-      </div>
+    </div>
 
-      <button class="btn-primary" type="button">Profil mentése (demo)</button>
-      <div class="note">
-        A valódi mentés később Firebase-be kerül, most csak a felületet rakjuk össze.
-      </div>
-    </section>
-<!-- [3/5 - END] -->
+    <!-- 2. Számlázás és órabér -->
+    <div class="szekcio-cim">2. Számlázás és órabér</div>
 
-<!-- [4/5 - START] -->
-    <!-- DOKUMENTUMOK -->
-    <section id="dok" class="section">
-      <h2 class="section-title">Dokumentumok – Mester szint és szakmunkás igazolás</h2>
-      <p class="section-sub">
-        A dokumentumokat csak az admin látja. A megrendelők felé csak jelvény jelenik meg
-        (pl. <b>Mester igazolt</b>, <b>Szakkképzett igazolt</b>).
-      </p>
+    <div class="checkbox-sor">
+        <input type="checkbox" id="prof-szamla-kepes" />
+        <label for="prof-szamla-kepes">
+            Számlaképes vagyok (tudok munkadíjról számlát adni).
+        </label>
+    </div>
+    <p class="info-szoveg">
+        A megrendelők a jövőben rá tudnak szűrni a számlaképes szakikra, így előnyt élvezel a listában.
+    </p>
 
-      <label>Profilkép (kötelező)</label>
-      <input type="file" />
+    <div class="checkbox-sor">
+        <input type="checkbox" id="prof-oraber-vallal" />
+        <label for="prof-oraber-vallal">
+            Órabéres munkát is vállalok.
+        </label>
+    </div>
 
-      <label>Mesterlevél feltöltése (ha van)</label>
-      <input type="file" />
-      <div class="note">
-        Ha igazolt mester vagy, ez a legmagasabb rang. Az admin ellenőrzi.
-      </div>
-
-      <label>Szakmunkás bizonyítvány feltöltése (nem kötelező)</label>
-      <input type="file" />
-      <div class="note">
-        A szakmunkás bizonyítvánnyal rendelkező, ellenőrzött szakik előbb kapnak munkát a rendszerben.
-      </div>
-
-      <button class="btn-primary" type="button">Dokumentumok mentése (demo)</button>
-      <div class="note">
-        Később itt lesz az admin visszajelzés is: elfogadva / elutasítva / ellenőrzés alatt.
-      </div>
-    </section>
-
-    <!-- NAPTÁR -->
-    <section id="naptar" class="section">
-      <h2 class="section-title">Naptár – Mikor tudsz új munkát vállalni?</h2>
-      <p class="section-sub">
-        Egyszerre maximum <b>3 hétre előre</b> jelölhetsz be szabad napokat. Hetente egyszer
-        tudod hosszabbítani 1 héttel. Ez kiszűri, hogy mindenki mindent "szabadnak" jelöljön be.
-      </p>
-
-      <div class="calendar-grid">
-        <div class="day-card">
-          <h4>2025-03-01</h4>
-          <div class="checkbox-line">
-            <input type="checkbox" id="free1" checked />
-            <label for="free1">Szabad nap új munkára</label>
-          </div>
-          <textarea placeholder="Megjegyzés erre a napra (pl. csak délelőtt, csak kisebb munka)..."></textarea>
-          <div class="badge-free">Szabadnak jelölve</div>
+    <div class="row-2" id="prof-oraber-sor" style="display:none;">
+        <div class="mezo-csoport">
+            <label for="prof-oraber">Óradíj (bruttó Ft/óra)</label>
+            <input type="number" id="prof-oraber" min="0" step="500" placeholder="Pl.: 12000" />
+            <p class="info-szoveg">
+                A profilodon így fog megjelenni: „Órabéres munkadíj: X Ft/óra”.
+            </p>
         </div>
+    </div>
 
-        <div class="day-card">
-          <h4>2025-03-02</h4>
-          <div class="checkbox-line">
-            <input type="checkbox" id="free2" />
-            <label for="free2">Szabad nap új munkára</label>
-          </div>
-          <textarea placeholder="Megjegyzés (opcionális)"></textarea>
-        </div>
+    <!-- 3. Mentés -->
+    <button class="fo-gomb" onclick="profilMentesDemo()">Profil mentése (demó)</button>
 
-        <div class="day-card">
-          <h4>2025-03-03</h4>
-          <div class="checkbox-line">
-            <input type="checkbox" id="free3" />
-            <label for="free3">Szabad nap új munkára</label>
-          </div>
-          <textarea placeholder="Megjegyzés (opcionális)"></textarea>
-        </div>
-      </div>
+    <p class="labjegyzet">
+        A valódi mentés később Firebase-be kerül, most csak a felületet és a logikát rakjuk össze
+        (adatok localStorage-ban tárolódnak ezen az eszközön).
+    </p>
+</div>
 
-      <button class="btn-primary" type="button">Naptár mentése (demo)</button>
-      <div class="note">
-        Figyelem: a végleges rendszer figyelni fogja, hogy egyszerre max. 21 szabad nap legyen
-        előre bejelölve, és hetente csak egyszer lehessen hosszabbítani.
-      </div>
-    </section>
+<script>
+    // Segédfüggvények mezők betöltéséhez/mentéséhez
 
-    <!-- REFERENCIÁK -->
-    <section id="ref" class="section">
-      <h2 class="section-title">Referenciák – Képek a munkáidról</h2>
-      <p class="section-sub">
-        Itt tudod feltölteni a legjobb munkáid. A megrendelő ezt fogja nézni, mielőtt választ.
-      </p>
+    function betoltMezok() {
+        // Ha van külön profil-mentés, azt használjuk, egyébként regisztrációs alap
+        const nev = localStorage.getItem("sp_nev") || localStorage.getItem("szaki_nev") || "";
+        const szakma = localStorage.getItem("sp_szakma") || localStorage.getItem("szaki_szakma") || "";
+        const megye = localStorage.getItem("sp_megye") || "";
+        const varosok = localStorage.getItem("sp_varosok") || localStorage.getItem("szaki_hely") || "";
+        const bemut = localStorage.getItem("sp_bemutkozas") || "";
+        const kisMunka = localStorage.getItem("sp_kisMunka") === "true";
 
-      <label>Új referencia fotó</label>
-      <input type="file" />
+        const szamlaKepes = (localStorage.getItem("sp_szamlaKepes") ?? localStorage.getItem("szaki_szamlaKepes")) === "true";
+        const oraberVallal = (localStorage.getItem("sp_oraberVallal") ?? localStorage.getItem("szaki_oraberVallal")) === "true";
+        const oraberOsszeg = localStorage.getItem("sp_oraberOsszeg") || localStorage.getItem("szaki_oraberOsszeg") || "";
 
-      <label>Rövid leírás</label>
-      <textarea placeholder="Pl.: 40 m² nappali burkolás, Budapest XIII., 2024"></textarea>
+        document.getElementById("prof-nev").value = nev;
+        document.getElementById("prof-szakma").value = szakma;
+        document.getElementById("prof-megye").value = megye;
+        document.getElementById("prof-varosok").value = varosok;
+        document.getElementById("prof-bemutatkozas").value = bemut;
+        document.getElementById("prof-kis-munka").checked = kisMunka;
 
-      <button class="btn-primary" type="button">Referencia hozzáadása (demo)</button>
-      <div class="note">
-        Később itt listázva lesznek a már feltöltött referencia képeid is.
-      </div>
-    </section>
+        document.getElementById("prof-szamla-kepes").checked = szamlaKepes;
+        document.getElementById("prof-oraber-vallal").checked = oraberVallal;
+        document.getElementById("prof-oraber").value = oraberOsszeg;
 
-    <!-- CHAT -->
-    <section id="chat" class="section">
-      <h2 class="section-title">Chat – Kapcsolat a megrendelőkkel</h2>
-      <p id="chatInfoText" class="chat-info-top">
-        Jelenleg 3 aktív megrendelővel beszélsz. Ha lezársz egy munkát (Megnyertem / Nem az enyém),
-        felszabadul egy hely egy új megrendelőnek.
-      </p>
+        frissitOraberSor();
+    }
 
-      <div class="chat-list">
+    function frissitOraberSor() {
+        const oraberVallal = document.getElementById("prof-oraber-vallal").checked;
+        const sor = document.getElementById("prof-oraber-sor");
+        sor.style.display = oraberVallal ? "flex" : "none";
+    }
 
-        <!-- CHAT KÁRTYA 1 -->
-        <div class="chat-card" data-status="active">
-          <div class="chat-status-pill active">AKTÍV</div>
-          <p class="chat-title">🧱 Nappali festés – Budapest XIII.</p>
-          <p class="chat-sub">Megrendelő: János (tel.: +36 30 ...)</p>
-          <p class="chat-last-msg">Utolsó üzenet (demo): "Küldene képet a falak állapotáról?"</p>
+    function profilMentesDemo() {
+        const nev = document.getElementById("prof-nev").value.trim();
+        const szakma = document.getElementById("prof-szakma").value.trim();
+        const megye = document.getElementById("prof-megye").value.trim();
+        const varosok = document.getElementById("prof-varosok").value.trim();
+        const bemut = document.getElementById("prof-bemutatkozas").value.trim();
+        const kisMunka = document.getElementById("prof-kis-munka").checked;
 
-          <div class="chat-actions">
-            <button class="btn-win">Ezt a munkát megnyertem</button>
-            <button class="btn-notmine">Ez a munka nem az enyém</button>
-          </div>
-        </div>
+        const szamlaKepes = document.getElementById("prof-szamla-kepes").checked;
+        const oraberVallal = document.getElementById("prof-oraber-vallal").checked;
+        const oraberOsszeg = document.getElementById("prof-oraber").value.trim();
 
-        <!-- CHAT KÁRTYA 2 -->
-        <div class="chat-card" data-status="active">
-          <div class="chat-status-pill active">AKTÍV</div>
-          <p class="chat-title">🚿 Fürdőszoba burkolás – Dunakeszi</p>
-          <p class="chat-sub">Megrendelő: Mária (tel.: +36 20 ...)</p>
-          <p class="chat-last-msg">
-            Utolsó üzenet (demo): "Mennyi lenne kb. m² ár anyag nélkül?"
-          </p>
-
-          <div class="chat-actions">
-            <button class="btn-win">Ezt a munkát megnyertem</button>
-            <button class="btn-notmine">Ez a munka nem az enyém</button>
-          </div>
-        </div>
-
-        <!-- CHAT KÁRTYA 3 -->
-        <div class="chat-card" data-status="active">
-          <div class="chat-status-pill active">AKTÍV</div>
-          <p class="chat-title">🏠 Komplett felújítás – Budapest XI.</p>
-          <p class="chat-sub">Megrendelő: Tamás (tel.: +36 70 ...)</p>
-          <p class="chat-last-msg">
-            Utolsó üzenet (demo): "Meg tudjuk nézni személyesen a héten?"
-          </p>
-
-          <div class="chat-actions">
-            <button class="btn-win">Ezt a munkát megnyertem</button>
-            <button class="btn-notmine">Ez a munka nem az enyém</button>
-          </div>
-        </div>
-
-      </div>
-
-      <div class="chat-footer-note">
-        A végleges logika: ha bármelyik munkát lezárod
-        (<b>megnyertem</b> / <b>nem az enyém</b>), a chat lezárul, nem tudtok tovább
-        írni, és egy új megrendelő tud majd ide bekerülni. Itt most a logika
-        csak demo – a gombok lezárják a panelt vizuálisan.
-      </div>
-    </section>
-  </div>
-<!-- [4/5 - END] -->
-
-<!-- [5/5 - START] -->
-  <script>
-    // FÜL VÁLTÁS
-    document.addEventListener("DOMContentLoaded", function () {
-      const navButtons = document.querySelectorAll(".nav-btn");
-      const sections = document.querySelectorAll(".section");
-
-      function showSection(targetId) {
-        sections.forEach(sec => {
-          sec.classList.toggle("active", sec.id === targetId);
-        });
-        navButtons.forEach(btn => {
-          btn.classList.toggle("active", btn.dataset.target === targetId);
-        });
-      }
-
-      navButtons.forEach(btn => {
-        btn.addEventListener("click", () => {
-          showSection(btn.dataset.target);
-        });
-      });
-
-      // CHAT LOGIKA – max. 3 aktív munka, lezárás gombokkal
-      const chatCards = document.querySelectorAll(".chat-card");
-
-      function updateChatInfo() {
-        const info = document.getElementById("chatInfoText");
-        if (!info) return;
-
-        const activeCount = document.querySelectorAll(
-          '.chat-card[data-status="active"]'
-        ).length;
-        const freeSlots = 3 - activeCount;
-
-        let text = "";
-        if (activeCount === 3) {
-          text =
-            "Jelenleg 3 aktív megrendelővel beszélsz. Ha lezársz egy munkát (Megnyertem / Nem az enyém), új hely szabadul fel.";
-        } else if (activeCount === 0) {
-          text =
-            "Jelenleg nincs aktív beszélgetésed. A rendszer legfeljebb 3 új megrendelőt enged egyszerre.";
-        } else {
-          text =
-            "Jelenleg " +
-            activeCount +
-            " aktív megrendelővel beszélsz. Szabad helyek új megrendelőnek: " +
-            freeSlots +
-            ".";
-        }
-        info.textContent = text;
-      }
-
-      function closeChat(card, reason) {
-        if (!card || card.dataset.status !== "active") return;
-
-        card.dataset.status = "closed";
-        card.classList.add("closed");
-
-        const pill = card.querySelector(".chat-status-pill");
-        if (pill) {
-          pill.classList.remove("active");
-          pill.classList.add("closed");
-          if (reason === "win") {
-            pill.textContent = "LEZÁRVA – Megnyerted";
-          } else {
-            pill.textContent = "LEZÁRVA – Nem a tiéd";
-          }
+        // Kötelezőnek nem feltétlenül tesszük, de figyelmeztethetünk
+        if (!nev || !szakma) {
+            alert("Kérlek töltsd ki legalább a nevet és a szakmát.");
+            return;
         }
 
-        const actions = card.querySelector(".chat-actions");
-        if (actions) {
-          actions.remove();
-        }
+        localStorage.setItem("sp_nev", nev);
+        localStorage.setItem("sp_szakma", szakma);
+        localStorage.setItem("sp_megye", megye);
+        localStorage.setItem("sp_varosok", varosok);
+        localStorage.setItem("sp_bemutkozas", bemut);
+        localStorage.setItem("sp_kisMunka", kisMunka ? "true" : "false");
 
-        const lastMsg = card.querySelector(".chat-last-msg");
-        if (lastMsg) {
-          if (reason === "win") {
-            lastMsg.textContent =
-              'Lezárva: ezt a munkát MEGNYERTED. A chat archiválva lesz, és felszabadult 1 hely új megrendelőnek.';
-          } else {
-            lastMsg.textContent =
-              'Lezárva: EZ A MUNKA NEM A TIED. A chat lezárva, felszabadult 1 hely új megrendelőnek.';
-          }
-        }
+        localStorage.setItem("sp_szamlaKepes", szamlaKepes ? "true" : "false");
+        localStorage.setItem("sp_oraberVallal", oraberVallal ? "true" : "false");
+        localStorage.setItem("sp_oraberOsszeg", oraberOsszeg);
 
-        updateChatInfo();
-      }
+        // Szinkronban tartjuk a regisztrációs kulcsokkal is (hogy a profilból is lássa az app)
+        localStorage.setItem("szaki_szamlaKepes", szamlaKepes ? "true" : "false");
+        localStorage.setItem("szaki_oraberVallal", oraberVallal ? "true" : "false");
+        localStorage.setItem("szaki_oraberOsszeg", oraberOsszeg);
 
-      chatCards.forEach(card => {
-        const winBtn = card.querySelector(".btn-win");
-        const notMineBtn = card.querySelector(".btn-notmine");
+        alert("Profil adatok elmentve (demó – localStorage).");
+    }
 
-        if (winBtn) {
-          winBtn.addEventListener("click", () => closeChat(card, "win"));
-        }
-        if (notMineBtn) {
-          notMineBtn.addEventListener("click", () =>
-            closeChat(card, "notmine")
-          );
-        }
-      });
+    document.addEventListener("DOMContentLoaded", () => {
+        betoltMezok();
 
-      // inicializálás
-      updateChatInfo();
+        document.getElementById("prof-oraber-vallal")
+            .addEventListener("change", frissitOraberSor);
     });
-  </script>
+</script>
+
 </body>
 </html>
-<!-- [5/5 - END] -->

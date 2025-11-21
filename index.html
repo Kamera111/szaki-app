@@ -1,94 +1,433 @@
-<!-- [1/3 - START] -->
+<!-- [1] FEJLÉC + ALAP STÍLUSOK -->
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-<meta charset="UTF-8" />
-<title>Szaki-App</title>
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f2f2f2;
-        padding: 30px;
-        text-align: center;
-    }
-    .box {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        display: inline-block;
-        width: 90%;
-        max-width: 850px;
-        margin-top: 20px;
-        text-align: left;
-    }
-    button.role-btn {
-        background: #f57c00;
-        color: white;
-        padding: 15px 25px;
-        border: none;
-        font-size: 18px;
-        border-radius: 10px;
-        cursor: pointer;
-        width: 100%;
-        margin-top: 15px;
-    }
-    button.role-btn:hover {
-        background: #e56f00;
-    }
-    .center { text-align: center; }
-</style>
+    <meta charset="UTF-8" />
+    <title>Szaki-App – Találd meg a szakembered</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --primary: #f57c00;
+            --primary-dark: #e56f00;
+            --bg: #f2f2f2;
+            --card-bg: #ffffff;
+            --text-main: #222;
+            --text-muted: #666;
+            --border-soft: #e0e0e0;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+        }
+
+        .page-wrap {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 24px 12px 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+            padding: 20px 18px;
+            margin-bottom: 18px;
+        }
+
+        h1 {
+            margin: 0 0 4px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .alcim {
+            text-align: center;
+            margin: 0 0 18px;
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .gomb-sor {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .btn {
+            border-radius: 999px;
+            border: none;
+            padding: 10px 18px;
+            font-size: 14px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            background: #fff;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: #fff7eb;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1px solid var(--border-soft);
+            color: var(--text-muted);
+        }
+
+        .btn-ghost:hover {
+            background: #f8f8f8;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: #fff3e0;
+            color: #bf6000;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .stat-kartya {
+            border-radius: 12px;
+            padding: 12px 10px;
+            border: 1px solid var(--border-soft);
+            background: #fffdfa;
+            text-align: center;
+        }
+
+        .stat-szam {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .szaki-kartya {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) minmax(0,1.2fr);
+            gap: 14px;
+            align-items: center;
+        }
+
+        .szaki-fejlec {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .szaki-av {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg,#f57c00,#ffb74d);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .szaki-nev {
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .szaki-rang {
+            font-size: 12px;
+            color: var(--primary-dark);
+        }
+
+        .szaki-adat {
+            font-size: 13px;
+            margin: 2px 0;
+            color: var(--text-muted);
+        }
+
+        .szaki-kiemelt {
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .ai-blokk h2,
+        .szaki-blokk h2,
+        .stat-blokk h2 {
+            font-size: 18px;
+            margin: 0 0 8px;
+        }
+
+        .ai-leiras {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin: 4px 0 10px;
+        }
+
+        .labjegyzet {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 720px) {
+            .page-wrap {
+                padding: 18px 10px 28px;
+            }
+            .szaki-kartya {
+                grid-template-columns: 1fr;
+            }
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
+
 <body>
-<!-- [1/3 - END] -->
+<div class="page-wrap">
 
+    <!-- [2] FEJLÉC + FŐ GOMBOK -->
+    <div class="card">
+        <h1>Szaki-App</h1>
+        <p class="alcim">Online munkakiírás megrendelőknek és szakiknak – egyszerűen, érthetően.</p>
 
-<!-- [2/3 - START] -->
-<h2>Üdv a Szaki-App oldalon!</h2>
-<p>Az oldal fejlesztés alatt áll.<br>
-Nem sokára indul a szakember–megrendelő összekötő rendszer!</p>
+        <div class="gomb-sor">
+            <a class="btn btn-primary" href="megrendelo-regisztracio.html">
+                📝 Megrendelő vagyok
+            </a>
+            <a class="btn btn-outline" href="szaki-regisztracio.html">
+                🧰 Szakember vagyok
+            </a>
+            <button class="btn btn-ghost" type="button" disabled>
+                🔐 Belépés (hamarosan)
+            </button>
+        </div>
 
-<div class="box">
-    <h3>🔧 Szakember vagyok</h3>
-    <ul>
-        <li>Ingyenes megjelenés • ranglista • becsületes szakik</li>
-        <li>Kötelező naptár • jelöld mikor érsz rá – rövid, kicsi, pár napos munka választható</li>
-        <li>Profilkép, árak, referencia képek</li>
-    </ul>
-    <div class="center">
-        <button class="role-btn" onclick="selectRole('szaki')">Belépek szakember vagyok</button>
+        <div class="gomb-sor">
+            <button class="btn btn-ghost" type="button" onclick="megosztasOldal()">
+                🔗 Megosztás – ajánld ismerősnek
+            </button>
+        </div>
+    </div>
+
+    <!-- [3] STATISZTIKÁK BLOKK -->
+    <div class="card stat-blokk">
+        <div class="szekcio-fejlec" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <h2>Statisztika (induló értékek)</h2>
+            <span class="tag">Demó</span>
+        </div>
+        <p style="font-size:13px;color:var(--text-muted);margin:0 0 10px;">
+            Ezek az induló számok, innen fogjuk tovább számolni a valódi használat közben.
+        </p>
+        <div class="stat-grid">
+            <div class="stat-kartya">
+                <div id="stat-latogato" class="stat-szam">321</div>
+                <div class="stat-label">Összes látogató</div>
+            </div>
+            <div class="stat-kartya">
+                <div id="stat-megrendelo" class="stat-szam">121</div>
+                <div class="stat-label">Regisztrált megrendelő</div>
+            </div>
+            <div class="stat-kartya">
+                <div id="stat-szaki" class="stat-szam">87</div>
+                <div class="stat-label">Regisztrált szakember</div>
+            </div>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">
+            Megjegyzés: a látogatószám jelenleg csak helyi (demó) számlálóval növekszik ennél az eszköznél.
+        </p>
+    </div>
+
+    <!-- [4] KIEMELT VILLANYSZERELŐ – VASKÓ ZSOLT -->
+    <div class="card szaki-blokk">
+        <h2>Kiemelt villanyszerelő – Zsolt</h2>
+        <div class="szaki-kartya">
+            <div>
+                <div class="szaki-fejlec">
+                    <div class="szaki-av">VZ</div>
+                    <div>
+                        <div class="szaki-nev">Vaskó Zsolt Tamás</div>
+                        <div class="szaki-rang">⚡ Igazolt villanyszerelő • kiemelt partner</div>
+                    </div>
+                </div>
+                <div class="szaki-adat">📧 E-mail: <a href="mailto:vaskozsolttamas@gmail.com">vaskozsolttamas@gmail.com</a></div>
+                <div class="szaki-adat">📞 Telefon: <a href="tel:+36306566793">+36 30 656 6793</a></div>
+                <div class="szaki-adat">🏅 Rang: <strong>Igazolt szakember</strong></div>
+                <p class="szaki-kiemelt">
+                    Minden beérkező <strong>villanyszerelő</strong> munkát elsőként Zsolt kap meg a rendszerben.
+                    Ő az egyetlen szakember, aki korlátlanul tud írni a megrendelőknek a chaten (demó szabály).
+                </p>
+            </div>
+            <div>
+                <p style="font-size:13px;color:var(--text-muted);margin:0 0 8px;">
+                    Ahogy bővül a rendszer, több igazolt szakember is csatlakozik, de a villanyszerelő munkáknál
+                    Zsolt mindig elsőbbséget élvez:
+                </p>
+                <ul style="font-size:13px;color:var(--text-muted);padding-left:20px;margin:0 0 10px;">
+                    <li>Elsőként kap értesítést az új villanyszerelő megrendelésekről.</li>
+                    <li>Korlátlanul üzenhet a megrendelőknek.</li>
+                    <li>Admin jogosultsággal kiemelt, ellenőrzött partnerként jelenik meg.</li>
+                </ul>
+                <button class="btn btn-outline" type="button" onclick="nyitMegrendeloRegisztracio()">
+                    Villanyszerelőt keresek – írok Zsoltnak is
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- [5] AI SEGÍTSÉG BLOKK -->
+    <div class="card ai-blokk">
+        <h2>MI segít a munkakiírásban</h2>
+        <p class="ai-leiras">
+            A Szaki-App későbbi verziójában a Google Gemini alapú mesterséges intelligencia segít
+            megfogalmazni a munkaleírást, ellenőrizni a mennyiségeket és javaslatot tenni a szakmákra.
+        </p>
+        <ul style="font-size:13px;color:var(--text-muted);padding-left:20px;margin:0 0 12px;">
+            <li>Segít részletes, profi munkaleírást írni (m², helyiségek, állapot).</li>
+            <li>Javasolja, milyen szakemberekre lesz szükség (pl. burkoló, vízszerelő, villanyszerelő).</li>
+            <li>A szakiknak segít gyors válasz sablonokat, ajánlat szöveget készíteni.</li>
+        </ul>
+        <div class="gomb-sor">
+            <button class="btn btn-primary" type="button" onclick="aiSegitDemo()">
+                🤖 Kipróbálom demó módban
+            </button>
+            <button class="btn btn-ghost" type="button" onclick="nyitMunkaReszletei()">
+                ➜ Ugrás a munka részletei oldalra
+            </button>
+        </div>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">
+            Jelenleg a demó csak egy egyszerű súgó ablakot mutat. Később Firebase AI Logic (Gemini) kerül ide.
+        </p>
+    </div>
+
+    <!-- [6] LÁBJEGYZET -->
+    <div class="labjegyzet">
+        Szaki-App • induló demó verzió<br />
+        Megrendelőknek az 1–2. lépés már működik. A regisztráció, chat, kreditek és MI folyamatosan épülnek.
     </div>
 </div>
 
-<div class="box">
-    <h3>🏠 Megrendelő vagyok</h3>
-    <ul>
-        <li>Add meg: leghamarabb / legkésőbb kezdés & meddig legyen kész</li>
-        <li>Jelöld: rövid, kicsi, pár napos vagy egy napos munkáról van-e szó</li>
-        <li>Az admin hagyja jóvá – korrekt rendszer</li>
-    </ul>
-    <div class="center">
-        <button class="role-btn" onclick="selectRole('megrendelo')">Belépek megrendelőként</button>
-    </div>
-</div>
-
-<p style="text-align:center; margin-top:20px;">
-    ❤️ Becsület-kassza – Ha segítettem, meghálálhatod
-</p>
-<!-- [2/3 - END] -->
-
-
-<!-- [3/3 - START] -->
+<!-- [7] SCRIPT: MEGOSZTÁS, SZÁMLÁLÓ, NAVIGÁCIÓ, AI DEMÓ -->
 <script>
-function selectRole(role) {
-    if (role === "szaki") {
-        window.location.href = "szaki-regisztracio.html";
+    // [7.1] KONSTANSOK – induló statisztika
+    const STAT_BASE = {
+        latogato: 321,
+        megrendelo: 121,
+        szaki: 87
+    };
+
+    // [7.2] Látogatószámláló (helyi, csak demó)
+    function initLatogatoSzamlalo() {
+        try {
+            const key = "szakiapp_latogato_demo";
+            const eddigi = parseInt(localStorage.getItem(key) || "0", 10);
+            const uj = eddigi + 1;
+            localStorage.setItem(key, String(uj));
+
+            const elem = document.getElementById("stat-latogato");
+            if (elem) {
+                const osszes = STAT_BASE.latogato + eddigi; // innen indulunk tovább
+                elem.textContent = osszes.toString();
+            }
+        } catch (e) {
+            // ha valami gond van a localStorage-sal, marad az alap 321
+            console.warn("Látogatószámláló hiba (demó):", e);
+        }
+
+        // a másik két érték egyelőre fix induló szám, csak kiírjuk őket
+        const mElem = document.getElementById("stat-megrendelo");
+        const sElem = document.getElementById("stat-szaki");
+        if (mElem) mElem.textContent = STAT_BASE.megrendelo.toString();
+        if (sElem) sElem.textContent = STAT_BASE.szaki.toString();
     }
-    if (role === "megrendelo") {
+
+    // [7.3] Megosztás – mindig az egész oldalt ossza meg
+    function megosztasOldal() {
+        const url = "https://szaki1.github.io/szaki-app/";
+        const szoveg = "Nézd meg a Szaki-App oldalt, itt tudsz szakikat találni és munkát kiírni:";
+
+        if (navigator.share) {
+            navigator.share({
+                title: "Szaki-App",
+                text: szoveg,
+                url: url
+            }).catch(() => {});
+        } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(url)
+                .then(() => alert("A hivatkozás a vágólapra került:\n" + url))
+                .catch(() => alert("Másold ki ezt a linket: " + url));
+        } else {
+            alert("Másold ki ezt a linket: " + url);
+        }
+    }
+
+    // [7.4] Navigációs segédfüggvények
+    function nyitMegrendeloRegisztracio() {
         window.location.href = "megrendelo-regisztracio.html";
     }
-}
+
+    function nyitMunkaReszletei() {
+        window.location.href = "munka-reszletei.html";
+    }
+
+    // [7.5] AI demó – később Firebase AI Logic (Gemini) kerül ide
+    function aiSegitDemo() {
+        const uzenet =
+            "Demó üzemmód:\n\n" +
+            "A végleges rendszerben itt a Google Gemini MI fog segíteni a munkaleírás " +
+            "megfogalmazásában és a szakmák javaslatában.\n\n" +
+            "Addig is írd le minél részletesebben a feladatot a 'Munka részletei' oldalon, " +
+            "m², helyiségek, állapot és különleges igények megadásával.";
+        alert(uzenet);
+    }
+
+    // [7.6] INIT
+    document.addEventListener("DOMContentLoaded", () => {
+        initLatogatoSzamlalo();
+        // megosztasOldal, aiSegitDemo, nyitMegrendeloRegisztracio, nyitMunkaReszletei
+        // globálisan elérhetőek maradnak.
+    });
 </script>
 
 </body>
 </html>
-<!-- [3/3 - END] -->

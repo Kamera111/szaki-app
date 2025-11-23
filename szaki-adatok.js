@@ -62,7 +62,7 @@ function createRandomHoliday(seed) {
   return {
     holidayFrom,
     holidayTo,
-    fullHolidayText: `Szabadnap: ${labelFrom} – ${labelTo}.`,
+fullHolidayText: `Ezeken a napokon ráérek: ${labelFrom} – ${labelTo}.`,
   };
 }
 

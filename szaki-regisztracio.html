@@ -2,406 +2,57 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8" />
-    <title>Szakember regisztráció | Szaki-App</title>
+    <title>Szaki regisztráció – Szaki-App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f2f2f2;
-            margin: 0;
-            padding: 30px 10px;
+        body { font-family: Arial; background: #f5f5f5; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px;
+                     border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        label { font-weight: bold; display: block; margin-top: 15px; }
+        input, select {
+            width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-top: 5px;
         }
-
-        .wrap {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 26px 22px 32px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-        }
-
-        h1 {
-            margin: 0 0 6px;
-            text-align: center;
-        }
-
-        .alcim {
-            text-align: center;
-            margin: 0 0 20px;
-            color: #555;
-        }
-
-        .szekcio-cim {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 22px 0 10px;
-        }
-
-        .mezo-csoport {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        label span.kotelezo {
-            color: #e53935;
-            font-weight: normal;
-            font-size: 13px;
-            margin-left: 4px;
-        }
-
-        input[type="text"],
-        input[type="email"],
-        input[type="password"],
-        input[type="number"],
-        select {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-
-        .row-2 {
-            display: flex;
-            gap: 12px;
-        }
-
-        .row-2 .mezo-csoport {
-            flex: 1;
-        }
-
-        .checkbox-sor {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-
-        .checkbox-sor input {
-            margin: 0;
-        }
-
-        .info-szoveg {
-            font-size: 13px;
-            color: #777;
-            margin-top: 4px;
-        }
-
-        .fo-gomb {
-            background: #f57c00;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 14px 24px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 18px;
-        }
-
-        .fo-gomb:hover {
-            background: #e56f00;
-        }
-
-        .vissza-link {
-            margin-top: 14px;
-            text-align: center;
-            font-size: 14px;
-        }
-
-        .vissza-link a {
-            color: #f57c00;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .vissza-link a:hover {
-            text-decoration: underline;
-        }
-
-        .badge-demo {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 600;
-            background: #ffe0b2;
-            color: #e65100;
-            margin-left: 6px;
-        }
-
-        @media (max-width: 600px) {
-            .wrap {
-                padding: 20px 14px 24px;
-            }
-
-            .row-2 {
-                flex-direction: column;
-            }
+        button {
+            margin-top: 20px; width: 100%; padding: 12px; border: none;
+            border-radius: 8px; background: #ff8c00; color: white;
+            font-size: 16px; cursor: pointer;
         }
     </style>
 </head>
+
 <body>
 
-<div class="wrap">
-    <h1>Szakember regisztráció</h1>
-    <p class="alcim">
-        Hozz létre szakember fiókot, hogy a megrendelők könnyen elérjenek.
-    </p>
+<div class="container">
+    <h2>Szaki regisztráció</h2>
 
-    <!-- 1. Alap adatok -->
-    <div class="szekcio-cim">1. Alap adatok</div>
+    <label>Név</label>
+    <input type="text" id="nev" placeholder="Név…">
 
-    <div class="mezo-csoport">
-        <label for="szaki-nev">
-            Neved <span class="kotelezo">(kötelező)</span>
-        </label>
-        <input type="text" id="szaki-nev" placeholder="Pl.: Vaskó Zsolt Tamás" />
-    </div>
+    <label>Szakma</label>
+    <select id="szakma">
+        <option>Kőműves</option>
+        <option>Festő</option>
+        <option>Burkoló</option>
+        <option>Gipszkartonszerelő</option>
+        <option>Vízszerelő</option>
+        <option>Gázszerelő</option>
+        <option>Villanyszerelő</option>
+    </select>
 
-    <div class="row-2">
-        <div class="mezo-csoport">
-            <label for="szaki-email">
-                E-mail cím <span class="kotelezo">(kötelező, belépéshez is ezt használjuk)</span>
-            </label>
-            <input type="email" id="szaki-email" placeholder="pl.: szaki@example.com" />
-        </div>
-        <div class="mezo-csoport">
-            <label for="szaki-tel">
-                Telefonszám <span class="kotelezo">(kötelező)</span>
-            </label>
-            <input type="text" id="szaki-tel" placeholder="+36 30 ..." />
-        </div>
-    </div>
+    <label>Telefonszám</label>
+    <input type="text" id="telefonszam" placeholder="+36 …">
 
-    <div class="row-2">
-        <div class="mezo-csoport">
-            <label for="szaki-jelszo">
-                Jelszó <span class="kotelezo">(kötelező)</span>
-            </label>
-            <input type="password" id="szaki-jelszo" placeholder="Min. 6 karakter (demó)" />
-        </div>
-        <div class="mezo-csoport">
-            <label for="szaki-jelszo2">
-                Jelszó ismét <span class="kotelezo">(kötelező)</span>
-            </label>
-            <input type="password" id="szaki-jelszo2" placeholder="Írd be újra a jelszót" />
-        </div>
-    </div>
-
-    <div class="mezo-csoport">
-        <label for="szaki-hely">
-            Város / kerület <span class="kotelezo">(kötelező)</span>
-        </label>
-        <input type="text" id="szaki-hely" placeholder="Pl.: Budapest XXI. kerület" />
-    </div>
-
-    <!-- 2. Szakma és vállalkozás típusa -->
-    <div class="szekcio-cim">2. Szakma és vállalkozás típusa</div>
-
-    <div class="mezo-csoport">
-        <label for="szaki-szakma">
-            Fő szakma <span class="kotelezo">(kötelező)</span>
-        </label>
-        <select id="szaki-szakma">
-            <option value="">Válassz szakmát</option>
-            <option>Kőműves</option>
-            <option>Szobafestő-tapétázó</option>
-            <option>Burkoló</option>
-            <option>Hidegburkoló</option>
-            <option>Melegburkoló</option>
-            <option>Villanyszerelő</option>
-            <option>Vízszerelő</option>
-            <option>Gázszerelő</option>
-            <option>Fűtésszerelő</option>
-            <option>Gipszkartonos</option>
-            <option>Klímaszerelő</option>
-        </select>
-        <p class="info-szoveg">
-            A későbbi verzióban több szakmát is hozzáadhatsz egy profilhoz.
-        </p>
-    </div>
-
-    <div class="checkbox-sor">
-        <input type="checkbox" id="ceges-vagyok" />
-        <label for="ceges-vagyok">Kivitelező cégként szeretnék regisztrálni</label>
-        <span class="badge-demo">később fizetős</span>
-    </div>
-    <p class="info-szoveg" id="ceges-info">
-        Céges profil esetén a megjelenés előfizetéses / kredites lesz. Jelenleg csak demó.
-    </p>
-
-    <div id="ceges-blokk" style="display:none;">
-        <div class="mezo-csoport">
-            <label for="ceg-nev">Cégnév</label>
-            <input type="text" id="ceg-nev" placeholder="Pl.: Szaki1 Kivitelező Kft." />
-        </div>
-        <div class="row-2">
-            <div class="mezo-csoport">
-                <label for="ceg-adoszam">Adószám</label>
-                <input type="text" id="ceg-adoszam" placeholder="Pl.: 12345678-2-42" />
-            </div>
-            <div class="mezo-csoport">
-                <label for="ceg-cjsz">Cégjegyzékszám (nem kötelező)</label>
-                <input type="text" id="ceg-cjsz" placeholder="Pl.: 01-09-123456" />
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. Számla és órabér -->
-    <div class="szekcio-cim">3. Számlázás és órabér</div>
-
-    <div class="checkbox-sor">
-        <input type="checkbox" id="szamla-kepes" />
-        <label for="szamla-kepes">Számlaképes vagyok (tudok munkadíjról számlát adni).</label>
-    </div>
-    <p class="info-szoveg">
-        A megrendelők szűrni tudnak majd számlaképes szakikra, és előnyt élveznek az ilyen profilok.
-    </p>
-
-    <div class="checkbox-sor">
-        <input type="checkbox" id="oraber-vallalok" />
-        <label for="oraber-vallalok">Órabéres munkát is vállalok.</label>
-    </div>
-    <div class="mezo-csoport" id="oraber-mezo" style="display:none;">
-        <label for="oraber-osszeg">Óradíj (bruttó Ft/óra)</label>
-        <input type="number" id="oraber-osszeg" min="0" step="500" placeholder="Pl.: 12000" />
-        <p class="info-szoveg">
-            A profilodon így fog megjelenni: „Órabéres munkadíj: X Ft/óra”.
-        </p>
-    </div>
-
-    <!-- 4. Mentés (demó) -->
-    <button class="fo-gomb" id="regisztracio-gomb" onclick="mentesDemo()">
-        Regisztráció mentése (demó)
-    </button>
-
-    <p class="vissza-link">
-        <a href="index.html">← Vissza a főoldalra</a>
-    </p>
+    <button onclick="regisztral()">Regisztráció</button>
 </div>
 
+<!-- *** EZT ADTAM HOZZÁ A VÉGÉRE *** -->
+<script src="szaki-adatok.js"></script>
+
 <script>
-    // Egyszerű demó-mentés localStorage-ba, hogy a későbbi oldalak tudjanak belőle olvasni.
-
-    function initCegesBlokk() {
-        const chk = document.getElementById("ceges-vagyok");
-        const blokk = document.getElementById("ceges-blokk");
-
-        const mentett = localStorage.getItem("szaki_ceges") === "true";
-        chk.checked = mentett;
-        blokk.style.display = mentett ? "block" : "none";
-
-        chk.addEventListener("change", () => {
-            const akt = chk.checked;
-            blokk.style.display = akt ? "block" : "none";
-            localStorage.setItem("szaki_ceges", akt ? "true" : "false");
-        });
-    }
-
-    function initOraberBlokk() {
-        const chk = document.getElementById("oraber-vallalok");
-        const blokk = document.getElementById("oraber-mezo");
-
-        const mentett = localStorage.getItem("szaki_oraberVallal") === "true";
-        chk.checked = mentett;
-        blokk.style.display = mentett ? "block" : "none";
-
-        chk.addEventListener("change", () => {
-            const akt = chk.checked;
-            blokk.style.display = akt ? "block" : "none";
-            localStorage.setItem("szaki_oraberVallal", akt ? "true" : "false");
-        });
-    }
-
-    function initSzamlaKepes() {
-        const chk = document.getElementById("szamla-kepes");
-        const mentett = localStorage.getItem("szaki_szamlaKepes") === "true";
-        chk.checked = mentett;
-
-        chk.addEventListener("change", () => {
-            localStorage.setItem("szaki_szamlaKepes", chk.checked ? "true" : "false");
-        });
-    }
-
-    function betoltMezok() {
-        document.getElementById("szaki-nev").value = localStorage.getItem("szaki_nev") || "";
-        document.getElementById("szaki-email").value = localStorage.getItem("szaki_email") || "";
-        document.getElementById("szaki-tel").value = localStorage.getItem("szaki_tel") || "";
-        document.getElementById("szaki-hely").value = localStorage.getItem("szaki_hely") || "";
-        document.getElementById("szaki-szakma").value = localStorage.getItem("szaki_szakma") || "";
-
-        document.getElementById("ceg-nev").value = localStorage.getItem("szaki_cegNev") || "";
-        document.getElementById("ceg-adoszam").value = localStorage.getItem("szaki_cegAdoszam") || "";
-        document.getElementById("ceg-cjsz").value = localStorage.getItem("szaki_cegCjsz") || "";
-
-        const oraber = localStorage.getItem("szaki_oraberOsszeg");
-        if (oraber) {
-            document.getElementById("oraber-osszeg").value = oraber;
-        }
-    }
-
-    function mentesDemo() {
-        const nev = document.getElementById("szaki-nev").value.trim();
-        const email = document.getElementById("szaki-email").value.trim();
-        const tel = document.getElementById("szaki-tel").value.trim();
-        const j1 = document.getElementById("szaki-jelszo").value;
-        const j2 = document.getElementById("szaki-jelszo2").value;
-        const hely = document.getElementById("szaki-hely").value.trim();
-        const szakma = document.getElementById("szaki-szakma").value;
-
-        if (!nev || !email || !tel || !hely || !szakma || !j1 || !j2) {
-            alert("Kérlek tölts ki minden kötelező mezőt.");
-            return;
-        }
-        if (j1 !== j2) {
-            alert("A két jelszó nem egyezik.");
-            return;
-        }
-
-        // alap adatok
-        localStorage.setItem("szaki_nev", nev);
-        localStorage.setItem("szaki_email", email);
-        localStorage.setItem("szaki_tel", tel);
-        localStorage.setItem("szaki_hely", hely);
-        localStorage.setItem("szaki_szakma", szakma);
-
-        // (DEMO) jelszót is eltároljuk, de élesben ez titkosítva menne szerverre
-        localStorage.setItem("szaki_jelszo_demo", j1);
-
-        // céges adatok
-        const cegek = document.getElementById("ceges-vagyok").checked;
-        localStorage.setItem("szaki_ceges", cegek ? "true" : "false");
-        localStorage.setItem("szaki_cegNev", document.getElementById("ceg-nev").value.trim());
-        localStorage.setItem("szaki_cegAdoszam", document.getElementById("ceg-adoszam").value.trim());
-        localStorage.setItem("szaki_cegCjsz", document.getElementById("ceg-cjsz").value.trim());
-
-        // számlaképes
-        const szamlaKepes = document.getElementById("szamla-kepes").checked;
-        localStorage.setItem("szaki_szamlaKepes", szamlaKepes ? "true" : "false");
-
-        // órabér
-        const oraberVallal = document.getElementById("oraber-vallalok").checked;
-        localStorage.setItem("szaki_oraberVallal", oraberVallal ? "true" : "false");
-        const oraberOsszeg = document.getElementById("oraber-osszeg").value.trim();
-        localStorage.setItem("szaki_oraberOsszeg", oraberOsszeg);
-
-        alert("Regisztráció adatai lokálisan elmentve (demó).\nKésőbb ez kerül a valódi adatbázisba.");
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        initCegesBlokk();
-        initOraberBlokk();
-        initSzamlaKepes();
-        betoltMezok();
-    });
+function regisztral() {
+    alert("A regisztráció jelenleg DEMÓ módban működik. Később kerül mentésre az adatbázisba.");
+}
 </script>
 
 </body>

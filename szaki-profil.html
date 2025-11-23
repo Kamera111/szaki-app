@@ -2,342 +2,276 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8" />
-    <title>Szaki Profil – Vezérlőpult | Szaki-App</title>
+    <title>Kiemelt szakemberek – Szaki-App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: #f2f2f2;
             margin: 0;
-        }
-
-        .topbar {
-            background: #ff9800;
-            color: #fff;
-            padding: 18px 16px 14px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-        }
-
-        .topbar-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin: 0 0 4px;
-        }
-
-        .topbar-sub {
-            margin: 0;
-            font-size: 13px;
-            opacity: 0.9;
-        }
-
-        .tabs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 14px;
-        }
-
-        .tab-btn {
-            border-radius: 999px;
-            border: none;
-            padding: 8px 14px;
-            font-size: 13px;
-            cursor: default;
-            background: rgba(255,255,255,0.8);
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            background: #f5f5f5;
             color: #333;
         }
 
-        .tab-btn.active {
-            background: #ffffff;
-            font-weight: 600;
-        }
-
-        .wrap {
-            max-width: 900px;
-            margin: 18px auto 30px;
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 24px 22px 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-        }
-
-        h2 {
-            margin-top: 0;
-        }
-
-        .alcim {
-            margin: 0 0 18px;
-            color: #555;
-            font-size: 14px;
-        }
-
-        .szekcio-cim {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 24px 0 10px;
-        }
-
-        .mezo-csoport {
-            margin-bottom: 14px;
-        }
-
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 4px;
-            font-size: 14px;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 6px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        .row-2 {
-            display: flex;
-            gap: 12px;
-        }
-
-        .row-2 .mezo-csoport {
-            flex: 1;
-        }
-
-        .checkbox-sor {
+        header {
+            background: #ff8c00;
+            color: #ffffff;
+            padding: 14px 20px;
             display: flex;
             align-items: center;
-            gap: 8px;
+            justify-content: space-between;
+        }
+
+        header .logo {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        header a.back-link {
+            color: #ffffff;
+            text-decoration: none;
             font-size: 14px;
-            margin: 8px 0;
         }
 
-        .checkbox-sor input {
-            margin: 0;
+        main {
+            max-width: 1100px;
+            margin: 20px auto 40px;
+            padding: 0 16px;
         }
 
-        .info-szoveg {
-            font-size: 12px;
-            color: #777;
+        h1 {
+            font-size: 24px;
+            margin: 10px 0 20px;
+            text-align: left;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .szaki-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px 18px 22px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .szaki-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .szaki-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #ff8c00;
+            color: #ffffff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .szaki-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .szaki-name {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 4px;
+        }
+
+        .szaki-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
             margin-top: 4px;
         }
 
-        .fo-gomb {
-            background: #f57c00;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 14px 24px;
-            font-size: 16px;
-            cursor: pointer;
-            margin-top: 18px;
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            line-height: 1.2;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: #f7f7f7;
         }
 
-        .fo-gomb:hover {
-            background: #e56f00;
+        .badge-verified {
+            border-color: #2e7d32;
+            background: #e7f5ea;
+            color: #2e7d32;
         }
 
-        .labjegyzet {
-            margin-top: 10px;
+        .badge-featured {
+            border-color: #ff8c00;
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .szaki-contact {
+            margin: 8px 0 14px;
+            font-size: 14px;
+        }
+
+        .szaki-phone a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .szaki-note {
             font-size: 12px;
             color: #777;
+            margin-bottom: 12px;
+        }
+
+        .szaki-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .btn-chat {
+            border: none;
+            border-radius: 999px;
+            padding: 9px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #ff8c00;
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s ease, transform 0.05s ease;
+        }
+
+        .btn-chat:hover {
+            background: #ff9e26;
+        }
+
+        .btn-chat:active {
+            transform: translateY(1px);
+        }
+
+        footer {
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+            padding: 18px 10px 26px;
         }
 
         @media (max-width: 600px) {
-            .wrap {
-                padding: 18px 14px 24px;
+            header {
+                flex-direction: row;
+                gap: 8px;
             }
-
-            .row-2 {
-                flex-direction: column;
+            h1 {
+                font-size: 20px;
+                text-align: left;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="topbar">
-    <div class="topbar-title">Szaki Profil – Vezérlőpult</div>
-    <p class="topbar-sub">Csak becsületes, precíz és pontos szakiknak</p>
-    <div class="tabs">
-        <button class="tab-btn active">Profil adatok</button>
-        <button class="tab-btn">Dokumentumok</button>
-        <button class="tab-btn">Naptár</button>
-        <button class="tab-btn">Referenciák</button>
-        <button class="tab-btn">Chat (max. 3 munka)</button>
-    </div>
-</div>
+<header>
+    <div class="logo">Szaki-App</div>
+    <a href="index.html" class="back-link">← Vissza a főoldalra</a>
+</header>
 
-<div class="wrap">
-    <h2>Profil adatok</h2>
-    <p class="alcim">
-        Ezek az adatok jelennek meg a megrendelőknek. Később még bővíthetjük.
-    </p>
+<main>
+    <h1>Kiemelt szakemberek</h1>
 
-    <!-- 1. Alap profil adatok -->
-    <div class="szekcio-cim">1. Alap adatok</div>
+    <div class="card-grid">
 
-    <div class="row-2">
-        <div class="mezo-csoport">
-            <label for="prof-nev">Név</label>
-            <input type="text" id="prof-nev" placeholder="Pl.: Chisnyán Sándor CSABI" />
-        </div>
-        <div class="mezo-csoport">
-            <label for="prof-szakma">Szakma</label>
-            <input type="text" id="prof-szakma" placeholder="Pl.: kőműves, burkoló, festő" />
-        </div>
-    </div>
+        <!-- ZSOLT KÁRTYÁJA -->
+        <div class="szaki-card" id="szaki-zsolt">
+            <div class="szaki-header">
+                <div class="szaki-avatar">VZ</div>
+                <div>
+                    <div class="szaki-title">Kiemelt villanyszerelő – Zsolt</div>
+                    <div class="szaki-name">Vaskó Zsolt Tamás</div>
+                    <div class="szaki-badges">
+                        <span class="badge badge-verified">Igazolt villanyszerelő</span>
+                        <span class="badge badge-featured">Kiemelt partner</span>
+                    </div>
+                </div>
+            </div>
 
-    <div class="row-2">
-        <div class="mezo-csoport">
-            <label for="prof-megye">Vármegyék ahol dolgozol</label>
-            <input type="text" id="prof-megye" placeholder="Pl.: Pest" />
-        </div>
-        <div class="mezo-csoport">
-            <label for="prof-varosok">Városok / kerületek</label>
-            <input type="text" id="prof-varosok" placeholder="Pl.: Budapest és környéke" />
-        </div>
-    </div>
+            <div class="szaki-contact">
+                <p class="szaki-phone">
+                    <strong>Telefon:</strong>
+                    <a href="tel:+36306566793">+36 30 656 6793</a>
+                </p>
+            </div>
 
-    <div class="mezo-csoport">
-        <label for="prof-bemutatkozas">Rövid bemutatkozás</label>
-        <textarea id="prof-bemutatkozas"
-                  placeholder="Pl.: Több mint 30 éves tapasztalattal, lakásfelújítással foglalkozom..."></textarea>
-    </div>
-
-    <div class="checkbox-sor">
-        <input type="checkbox" id="prof-kis-munka" />
-        <label for="prof-kis-munka">
-            Rövid, kicsi, pár napos vagy 1 napos munkát is vállalok, ha belefér két nagy közé.
-        </label>
-    </div>
-
-    <!-- 2. Számlázás és órabér -->
-    <div class="szekcio-cim">2. Számlázás és órabér</div>
-
-    <div class="checkbox-sor">
-        <input type="checkbox" id="prof-szamla-kepes" />
-        <label for="prof-szamla-kepes">
-            Számlaképes vagyok (tudok munkadíjról számlát adni).
-        </label>
-    </div>
-    <p class="info-szoveg">
-        A megrendelők a jövőben rá tudnak szűrni a számlaképes szakikra, így előnyt élvezel a listában.
-    </p>
-
-    <div class="checkbox-sor">
-        <input type="checkbox" id="prof-oraber-vallal" />
-        <label for="prof-oraber-vallal">
-            Órabéres munkát is vállalok.
-        </label>
-    </div>
-
-    <div class="row-2" id="prof-oraber-sor" style="display:none;">
-        <div class="mezo-csoport">
-            <label for="prof-oraber">Óradíj (bruttó Ft/óra)</label>
-            <input type="number" id="prof-oraber" min="0" step="500" placeholder="Pl.: 12000" />
-            <p class="info-szoveg">
-                A profilodon így fog megjelenni: „Órabéres munkadíj: X Ft/óra”.
+            <p class="szaki-note">
+                Villanyszerelő munkákkal kapcsolatban közvetlenül Zsoltot is elérheted telefonon vagy a chat felületen.
             </p>
+
+            <div class="szaki-actions">
+                <button type="button" class="btn-chat" onclick="nyitChat('Zsolt')">
+                    Azonnal írok Zsoltnak itt! Chat-en
+                </button>
+            </div>
         </div>
+
+        <!-- CSABI KÁRTYÁJA -->
+        <div class="szaki-card" id="szaki-csabi">
+            <div class="szaki-header">
+                <div class="szaki-avatar">CS</div>
+                <div>
+                    <div class="szaki-title">Kiemelt szakember – Csabi</div>
+                    <div class="szaki-name">Csabi</div>
+                </div>
+            </div>
+
+            <div class="szaki-contact">
+                <p class="szaki-phone">
+                    <strong>Telefon:</strong>
+                    <a href="tel:+36305902316">+36 30 590 2316</a>
+                </p>
+            </div>
+
+            <p class="szaki-note">
+                Ha több szakmát is érint a munka, vagy általános kérdésed van a rendszerrel kapcsolatban, Csabit is közvetlenül eléred.
+            </p>
+
+            <div class="szaki-actions">
+                <button type="button" class="btn-chat" onclick="nyitChat('Csabi')">
+                    Azonnal írok Csabinak itt! Chat-en
+                </button>
+            </div>
+        </div>
+
     </div>
+</main>
 
-    <!-- 3. Mentés -->
-    <button class="fo-gomb" onclick="profilMentesDemo()">Profil mentése (demó)</button>
-
-    <p class="labjegyzet">
-        A valódi mentés később Firebase-be kerül, most csak a felületet és a logikát rakjuk össze
-        (adatok localStorage-ban tárolódnak ezen az eszközön).
-    </p>
-</div>
+<footer>
+    © 2025 Szaki-App – Kiemelt szakemberek profiloldal
+</footer>
 
 <script>
-    // Segédfüggvények mezők betöltéséhez/mentéséhez
-
-    function betoltMezok() {
-        // Ha van külön profil-mentés, azt használjuk, egyébként regisztrációs alap
-        const nev = localStorage.getItem("sp_nev") || localStorage.getItem("szaki_nev") || "";
-        const szakma = localStorage.getItem("sp_szakma") || localStorage.getItem("szaki_szakma") || "";
-        const megye = localStorage.getItem("sp_megye") || "";
-        const varosok = localStorage.getItem("sp_varosok") || localStorage.getItem("szaki_hely") || "";
-        const bemut = localStorage.getItem("sp_bemutkozas") || "";
-        const kisMunka = localStorage.getItem("sp_kisMunka") === "true";
-
-        const szamlaKepes = (localStorage.getItem("sp_szamlaKepes") ?? localStorage.getItem("szaki_szamlaKepes")) === "true";
-        const oraberVallal = (localStorage.getItem("sp_oraberVallal") ?? localStorage.getItem("szaki_oraberVallal")) === "true";
-        const oraberOsszeg = localStorage.getItem("sp_oraberOsszeg") || localStorage.getItem("szaki_oraberOsszeg") || "";
-
-        document.getElementById("prof-nev").value = nev;
-        document.getElementById("prof-szakma").value = szakma;
-        document.getElementById("prof-megye").value = megye;
-        document.getElementById("prof-varosok").value = varosok;
-        document.getElementById("prof-bemutatkozas").value = bemut;
-        document.getElementById("prof-kis-munka").checked = kisMunka;
-
-        document.getElementById("prof-szamla-kepes").checked = szamlaKepes;
-        document.getElementById("prof-oraber-vallal").checked = oraberVallal;
-        document.getElementById("prof-oraber").value = oraberOsszeg;
-
-        frissitOraberSor();
+    // Itt majd a saját chatnyitó logikád hívódhat meg
+    function nyitChat(kihez) {
+        // Példa: átirányítás a chat.html oldalra query paraméterrel
+        window.location.href = "chat.html?szaki=" + encodeURIComponent(kihez);
     }
-
-    function frissitOraberSor() {
-        const oraberVallal = document.getElementById("prof-oraber-vallal").checked;
-        const sor = document.getElementById("prof-oraber-sor");
-        sor.style.display = oraberVallal ? "flex" : "none";
-    }
-
-    function profilMentesDemo() {
-        const nev = document.getElementById("prof-nev").value.trim();
-        const szakma = document.getElementById("prof-szakma").value.trim();
-        const megye = document.getElementById("prof-megye").value.trim();
-        const varosok = document.getElementById("prof-varosok").value.trim();
-        const bemut = document.getElementById("prof-bemutatkozas").value.trim();
-        const kisMunka = document.getElementById("prof-kis-munka").checked;
-
-        const szamlaKepes = document.getElementById("prof-szamla-kepes").checked;
-        const oraberVallal = document.getElementById("prof-oraber-vallal").checked;
-        const oraberOsszeg = document.getElementById("prof-oraber").value.trim();
-
-        // Kötelezőnek nem feltétlenül tesszük, de figyelmeztethetünk
-        if (!nev || !szakma) {
-            alert("Kérlek töltsd ki legalább a nevet és a szakmát.");
-            return;
-        }
-
-        localStorage.setItem("sp_nev", nev);
-        localStorage.setItem("sp_szakma", szakma);
-        localStorage.setItem("sp_megye", megye);
-        localStorage.setItem("sp_varosok", varosok);
-        localStorage.setItem("sp_bemutkozas", bemut);
-        localStorage.setItem("sp_kisMunka", kisMunka ? "true" : "false");
-
-        localStorage.setItem("sp_szamlaKepes", szamlaKepes ? "true" : "false");
-        localStorage.setItem("sp_oraberVallal", oraberVallal ? "true" : "false");
-        localStorage.setItem("sp_oraberOsszeg", oraberOsszeg);
-
-        // Szinkronban tartjuk a regisztrációs kulcsokkal is (hogy a profilból is lássa az app)
-        localStorage.setItem("szaki_szamlaKepes", szamlaKepes ? "true" : "false");
-        localStorage.setItem("szaki_oraberVallal", oraberVallal ? "true" : "false");
-        localStorage.setItem("szaki_oraberOsszeg", oraberOsszeg);
-
-        alert("Profil adatok elmentve (demó – localStorage).");
-    }
-
-    document.addEventListener("DOMContentLoaded", () => {
-        betoltMezok();
-
-        document.getElementById("prof-oraber-vallal")
-            .addEventListener("change", frissitOraberSor);
-    });
 </script>
 
 </body>

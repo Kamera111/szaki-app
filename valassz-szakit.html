@@ -54,45 +54,45 @@
   <div class="info" id="info"></div>
 </div>
 
-<!-- FONTOS: egyszerű script, NEM modul -->
-<script src="szaki-adatok.js"></script>
 <script>
-  // URL-ből kivesszük a kívánt szakmát
-  const params = new URLSearchParams(window.location.search);
-  const keresettSzakma = params.get("szakma") || "";
+  // Most mindent itt tartunk, hogy biztosan működjön
+  const SZAKIK = [
+    {
+      name: "Hegedűs Bence",
+      szakma: "Villanyszerelő",
+      sender: "Hegedűs Bence"
+    },
+    {
+      name: "Oláh Krisz",
+      szakma: "Villanyszerelő",
+      sender: "Oláh Krisz"
+    },
+    {
+      name: "Vaskó Zsolt Tamás",
+      szakma: "Villanyszerelő",
+      sender: "Zsolti"
+    }
+  ];
 
   const listaDiv = document.getElementById("szaki-lista");
   const infoDiv = document.getElementById("info");
 
-  // ha nincs szakma paraméter, kiírjuk
-  if (!keresettSzakma) {
-    infoDiv.textContent = "Hiányzik a ?szakma= paraméter az URL-ből.";
-  }
+  // Ideiglenesen fix megrendelő név:
+  const senderName = encodeURIComponent("TesztKliens1");
 
-  // SZAKIK tömb a szaki-adatok.js-ből (globális)
-  const szakik = (window.SZAKIK || []).filter(s => !keresettSzakma ||
-    s.szakma === keresettSzakma
-  );
+  SZAKIK.forEach(szaki => {
+    const btn = document.createElement("button");
+    btn.className = "szaki-btn";
+    btn.textContent = `${szaki.name} – ${szaki.szakma}`;
+    btn.onclick = () => {
+      const partnerName = encodeURIComponent(szaki.name);
+      window.location.href =
+        `chat.html?sender=${senderName}&partner=${partnerName}`;
+    };
+    listaDiv.appendChild(btn);
+  });
 
-  if (szakik.length === 0) {
-    listaDiv.innerHTML = "<p>Ehhez a szakmához még nincs szakember.</p>";
-  } else {
-    szakik.forEach(szaki => {
-      const btn = document.createElement("button");
-      btn.className = "szaki-btn";
-      btn.textContent = `${szaki.name} – ${szaki.szakma}`;
-      btn.onclick = () => {
-        // partner neve a chatnek
-        const partnerName = encodeURIComponent(szaki.name);
-        const senderName = encodeURIComponent("TesztKliens1");
-        window.location.href =
-          `chat.html?sender=${senderName}&partner=${partnerName}`;
-      };
-      listaDiv.appendChild(btn);
-    });
-
-    infoDiv.textContent = `Szakma: ${keresettSzakma} – talált szakik: ${szakik.length}`;
-  }
+  infoDiv.textContent = `Összes szakember: ${SZAKIK.length} db`;
 </script>
 
 </body>

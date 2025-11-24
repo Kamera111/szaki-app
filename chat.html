@@ -18,6 +18,15 @@
             color: white;
             font-weight: bold;
             font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        header span.room {
+            font-size: 11px;
+            font-weight: normal;
+            opacity: 0.9;
         }
         #chat-box {
             margin: 20px;
@@ -51,7 +60,10 @@
 
 <body>
 
-<header>Chat – Szaki-App</header>
+<header>
+    <div>Chat – Szaki-App</div>
+    <span class="room" id="room-label"></span>
+</header>
 
 <div id="chat-box">
     <p><i>Csatlakoztál a beszélgetéshez…</i></p>
@@ -60,12 +72,12 @@
 <input type="text" id="message-input" placeholder="Írj üzenetet…" />
 <button class="send-btn" onclick="sendMessage()">Küldés</button>
 
-<!-- Firebase SDK-k (compat mód, hogy egyszerűen működjön) -->
+<!-- Firebase SDK-k (compat mód) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
-// UGYANAZ a config, mint a firebase-config.js-ben
+// --- Firebase config (ugyanaz, mint a projektben) ---
 const firebaseConfig = {
   apiKey: "AIzaSyAKhHvi3yObUurBKhT1r_feg4g0A5w766Q",
   authDomain: "szaki-app.firebaseapp.com",
@@ -75,13 +87,37 @@ const firebaseConfig = {
   appId: "1:418149364598:web:2ae4450dc8fadfbac30057"
 };
 
-// Firebase inicializálás
+// Inicializálás
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// CHAT szoba
-const ROOM_ID = "DEFAULT";
-const messagesRef = db.collection("chats").doc(ROOM_ID).collection("messages");
+// ---- Messenger mód: szoba ID 2 résztvevőből ----
+function getRoomIdFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+
+    // URL param nevek: p1, p2
+    // pl.: chat.html?p1=csabi&p2=zsolt
+    let p1 = (params.get("p1") || "CSABI").trim();
+    let p2 = (params.get("p2") || "ZSOLT").trim();
+
+    if (!p1) p1 = "CSABI";
+    if (!p2) p2 = "ZSOLT";
+
+    // nagybetű + ABC szerinti rendezés
+    const pair = [p1.toUpperCase(), p2.toUpperCase()].sort();
+    return pair[0] + "_" + pair[1];
+}
+
+const ROOM_ID = getRoomIdFromUrl();
+
+// labelben is mutatjuk
+document.getElementById("room-label").textContent = "Szoba: " + ROOM_ID;
+
+// Firestore útvonal: chats / ROOM_ID / messages
+const messagesRef = db
+    .collection("chats")
+    .doc(ROOM_ID)
+    .collection("messages");
 
 // DOM elemek
 const chatBox = document.getElementById("chat-box");
@@ -102,6 +138,18 @@ function appendMessage(sender, text) {
     chatBox.appendChild(p);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
+
+// Üzenetek élő figyelése
+messagesRef.orderBy("timestamp").onSnapshot((snapshot) => {
+    chatBox.innerHTML = "<p><i>Csatlakoztál a beszélgetéshez…</i></p>";
+
+    snapshot.forEach((doc) => {
+        const data = doc.data() || {};
+        const sender = data.sender || "Ismeretlen";
+        const text = data.text || "";
+        appendMessage(sender, text);
+    });
+});
 
 // Üzenet küldése Firestore-ba
 async function sendMessage() {
@@ -126,15 +174,8 @@ async function sendMessage() {
     }
 }
 
-// Üzenetek élő figyelése (real-time)
-messagesRef.orderBy("timestamp").onSnapshot((snapshot) => {
-    chatBox.innerHTML = "<p><i>Csatlakoztál a beszélgetéshez…</i></p>";
-
-    snapshot.forEach((doc) => {
-        const data = doc.data();
-        appendMessage(data.sender || "Ismeretlen", data.text || "");
-    });
-});
+// globális, hogy a gomb onclick hívni tudja
+window.sendMessage = sendMessage;
 </script>
 
 </body>

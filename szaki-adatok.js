@@ -139,7 +139,7 @@ window.SzakiAdatok = (function () {
 
     const szakik = [];
 
-    // --- VALÓDI SZAKIK: CSABI több szakmában, ZSOLTI festőként ---
+    // --- VALÓDI SZAKIK: CSABI több szakmában, ZSOLTI villanyszerelőként ---
     const csabiPhone = "+36305902316";
     const zsoltPhone = "+36306566793";
 
@@ -162,14 +162,15 @@ window.SzakiAdatok = (function () {
         });
     });
 
+    // Zsolti: CSAK villanyszerelő
     szakik.push({
         name: "Zsolti",
-        profession: "Festő",
+        profession: "Villanyszerelő",
         phone: zsoltPhone,
         isReal: true,
         isDemo: false,
         holidays: randomHoliday(),
-        note: "Minőségi festés, gyors határidővel."
+        note: "Minőségi villanyszerelés, gyors határidővel."
     });
 
     // --- DEMÓ SZAKIK FELTÖLTÉSE (nem elérhetők) ---
@@ -191,16 +192,13 @@ window.SzakiAdatok = (function () {
     return {
         getAllSzakik: () => szakik,
 
-        // Tel.szám megjelenítése
         getDisplayPhone: (szaki) => {
             if (szaki.isReal) {
                 return szaki.phone; // Csabi, Zsolti: mindig látható
             }
-            // demó szakik: nem publikus
             return "Nem publikus – regisztrálj szakinak!";
         },
 
-        // Naptár szöveg
         getHolidayLabel: (szaki) => {
             return `Mikor tud új munkát vállalni: ${szaki.holidays.from} – ${szaki.holidays.to}`;
         }

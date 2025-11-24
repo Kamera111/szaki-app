@@ -1,4 +1,4 @@
-// --- Szaki lista (adatbázis helyett egyelőre fix tömb) ---
+// --- Szaki lista ---
 export const SZAKIK = [
     {
         name: "Hegedűs Bence",

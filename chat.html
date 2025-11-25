@@ -47,7 +47,6 @@
 </div>
 
 <script type="module">
-  // Modular Firebase v10 importok (CDN)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
   import {
     getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp
@@ -58,26 +57,63 @@
   }
 
   // URL paramok
-  const sender = decodeURIComponent(getParam('sender') || '').trim() || 'Megrendelő';
-  const partner = decodeURIComponent(getParam('partner') || '').trim() || 'Szakember';
+  const senderParam = decodeURIComponent(getParam('sender') || '').trim() || '';
+  const partnerParam = decodeURIComponent(getParam('partner') || '').trim() || '';
   const megrendelonevParam = decodeURIComponent(getParam('megrendelonev') || '').trim() || '';
 
-  // Fejléc logika:
-  // - Ha megrendelonev param megvan (valassz-szakit.html adta át), akkor egyértelműen ezt mutatjuk Megrendelőnek,
-  //   és partner lesz a Szakember.
-  // - Mindig mutatjuk, hogy "Te most: <sender>" (az aktuális böngésző felhasználója).
-  if (megrendelonevParam) {
-    document.getElementById('megrendelonevText').textContent = megrendelonevParam;
-    document.getElementById('partnerText').textContent = partner;
-  } else {
-    // nincs explicit megrendelonev: visszabiztonsági viselkedés (korábbi működés)
-    // ez esetben a sender paramot írjuk ki Megrendelőként és partner lesz a Szakember
-    document.getElementById('megrendelonevText').textContent = sender;
-    document.getElementById('partnerText').textContent = partner;
+  // Egyszerű normalizálás: ékezetek eltávolítása és kisbetű
+  function removeDiacritics(s) {
+    return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+  function normalizeKey(s) {
+    return removeDiacritics(String(s || '').trim().toLowerCase());
   }
 
-  // Egyértelmű jelzés a felhasználónak, hogy ő melyik név
-  document.getElementById('youAre').textContent = 'Te most: ' + sender;
+  // Alias tábla: gyakori variánsok kanonizálása (bővíthető)
+  const aliasMap = {
+    'zsolt': 'zsolti',
+    'zsolti': 'zsolti',
+    'janos': 'janos',
+    'jános': 'janos'
+    // ide adhatsz további aliasokat, pl. 'csabi':'csabi'
+  };
+
+  function canonicalNameDisplay(orig) {
+    // visszaadja a megjelenítendő (eredeti) forma: megtartjuk a bemenet nagybetűs formázását, ha van
+    const s = String(orig || '').trim();
+    if (!s) return s;
+    // ha kisbetűs kanonikus név ismert, térj vissza a normált megjelenítéssel (pl. 'zsolti' -> 'Zsolti')
+    const key = normalizeKey(s);
+    const canon = aliasMap[key] || key;
+    // visszaalakítjuk: első betű nagy
+    return canon ? (canon.charAt(0).toUpperCase() + canon.slice(1)) : s;
+  }
+
+  function canonicalKey(orig) {
+    const key = normalizeKey(orig || '');
+    return aliasMap[key] || key || '';
+  }
+
+  // Döntés: melyik név a Megrendelő és melyik a Szakember a fejlécben
+  // Ha megrendelonevParam megvan, azt használjuk Megrendelőnek, partnerParam lesz a Szakember.
+  // Külön figyelem: ha partnerParam üres vagy megrendelonevParam==partnerParam, visszazuhanunk sender/partner logikára.
+  let displayMegrendelonev, displayPartner;
+  if (megrendelonevParam) {
+    displayMegrendelonev = canonicalNameDisplay(megrendelonevParam);
+    displayPartner = canonicalNameDisplay(partnerParam || senderParam || '');
+  } else {
+    displayMegrendelonev = canonicalNameDisplay(senderParam || '');
+    displayPartner = canonicalNameDisplay(partnerParam || '');
+  }
+
+  // "Te most" (az aktív felhasználó) a senderParam
+  const youAreDisplay = canonicalNameDisplay(senderParam || '');
+
+  // Ha partner és megrendelő azonosak (pl. elgépelés), próbáljuk javítani: ha partnerKey equals senderKey, akkor partner=partnerParam, megrendelonev=megrendelonevParam
+  // De jobb megoldás: a chat azonosító a kanonikus kulcsokból készül
+  document.getElementById('megrendelonevText').textContent = displayMegrendelonev || '-';
+  document.getElementById('partnerText').textContent = displayPartner || '-';
+  document.getElementById('youAre').textContent = 'Te most: ' + (youAreDisplay || senderParam || 'Ismeretlen');
 
   (function setupBackLink(){
     const params = new URLSearchParams(window.location.search);
@@ -92,8 +128,7 @@
     document.getElementById('backLink').href = backUrl;
   })();
 
-  // ----- IDE ILLESZD BE A SAJÁT FIREBASE KONFIGODAT -----
-  // Ezt a Firebase Console -> Project settings -> Your apps -> SDK snippet -> Config részből kapod.
+  // ====== IDE ILLESZD BE A SAJÁT FIREBASE KONFIGODAT -----
   const firebaseConfig = {
     apiKey: "AIzaSyAKhHvi3yObUurBKhT1r_feg4g0A5w766Q",
     authDomain: "szaki-app.firebaseapp.com",
@@ -104,22 +139,25 @@
   };
   // ----------------------------------------------------
 
-  // Inicializálás
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Egyedi chat ID (rendezve)
-  function chatId(a,b){
-    const names = [String(a).trim().toLowerCase(), String(b).trim().toLowerCase()].sort();
-    return names.join('_');
+  // Chat azonosító: mindig a kanonikus kulcsokból, rendezve készül (így mindkét irány ugyanoda ír)
+  // Külön figyelünk arra, hogy ha megrendelonevParam megvan, azt használjuk az egyik résztvevőnek.
+  const keyA = canonicalKey(megrendelonevParam || senderParam || '');
+  const keyB = canonicalKey(partnerParam || '');
+  const cidCandidates = [keyA, keyB].filter(Boolean);
+  // ha véletlenül a partner üres, fallback sender/partner logika
+  if (cidCandidates.length < 2) {
+    cidCandidates.length = 0;
+    cidCandidates.push(canonicalKey(senderParam || ''));
+    if (partnerParam) cidCandidates.push(canonicalKey(partnerParam));
   }
-
-  const cid = chatId(sender, partner);
-  // 'uzenetek' gyűjteményt használunk (illeszkedik a tűzfal/szabályokhoz)
+  const cid = cidCandidates.sort().join('_') || (canonicalKey(senderParam) + '_' + canonicalKey(partnerParam));
   const messagesCol = collection(db, 'chats', cid, 'uzenetek');
   const q = query(messagesCol, orderBy('when', 'asc'));
 
-  // Valós idejű figyelés: ha érkezik új dokumentum, kirendereljük
+  // Valós idejű figyelés
   onSnapshot(q, snapshot => {
     const wnd = document.getElementById('chatWindow');
     wnd.innerHTML = '';
@@ -134,12 +172,15 @@
   function appendMessageToWindow(m){
     const wnd = document.getElementById('chatWindow');
     const d = document.createElement('div');
-    // ha a message.from megegyezik a sender paraméterrel, akkor ez 'me'
-    d.className = 'msg ' + (m.from === sender ? 'me' : 'other');
+    // "me" döntés: m.from kanonikus kulcsa egyezik-e a senderParam kanonikus kulcsával
+    const fromKey = canonicalKey(m.from || '');
+    const senderKey = canonicalKey(senderParam || '');
+    d.className = 'msg ' + (fromKey && senderKey && fromKey === senderKey ? 'me' : 'other');
 
     const who = document.createElement('div');
     who.className = 'who';
-    who.textContent = m.from;
+    // megjelenítéshez kanonikus megjelenítőt használunk
+    who.textContent = canonicalNameDisplay(m.from || '');
 
     const text = document.createElement('div');
     text.style.marginTop = '4px';
@@ -162,7 +203,7 @@
     if (!text || !text.trim()) return;
     try {
       await addDoc(messagesCol, {
-        from: sender,
+        from: senderParam || '',
         text: text.trim(),
         when: serverTimestamp()
       });

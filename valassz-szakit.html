@@ -38,11 +38,6 @@
             line-height: 1.4;
         }
 
-        .info-box b {
-            display: inline-block;
-            margin-right: 4px;
-        }
-
         .share-main-btn {
             display: block;
             width: 100%;
@@ -111,10 +106,6 @@
             margin-top: 6px;
         }
 
-        .szaki-phone b {
-            font-weight: bold;
-        }
-
         .szaki-holiday {
             font-size: 12px;
             color: #555;
@@ -167,13 +158,6 @@
             color: #fff;
         }
 
-        .btn-chat:active,
-        .btn-share:active,
-        .share-main-btn:active {
-            transform: translateY(1px);
-            filter: brightness(0.95);
-        }
-
         .no-result {
             margin-top: 24px;
             font-size: 18px;
@@ -188,9 +172,7 @@
 
 <div class="container">
 
-    <div class="info-box" id="info-text" aria-live="polite">
-        <!-- ide írjuk ki a megrendelő nevét + keresett szakmát -->
-    </div>
+    <div class="info-box" id="info-text" aria-live="polite"></div>
 
     <div id="szaki-lista"></div>
 </div>
@@ -198,19 +180,13 @@
 <script src="szaki-adatok.js"></script>
 
 <script>
-    // ékezet-normalizálás (villanyszerelő ↔ villanyszerelo, stb.)
     function normalizeProfession(str) {
         if (!str) return "";
         const lower = String(str).trim().toLowerCase();
-        const map = {
-            "á": "a", "é": "e", "í": "i",
-            "ó": "o", "ö": "o", "ő": "o",
-            "ú": "u", "ü": "u", "ű": "u"
-        };
+        const map = { "á":"a","é":"e","í":"i","ó":"o","ö":"o","ő":"o","ú":"u","ü":"u","ű":"u" };
         return lower.replace(/[áéíóöőúüű]/g, c => map[c] || c);
     }
 
-    // főoldali megosztás (a megrendelő dobozban lévő gomb)
     function sharePage() {
         const url = window.location.href;
         const shareData = {
@@ -220,22 +196,17 @@
         };
         if (navigator.share) {
             navigator.share(shareData).catch(() => {});
-        } else if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(url).then(function() {
-                alert("A link vágólapra másolva. Küldd el ismerőseidnek!");
-            }).catch(function() {
-                alert("Nem sikerült a vágólapra másolás — másold ki kézzel a címsorból.");
+        } else if (navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(() => {
+                alert("A link vágólapra másolva!");
             });
         } else {
-            alert("Másold ki a linket a címsorból és küldd el az ismerőseidnek: " + url);
+            alert("Másold ki a linket: " + url);
         }
     }
 
-    // Chat indítása – sender = megrendelő neve, partner = szaki neve
     function openChatWith(szakiName, megrendelonev) {
-        const senderName = megrendelonev && megrendelonev.trim()
-            ? megrendelonev.trim()
-            : "Megrendelő";
+        const senderName = megrendelonev?.trim() || "Megrendelő";
         const link = "chat.html?sender=" +
             encodeURIComponent(senderName) +
             "&partner=" +
@@ -244,231 +215,163 @@
     }
 
     (function renderSzakik() {
-        if (!window.SzakiAdatok || typeof window.SzakiAdatok.getAllSzakik !== "function") {
+        if (!window.SzakiAdatok) {
             document.getElementById("szaki-lista").innerHTML =
-                "<p>Hiba: nem találhatók a szaki adatok.</p>";
+                "<p>Hiba: szaki-adatok.js hiányzik!</p>";
             return;
         }
 
         const params = new URLSearchParams(window.location.search);
         const filterRaw = (params.get("szakma") || "").trim();
-        const megrendelonev = (params.get("megrendelonev") || "").trim();
+        const megrendelonev = (params.get("name") || "").trim();
         const filterNorm = filterRaw ? normalizeProfession(filterRaw) : null;
 
-        // infó doboz — biztonságos DOM építés (NEM innerHTML a felhasználói értékekkel)
         const info = document.getElementById("info-text");
-        info.innerHTML = ""; // törlés
+        info.innerHTML = "";
+
         if (filterRaw) {
-            const line1 = document.createElement("div");
-            const label1 = document.createElement("b");
-            label1.textContent = "Megrendelő neve:";
-            line1.appendChild(label1);
-            line1.appendChild(document.createTextNode(" " + (megrendelonev || "Nincs megadva")));
-
-            const line2 = document.createElement("div");
-            const label2 = document.createElement("b");
-            label2.textContent = "Keresett szakma:";
-            line2.appendChild(label2);
-            line2.appendChild(document.createTextNode(" " + filterRaw));
-
-            const help = document.createElement("div");
-            help.textContent = "Válassz a lent látható szakemberek közül, és indíts chatet velük!";
-
-            const shareBtn = document.createElement("button");
-            shareBtn.className = "share-main-btn";
-            shareBtn.onclick = sharePage;
-            shareBtn.type = "button";
-            shareBtn.setAttribute("aria-label", "Oldal megosztása");
-            shareBtn.textContent = "MEGOSZTÁS";
-
-            info.appendChild(line1);
-            info.appendChild(line2);
-            info.appendChild(help);
-            info.appendChild(shareBtn);
-        } else {
-            const title = document.createElement("div");
-            const bold = document.createElement("b");
-            bold.textContent = "Válassz szakembert!";
-            title.appendChild(bold);
-
-            const hint = document.createElement("div");
-            hint.textContent = "Az URL-ben add meg a szakmát: ?szakma=Festő stb.";
-
-            const shareBtn = document.createElement("button");
-            shareBtn.className = "share-main-btn";
-            shareBtn.onclick = sharePage;
-            shareBtn.type = "button";
-            shareBtn.setAttribute("aria-label", "Oldal megosztása");
-            shareBtn.textContent = "MEGOSZTÁS";
-
-            info.appendChild(title);
-            info.appendChild(hint);
-            info.appendChild(shareBtn);
+            info.innerHTML =
+                `<b>Megrendelő neve:</b> ${megrendelonev || "Nincs megadva"}<br>
+                 <b>Keresett szakma:</b> ${filterRaw}<br>
+                 Válassz egy szakembert, és indíts chatet!<br>
+                 <button class="share-main-btn" onclick="sharePage()">MEGOSZTÁS</button>`;
         }
 
         const all = window.SzakiAdatok.getAllSzakik();
         const getPhone = window.SzakiAdatok.getDisplayPhone;
         const getHoliday = window.SzakiAdatok.getHolidayLabel;
 
-        // **ELŐSZŰRÉS**: csak a választott szakma marad (biztonságos normalizálás)
+        // **ÚJ**: SZŰRÉS TÖMBBEN LÉVŐ SZAKMÁKRA
         const filtered = all.filter(s => {
             if (!filterNorm) return true;
-            return normalizeProfession(s.profession || "") === filterNorm;
+            if (Array.isArray(s.profession)) {
+                return s.profession.some(p => normalizeProfession(p) === filterNorm);
+            } else {
+                return normalizeProfession(s.profession) === filterNorm;
+            }
         });
 
         const container = document.getElementById("szaki-lista");
         container.innerHTML = "";
 
         if (filtered.length === 0) {
-            container.innerHTML =
-                '<div class="no-result">Ehhez a szakmához még nincs szakember a listában.</div>';
+            container.innerHTML = '<div class="no-result">Ehhez a szakmához még nincs elérhető szaki.</div>';
             return;
         }
 
-        // csoportosítás a SZŰRT listából
-        const byProf = {};
+        // Csoportosítás – minden szaki TÖBB szakmához is megjelenik
+        const groups = {};
+
         filtered.forEach(s => {
-            const key = s.profession || "Ismeretlen";
-            if (!byProf[key]) byProf[key] = [];
-            byProf[key].push(s);
+            const profs = Array.isArray(s.profession) ? s.profession : [s.profession];
+            profs.forEach(p => {
+                const key = p || "Ismeretlen";
+                if (!groups[key]) groups[key] = [];
+                groups[key].push(s);
+            });
         });
 
-        // magyar helyes rendezés
-        Object.keys(byProf).sort((a,b) => a.localeCompare(b, 'hu')).forEach(prof => {
-            const section = document.createElement("div");
+        Object.keys(groups)
+            .sort((a, b) => a.localeCompare(b, "hu"))
+            .forEach(prof => {
+
             const title = document.createElement("div");
             title.className = "profession-title";
             title.textContent = prof + " szakemberek";
-            section.appendChild(title);
+            container.appendChild(title);
 
-            byProf[prof].forEach(szaki => {
+            groups[prof].forEach(szaki => {
+
                 const card = document.createElement("div");
                 card.className = "szaki-card";
 
-                const headerLine = document.createElement("div");
-                headerLine.className = "szaki-header-line";
+                const header = document.createElement("div");
+                header.className = "szaki-header-line";
 
                 const nameEl = document.createElement("div");
                 nameEl.className = "szaki-name";
-                nameEl.textContent = szaki.name || "Név nincs megadva";
+                nameEl.textContent = szaki.name;
 
                 const badge = document.createElement("div");
                 badge.className = "szaki-badge";
+
                 if (szaki.isReal) {
-                    if (szaki.name === "Csabi") {
-                        badge.textContent = "KIEMELT SZAKEMBER – Platina rang – Mester levél";
-                    } else if (szaki.name === "Zsolti") {
-                        badge.textContent = "KIEMELT IGAZOLT SZAKEMBER – Platina rang – Mester levél";
-                    } else {
-                        badge.textContent = "Igazolt szakember";
-                    }
+                    if (szaki.name === "Csabi") badge.textContent = "Platina – Mester levél";
+                    else if (szaki.name === "Zsolti") badge.textContent = "Platina – Igazolt szaki";
+                    else badge.textContent = "Igazolt szakember";
                 } else {
                     badge.textContent = "Naptára betáblázva";
                 }
 
-                headerLine.appendChild(nameEl);
-                headerLine.appendChild(badge);
-                card.appendChild(headerLine);
+                header.appendChild(nameEl);
+                header.appendChild(badge);
+                card.appendChild(header);
 
                 const profEl = document.createElement("div");
                 profEl.className = "szaki-profession";
-                profEl.textContent = szaki.profession || "";
+                profEl.textContent = Array.isArray(szaki.profession)
+                    ? szaki.profession.join(", ")
+                    : szaki.profession;
                 card.appendChild(profEl);
 
                 if (szaki.note) {
                     const noteEl = document.createElement("div");
                     noteEl.className = "szaki-note";
-                    if (szaki.name === "Csabi") {
-                        noteEl.textContent = "Teljes lakásfelújítást is vállalok!";
-                    } else {
-                        noteEl.textContent = szaki.note;
-                    }
+                    noteEl.textContent = szaki.note;
                     card.appendChild(noteEl);
                 }
 
                 const phoneEl = document.createElement("div");
                 phoneEl.className = "szaki-phone";
-                const phoneLabel = document.createElement("b");
-                phoneLabel.textContent = "Telefonszám:";
-                phoneEl.appendChild(phoneLabel);
-                // getPhone feltételezett biztonságos string; ne használjunk innerHTML
-                try {
-                    const phoneText = getPhone(szaki) || "";
-                    phoneEl.appendChild(document.createTextNode(" " + phoneText));
-                } catch (e) {
-                    phoneEl.appendChild(document.createTextNode(" ismeretlen"));
-                }
+                phoneEl.innerHTML = "<b>Telefonszám:</b> " + getPhone(szaki);
                 card.appendChild(phoneEl);
 
-                const holidayEl = document.createElement("div");
-                holidayEl.className = "szaki-holiday";
-                try {
-                    holidayEl.textContent = getHoliday(szaki);
-                } catch (e) {
-                    holidayEl.textContent = "";
+                const hol = getHoliday(szaki);
+                if (hol) {
+                    const holidayEl = document.createElement("div");
+                    holidayEl.className = "szaki-holiday";
+                    holidayEl.textContent = hol;
+                    card.appendChild(holidayEl);
                 }
-                card.appendChild(holidayEl);
 
-                const statusEl = document.createElement("div");
-                statusEl.className = "szaki-status " + (szaki.isReal ? "real" : "demo");
-                if (szaki.isReal) {
-                    statusEl.textContent = "Elérhető – vedd fel vele a kapcsolatot telefonon vagy chat-en!";
-                } else {
-                    statusEl.textContent = "Jelenleg nem fogad új munkát. Nézd meg a fenti időszakot, vagy válassz másik szakembert.";
-                }
-                card.appendChild(statusEl);
+                const status = document.createElement("div");
+                status.className = "szaki-status " + (szaki.isReal ? "real" : "demo");
+                status.textContent =
+                    szaki.isReal
+                        ? "Elérhető – chat vagy telefon!"
+                        : "Jelenleg nem fogad új munkát.";
+                card.appendChild(status);
 
                 const actions = document.createElement("div");
                 actions.className = "szaki-actions";
 
                 const chatBtn = document.createElement("button");
                 chatBtn.className = "btn-chat";
-                chatBtn.type = "button";
                 chatBtn.textContent = "Chat indítása";
-                chatBtn.setAttribute("aria-label", "Chat indítása " + (szaki.name || ""));
 
                 if (szaki.isReal) {
-                    chatBtn.onclick = function () {
-                        openChatWith(szaki.name, megrendelonev);
-                    };
+                    chatBtn.onclick = () => openChatWith(szaki.name, megrendelonev);
                 } else {
-                    // valóban letiltjuk, de megjelenítünk magyarázó tooltipet / címkét
                     chatBtn.disabled = true;
                     chatBtn.classList.add("demo-disabled");
-                    const from = (szaki.holidays && szaki.holidays.from) ? szaki.holidays.from : null;
-                    const to = (szaki.holidays && szaki.holidays.to) ? szaki.holidays.to : null;
-                    const titleText = from && to
-                        ? `Nem elérhető: ${from} – ${to}`
-                        : 'Jelenleg nem fogad új munkát';
-                    chatBtn.title = titleText;
+                    chatBtn.title = "Nem elérhető jelenleg";
                 }
 
                 const shareBtn = document.createElement("button");
                 shareBtn.className = "btn-share";
-                shareBtn.type = "button";
                 shareBtn.textContent = "Megosztás";
-                shareBtn.setAttribute("aria-label", "Szakember megosztása " + (szaki.name || ""));
-                shareBtn.onclick = function () {
-                    const currentUrl = window.location.href;
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
-                        navigator.clipboard.writeText(currentUrl).then(function() {
-                            alert("A szakember oldalának linkje vágólapra másolva. Küldd el ismerőseidnek!");
-                        }).catch(function() {
-                            alert("A link másolása nem sikerült — másold ki kézzel a címsorból: " + currentUrl);
-                        });
-                    } else {
-                        alert("Másold ki a linket a címsorból: " + currentUrl);
-                    }
+                shareBtn.onclick = () => {
+                    const url = window.location.href;
+                    navigator.clipboard.writeText(url);
+                    alert("Link másolva!");
                 };
 
                 actions.appendChild(chatBtn);
                 actions.appendChild(shareBtn);
-
                 card.appendChild(actions);
-                section.appendChild(card);
-            });
 
-            container.appendChild(section);
+                container.appendChild(card);
+            });
         });
     })();
 </script>

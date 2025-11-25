@@ -13,9 +13,7 @@
       color:#fff;
       font-weight:bold;
       font-size:18px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
+      text-align:center;
     }
 
     .top-bar {
@@ -37,7 +35,6 @@
       color:#007bff;
       text-decoration:none;
     }
-    .back-link span { margin-right:4px; }
 
     #chat-box {
       max-width:900px;
@@ -88,246 +85,173 @@
       font-size:14px;
       font-weight:bold;
       cursor:pointer;
-      white-space:nowrap;
     }
-
-    .send-btn:active {
-      transform:translateY(1px);
-      filter:brightness(0.95);
-    }
-
-    .notify {
-      display:none;
-      font-size:11px;
-      color:#28a745;
-    }
-    .notify-dot {
-      width:8px; height:8px; border-radius:50%;
-      background:#28a745; display:inline-block; margin-left:4px;
-      animation:blink 1s infinite;
-    }
-    @keyframes blink { 50% { opacity:0.1; } }
   </style>
 </head>
 <body>
-  <header>Chat – Szaki-App</header>
+<header>Chat – Szaki-App</header>
 
-  <div class="top-bar" id="top-bar"></div>
+<div class="top-bar" id="top-bar"></div>
 
-  <div id="chat-box">
-    <p><i>Csatlakoztál a beszélgetéshez…</i></p>
+<div id="chat-box">
+  <p><i>Csatlakoztál a beszélgetéshez…</i></p>
+</div>
+
+<div class="status-bar">
+  <span id="room-status"></span>
+  <span id="notify-indicator" style="display:none;color:#28a745;">Új üzenet ●</span>
+</div>
+
+<div class="input-row">
+  <input type="text" id="message-input" placeholder="Írj üzenetet…" />
+  <button class="send-btn" id="send-btn">Küldés</button>
+</div>
+
+<!-- MEGRENDELŐI GOMBOK – CSAK MEGRENDELŐNEK -->
+<div id="lezaro-gombok" style="display:none; max-width:900px; margin:20px auto; padding:0 14px;">
+    <button id="valasztom-btn"
+        style="width:100%; padding:14px; background:#28a745; color:#fff; border:none;
+               border-radius:8px; font-size:16px; font-weight:bold; margin-bottom:10px;">
+        👉 Ezt a szakembert választom!
+    </button>
+
+    <button id="jobb-ajanlat-btn"
+        style="width:100%; padding:14px; background:#c62828; color:#fff; border:none;
+               border-radius:8px; font-size:16px; font-weight:bold;">
+        ❌ Köszönöm, jobb ajánlatot kaptam
+    </button>
+</div>
+
+<script type="module">
+import { app, db } from "./firebase-config.js";
+import {
+  collection, doc, addDoc, query, orderBy, onSnapshot,
+  serverTimestamp, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const params = new URLSearchParams(window.location.search);
+
+// Ki vagy?
+let USER_NAME = params.get("sender") || localStorage.getItem("szakiName") || "Ismeretlen";
+localStorage.setItem("szakiName", USER_NAME);
+
+// Partner
+const PARTNER_NAME = params.get("partner") || "Ismeretlen szakember";
+const MEGRENDELO_NEV = params.get("megrendelonev") || "";
+const SZAKMA = params.get("szakma") || "";
+
+// Szoba azonosító
+function canonicalRoom(a,b){
+    return [a.trim().toLowerCase(), b.trim().toLowerCase()].sort().join("__");
+}
+const ROOM_ID = canonicalRoom(USER_NAME, PARTNER_NAME);
+
+// Fejléc
+document.getElementById("top-bar").innerHTML = `
+  <div class="top-row">
+    <div><b>Megrendelő:</b> ${MEGRENDELO_NEV || "-"}</div>
+    <div><b>Szakember:</b> ${PARTNER_NAME}</div>
+    <div><b>Te most:</b> ${USER_NAME}</div>
   </div>
+  <a class="back-link" href="valassz-szakit.html?szakma=${SZAKMA}&megrendelonev=${MEGRENDELO_NEV}">◀ Vissza</a>
+`;
 
-  <div class="status-bar">
-    <span id="room-status"></span>
-    <span id="notify-indicator" class="notify">
-      Új üzenet <span class="notify-dot"></span>
-    </span>
-  </div>
+document.getElementById("room-status").textContent = `Szoba: ${ROOM_ID}`;
 
-  <div class="input-row">
-    <input type="text" id="message-input" placeholder="Írj üzenetet…" />
-    <button class="send-btn" id="send-btn">Küldés</button>
-  </div>
+const chatRef = doc(db, "chats", ROOM_ID);
+const messagesRef = collection(db, "chats", ROOM_ID, "uzenetek");
 
-  <script type="module">
-    import { app, db } from "./firebase-config.js";
-    import {
-      collection, doc, addDoc, query, orderBy, onSnapshot,
-      serverTimestamp, updateDoc
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// Üzenetfigyelés
+const chatBox = document.getElementById("chat-box");
+onSnapshot(query(messagesRef, orderBy("timestamp")), (snapshot) => {
+  chatBox.innerHTML = "";
+  snapshot.forEach((d) => {
+    const m = d.data();
+    if (m.deletedBy?.includes(USER_NAME)) return;
 
-    const params = new URLSearchParams(window.location.search);
+    const p = document.createElement("p");
+    p.className = "msg";
+    const own = m.senderName === USER_NAME ? "own" : "";
+    const t = m.timestamp?.toDate?.() || new Date();
+    const time = `${t.getHours().toString().padStart(2,"0")}:${t.getMinutes().toString().padStart(2,"0")}`;
 
-    // Megrendelő neve (ELŐSZÖR ezt nézzük)
-    const MEGRENDELO_NEV =
-      params.get("megrendelonev") ||
-      params.get("sender") ||
-      params.get("name") ||
-      "";
+    p.innerHTML = `<span class="${own}">${m.senderName}:</span> ${m.text} <span class="meta">(${time})</span>`;
+    chatBox.appendChild(p);
+  });
+  chatBox.scrollTop = chatBox.scrollHeight;
+});
 
-    // Partner (szaki neve)
-    const PARTNER_NAME =
-      params.get("partner") ||
-      params.get("szaki") ||
-      "Ismeretlen szakember";
+// Üzenet küldése
+document.getElementById("send-btn").onclick = sendMessage;
+document.getElementById("message-input").onkeydown = (e) => {
+  if (e.key === "Enter") sendMessage();
+};
 
-    // Ki vagy te? (sender)
-    let USER_NAME =
-      params.get("sender") ||
-      localStorage.getItem("szakiName") ||
-      MEGRENDELO_NEV ||
-      "Ismeretlen";
+async function sendMessage(){
+  const text = document.getElementById("message-input").value.trim();
+  if (!text) return;
 
-    localStorage.setItem("szakiName", USER_NAME);
+  await addDoc(messagesRef, {
+    senderName: USER_NAME,
+    text,
+    timestamp: serverTimestamp(),
+    deletedBy: []
+  });
 
-    const SZAKMA = params.get("szakma") || "";
+  document.getElementById("message-input").value = "";
+}
 
-    // Szobakulcs – canonical
-    function canonicalRoom(a, b) {
-      const x = (a || "").trim().toLowerCase();
-      const y = (b || "").trim().toLowerCase();
-      return [x, y].sort().join("__");
-    }
+// --- MEGRENDELŐI GOMBOK LOGIKA ---
 
-    const ROOM_ID = canonicalRoom(MEGRENDELO_NEV || USER_NAME, PARTNER_NAME);
+const userNow = USER_NAME.trim().toLowerCase();
+const megNow = MEGRENDELO_NEV.trim().toLowerCase();
+const lezaro = document.getElementById("lezaro-gombok");
 
-    // Fejléc felépítés
-    const topBar = document.getElementById("top-bar");
-    topBar.innerHTML = `
-      <div class="top-row">
-        <div><b>Megrendelő:</b> ${escapeHtml(MEGRENDELO_NEV || "Nincs megadva")}</div>
-        <div><b>Szakember:</b> ${escapeHtml(PARTNER_NAME)}</div>
-        <div><b>Te most:</b> ${escapeHtml(USER_NAME)}</div>
-      </div>
-      <a class="back-link" href="valassz-szakit.html?szakma=${encodeURIComponent(SZAKMA)}&megrendelonev=${encodeURIComponent(MEGRENDELO_NEV)}">
-        <span>◀</span>Vissza a kereséshez
-      </a>
-    `;
+// Csak megrendelő lássa
+if (userNow && megNow && userNow === megNow) {
+    lezaro.style.display = "block";
+}
 
-    document.getElementById("room-status").textContent =
-      `Szoba: ${ROOM_ID}`;
-
-    // Referenciák
-    const chatRef = doc(db, "chats", ROOM_ID);
-    const messagesRef = collection(db, "chats", ROOM_ID, "uzenetek");
-
-    // Inicializálás async-ben
-    async function initChat() {
-      try {
-        await updateDoc(chatRef, {
-          members: {
-            roomId: ROOM_ID,
-            megrendelo: MEGRENDELO_NEV || null,
-            szakember: PARTNER_NAME || null
-          },
-          status: "active",
-          lastMessageAt: serverTimestamp()
-        });
-      } catch (_) {
-        // ha nincs dokumentum, majd az első üzenet létrehozza
-      }
-    }
-    initChat();
-
-    // Üzenetlista figyelése
-    const chatBox = document.getElementById("chat-box");
-    let lastSeen = Date.now();
-
-    const q = query(messagesRef, orderBy("timestamp"));
-    onSnapshot(q, (snapshot) => {
-      chatBox.innerHTML = "";
-
-      snapshot.forEach((docSnap) => {
-        const msg = docSnap.data();
-
-        if (Array.isArray(msg.deletedBy) && msg.deletedBy.includes(USER_NAME)) {
-          return;
-        }
-
-        const p = document.createElement("p");
-        p.className = "msg";
-
-        const own = msg.senderName === USER_NAME ? "own" : "";
-        const time = formatTs(msg.timestamp);
-
-        p.innerHTML =
-          `<span class="${own}">${escapeHtml(msg.senderName)}:</span> ` +
-          `${escapeHtml(msg.text || "")}` +
-          ` <span class="meta">(${time})</span>`;
-
-        // Törlés gomb csak saját üzenetre
-        if (msg.senderName === USER_NAME) {
-          const del = document.createElement("span");
-          del.className = "del";
-          del.textContent = "törlés";
-          del.onclick = async () => {
-            await updateDoc(docSnap.ref, {
-              deletedBy: (msg.deletedBy || []).concat(USER_NAME)
-            });
-          };
-          p.appendChild(del);
-        }
-
-        chatBox.appendChild(p);
-      });
-
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      const newest = snapshot.docs[snapshot.docs.length - 1];
-      if (newest) {
-        const ts = newest.data().timestamp?.toMillis?.() || Date.now();
-        if (ts > lastSeen) {
-          showNotify();
-          lastSeen = ts;
-        }
-      }
+// 1) SZAKI KIVÁLASZTÁSA
+document.getElementById("valasztom-btn").onclick = async () => {
+    await addDoc(collection(db, "szaki-valasztas"), {
+        megrendelo: MEGRENDELO_NEV,
+        szakember: PARTNER_NAME,
+        valasztas: "kivalasztva",
+        timestamp: serverTimestamp()
     });
 
-    // Küldés
-    const sendBtn = document.getElementById("send-btn");
-    const inputField = document.getElementById("message-input");
-
-    sendBtn.addEventListener("click", sendMsg);
-    inputField.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendMsg();
-      }
+    // Értesítés a szakinak
+    await addDoc(messagesRef, {
+        senderName: "Rendszer",
+        text: `A megrendelő téged választott! Gratulálunk!`,
+        timestamp: serverTimestamp()
     });
 
-    async function sendMsg() {
-      const text = inputField.value.trim();
-      if (!text) return;
+    alert("Köszönjük! A szakember megkapta az értesítést.");
+};
 
-      try {
-        await addDoc(messagesRef, {
-          senderName: USER_NAME,
-          text,
-          timestamp: serverTimestamp(),
-          deletedBy: [],
-          readBy: [USER_NAME]
-        });
+// 2) SZAKI ELUTASÍTÁSA
+document.getElementById("jobb-ajanlat-btn").onclick = async () => {
+    await addDoc(collection(db, "szaki-valasztas"), {
+        megrendelo: MEGRENDELO_NEV,
+        szakember: PARTNER_NAME,
+        valasztas: "elutasitva",
+        timestamp: serverTimestamp()
+    });
 
-        await updateDoc(chatRef, { lastMessageAt: serverTimestamp() });
+    // Szaki értesítése
+    await addDoc(messagesRef, {
+        senderName: "Rendszer",
+        text: `Sajnos a megrendelő nem téged választott.`,
+        timestamp: serverTimestamp()
+    });
 
-        inputField.value = "";
-        hideNotify();
-      } catch (err) {
-        console.error("Hiba üzenet mentéskor:", err);
-        alert("Hiba történt az üzenet küldése közben.");
-      }
-    }
-
-    // Segédek
-    function formatTs(ts) {
-      try {
-        const d = ts?.toDate ? ts.toDate() : new Date();
-        return `${pad(d.getHours())}:${pad(d.getMinutes())} ${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}`;
-      } catch { return "időbélyeg"; }
-    }
-
-    function pad(n) { return n < 10 ? "0"+n : ""+n; }
-
-    function escapeHtml(s) {
-      const div = document.createElement("div");
-      div.innerText = s == null ? "" : String(s);
-      return div.innerHTML;
-    }
-
-    function showNotify() {
-      const el = document.getElementById("notify-indicator");
-      el.style.display = "inline";
-      document.title = "🔔 Új üzenet – Szaki-App";
-    }
-
-    function hideNotify() {
-      document.getElementById("notify-indicator").style.display = "none";
-      document.title = "Chat – Szaki-App";
-    }
+    alert("Mentve. A szakember értesítést kapott.");
+};
 </script>
 
-<!-- Online státusz követése a chaten is -->
+<!-- Online státusz követése -->
 <script type="module" src="szaki-online.js"></script>
 
 </body>

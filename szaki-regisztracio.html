@@ -24,6 +24,7 @@
 
         h2 {
             margin-top: 0;
+            text-align: center;
         }
 
         label {
@@ -34,123 +35,155 @@
 
         input, select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid #ccc;
-            margin-top: 5px;
+            margin-top: 6px;
+            font-size: 15px;
         }
 
         button {
-            margin-top: 20px;
+            margin-top: 22px;
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
             border-radius: 8px;
             background: #ff8c00;
             color: white;
-            font-size: 16px;
+            font-size: 17px;
             cursor: pointer;
         }
 
-        .szabi-list {
-            margin: 20px auto 0;
+        button:active {
+            transform: translateY(1px);
+            filter: brightness(0.95);
+        }
+
+        .success-box {
             max-width: 600px;
-            padding: 10px 12px;
-            background: #ffffff;
+            margin: 20px auto;
+            background: #e8ffe8;
+            padding: 14px;
             border-radius: 10px;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-            font-size: 12px;
-            color: #444;
+            border: 1px solid #99dd99;
+            color: #155d15;
+            display: none;
         }
 
-        .szabi-list h3 {
-            margin-top: 0;
-            font-size: 13px;
-            margin-bottom: 6px;
+        .error-box {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffe8e8;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid #dd9999;
+            color: #8a0000;
+            display: none;
         }
 
-        .szabi-list ul {
-            padding-left: 18px;
-            margin: 0;
-        }
-
-        .szabi-list li {
-            margin: 2px 0;
-        }
     </style>
 </head>
-
 <body>
 
 <div class="container">
     <h2>Szaki regisztráció</h2>
 
-    <label>Név</label>
-    <input type="text" id="nev" placeholder="Név…">
+    <label>Név *</label>
+    <input type="text" id="nev" placeholder="Pl.: Kovács Béla">
 
-    <label>Szakma</label>
+    <label>Szakma *</label>
     <select id="szakma">
+        <option value="">Válassz szakmát…</option>
+        <option>Kőműves</option>
         <option>Festő</option>
         <option>Burkoló</option>
-        <option>Kőműves</option>
         <option>Gipszkartonos</option>
+        <option>Villanyszerelő</option>
         <option>Vízszerelő</option>
         <option>Gázszerelő</option>
-        <option>Villanyszerelő</option>
-        <option>Fűtésszerelő</option>
-        <option>Klímaszerelő</option>
-        <option>Teljes felújítás</option>
     </select>
 
-    <label>Telefonszám</label>
-    <input type="text" id="telefonszam" placeholder="+36 …">
+    <label>Telefonszám *</label>
+    <input type="text" id="telefon" placeholder="+36 …">
 
-    <button onclick="regisztral()">Regisztráció</button>
+    <button id="reg-btn">Regisztráció</button>
 </div>
 
-<div id="szaki-szabadnapok" class="szabi-list"></div>
+<div class="success-box" id="success-box"></div>
+<div class="error-box" id="error-box"></div>
 
-<script src="szaki-adatok.js"></script>
+<script type="module">
+    import { app, db } from "./firebase-config.js";
+    import {
+        collection,
+        addDoc,
+        query,
+        where,
+        getDocs,
+        serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-<script>
-function regisztral() {
-    const nev = document.getElementById("nev").value.trim();
-    const szakma = document.getElementById("szakma").value.trim();
-    const tel = document.getElementById("telefonszam").value.trim();
+    const regBtn = document.getElementById("reg-btn");
+    const successBox = document.getElementById("success-box");
+    const errorBox = document.getElementById("error-box");
 
-    if (!nev || !szakma || !tel) {
-        alert("Kérlek tölts ki minden mezőt!");
-        return;
-    }
+    regBtn.addEventListener("click", async () => {
+        successBox.style.display = "none";
+        errorBox.style.display = "none";
 
-    alert("DEMO: A regisztráció jelenleg még nem kerül mentésre.\n\n" +
-          "Név: " + nev + "\n" +
-          "Szakma: " + szakma + "\n" +
-          "Telefonszám: " + tel);
-}
+        const nev = document.getElementById("nev").value.trim();
+        const szakma = document.getElementById("szakma").value.trim();
+        const telefon = document.getElementById("telefon").value.trim();
 
-// Demó: meglévő szakik megjelenítése
-(function () {
-    if (!window.SzakiAdatok) return;
+        if (!nev || !szakma || !telefon) {
+            showError("Minden mező kitöltése kötelező!");
+            return;
+        }
 
-    const container = document.getElementById("szaki-szabadnapok");
-    const all = window.SzakiAdatok.getAllSzakik();
-    const getHolidayLabel = window.SzakiAdatok.getHolidayLabel;
-    const getDisplayPhone = window.SzakiAdatok.getDisplayPhone;
+        try {
+            // Ellenőrzés: létezik-e már ilyen telefonszám
+            const q = query(
+                collection(db, "szakik"),
+                where("telefon", "==", telefon)
+            );
+            const snap = await getDocs(q);
 
-    let html = "<h3>Regisztrált szakik (demó):</h3><ul>";
+            if (!snap.empty) {
+                showError("Ezzel a telefonszámmal már van regisztrált szakember!");
+                return;
+            }
 
-    all.forEach(s => {
-        const profList = Array.isArray(s.profession) ? s.profession.join(", ") : s.profession;
-        const holiday = getHolidayLabel(s);
-        const phone = getDisplayPhone(s);
+            // Mentés Firestore-ba
+            await addDoc(collection(db, "szakik"), {
+                nev,
+                szakma,
+                telefon,
+                online: false,
+                createdAt: serverTimestamp(),
+                rating: 0,
+                jobsDone: 0
+            });
 
-        html += `<li><b>${s.name}</b> – ${profList} – ${holiday} – Tel: ${phone}</li>`;
+            showSuccess("Sikeres regisztráció! A szakember felkerült a rendszerbe.");
+            setTimeout(() => {
+                window.location.href = "szaki-profilok.html";
+            }, 1500);
+
+        } catch (err) {
+            console.error(err);
+            showError("Hiba történt a regisztráció közben.");
+        }
     });
 
-    html += "</ul>";
-    container.innerHTML = html;
-})();
+    function showSuccess(msg) {
+        successBox.textContent = msg;
+        successBox.style.display = "block";
+    }
+
+    function showError(msg) {
+        errorBox.textContent = msg;
+        errorBox.style.display = "block";
+    }
 </script>
 
 </body>

@@ -238,12 +238,28 @@
         window.location.href = link;
     }
 
+    // magyar ékezet-normalizálás (villanyszerelő ↔ villanyszerelo, stb.)
+    function normalizeProfession(str) {
+        if (!str) return "";
+        const lower = str.toLowerCase();
+        const map = {
+            "á": "a", "é": "e", "í": "i",
+            "ó": "o", "ö": "o", "ő": "o",
+            "ú": "u", "ü": "u", "ű": "u"
+        };
+        return lower.replace(/[áéíóöőúüű]/g, c => map[c] || c);
+    }
+
     (function renderSzakik() {
         if (!window.SzakiAdatok || typeof window.SzakiAdatok.getAllSzakik !== "function") {
             document.getElementById("szaki-lista").innerHTML =
                 "<p>Hiba: nem találhatók a szaki adatok.</p>";
             return;
         }
+
+        const params = new URLSearchParams(window.location.search);
+        const filterRaw = params.get("szakma");
+        const filterNorm = filterRaw ? normalizeProfession(filterRaw) : null;
 
         const all = window.SzakiAdatok.getAllSzakik();
         const getPhone = window.SzakiAdatok.getDisplayPhone;
@@ -260,6 +276,11 @@
         container.innerHTML = "";
 
         Object.keys(byProf).sort().forEach(prof => {
+            // ha van URL-ben szakma szűrő, csak azt a szakmát mutatjuk
+            if (filterNorm && normalizeProfession(prof) !== filterNorm) {
+                return;
+            }
+
             const section = document.createElement("div");
             section.className = "profession-section";
 
@@ -283,9 +304,9 @@
                 badge.className = "szaki-badge";
                 if (szaki.isReal) {
                     if (szaki.name === "Csabi") {
-                        badge.textContent = "KIEMELT SZAKEMBER";
+                        badge.textContent = "KIEMELT SZAKEMBER – Platina rang – Mester levél";
                     } else if (szaki.name === "Zsolti") {
-                        badge.textContent = "KIEMELT IGAZOLT SZAKEMBER";
+                        badge.textContent = "KIEMELT IGAZOLT SZAKEMBER – Platina rang – Mester levél";
                     } else {
                         badge.textContent = "Igazolt szakember";
                     }
@@ -372,48 +393,6 @@
             container.appendChild(section);
         });
     })();
-</script>
-<script>
-  // Csabi és Zsolti kiemelt badge szövegének beállítása
-  document.addEventListener('DOMContentLoaded', () => {
-    // 1) Keressük meg az eredeti "KIEMELT SZAKEMBER" címkét (Csabinál)
-    let templateBadge = null;
-    document.querySelectorAll('span, div').forEach(el => {
-      if (el.textContent.trim() === 'KIEMELT SZAKEMBER') {
-        templateBadge = el;
-      }
-    });
-
-    if (!templateBadge) return;
-
-    // Szöveg frissítése mindenhol, ahol ez a címke van
-    templateBadge.textContent = 'KIEMELT SZAKEMBER – Platina rang – Mester levél';
-
-    // Ha több ilyen badge van (pl. festő, gipszkarton), azokat is írjuk át
-    document.querySelectorAll('span, div').forEach(el => {
-      if (el !== templateBadge && el.textContent.trim() === 'KIEMELT SZAKEMBER') {
-        el.textContent = 'KIEMELT SZAKEMBER – Platina rang – Mester levél';
-      }
-    });
-
-    // 2) Zsolti kártyájára is tegyük rá ugyanezt a címkét
-    const cards = Array.from(document.querySelectorAll('.card'));
-    const zsoltCard = cards.find(el => /zsolt/i.test(el.textContent));
-
-    if (zsoltCard) {
-      // Ha már van rajta ilyen badge, nem kell még egy
-      const alreadyHas = Array
-        .from(zsoltCard.querySelectorAll('span, div'))
-        .some(el => el.textContent.includes('KIEMELT SZAKEMBER'));
-
-      if (!alreadyHas && templateBadge) {
-        const clone = templateBadge.cloneNode(true);
-        // próbáljuk a kártya elejére tenni (fejléc / jobb felső)
-        const header = zsoltCard.querySelector('.card-header') || zsoltCard;
-        header.appendChild(clone);
-      }
-    }
-  });
 </script>
 
 </body>

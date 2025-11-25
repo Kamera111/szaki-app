@@ -90,13 +90,16 @@
 
     <label>Szakma</label>
     <select id="szakma">
-        <option>Kőműves</option>
         <option>Festő</option>
         <option>Burkoló</option>
-        <option>Gipszkartonszerelő</option>
+        <option>Kőműves</option>
+        <option>Gipszkartonos</option>
         <option>Vízszerelő</option>
         <option>Gázszerelő</option>
         <option>Villanyszerelő</option>
+        <option>Fűtésszerelő</option>
+        <option>Klímaszerelő</option>
+        <option>Teljes felújítás</option>
     </select>
 
     <label>Telefonszám</label>
@@ -108,12 +111,25 @@
 <div id="szaki-szabadnapok" class="szabi-list"></div>
 
 <script src="szaki-adatok.js"></script>
+
 <script>
 function regisztral() {
-    alert("A regisztráció jelenleg DEMÓ módban működik. Később kerül mentésre az adatbázisba.");
+    const nev = document.getElementById("nev").value.trim();
+    const szakma = document.getElementById("szakma").value.trim();
+    const tel = document.getElementById("telefonszam").value.trim();
+
+    if (!nev || !szakma || !tel) {
+        alert("Kérlek tölts ki minden mezőt!");
+        return;
+    }
+
+    alert("DEMO: A regisztráció jelenleg még nem kerül mentésre.\n\n" +
+          "Név: " + nev + "\n" +
+          "Szakma: " + szakma + "\n" +
+          "Telefonszám: " + tel);
 }
 
-// Demó: meglévő szakik szabadnapjai
+// Demó: meglévő szakik megjelenítése
 (function () {
     if (!window.SzakiAdatok) return;
 
@@ -122,15 +138,17 @@ function regisztral() {
     const getHolidayLabel = window.SzakiAdatok.getHolidayLabel;
     const getDisplayPhone = window.SzakiAdatok.getDisplayPhone;
 
-    const maxShow = 10;
-    const items = all.slice(0, maxShow);
+    let html = "<h3>Regisztrált szakik (demó):</h3><ul>";
 
-    let html = "<h3>Már regisztrált szakik (szabadnapok demó):</h3><ul>";
-    items.forEach((s) => {
-        html += `<li>${s.name} – ${s.profession} – ${getHolidayLabel(s)} – Tel: ${getDisplayPhone(s)}</li>`;
+    all.forEach(s => {
+        const profList = Array.isArray(s.profession) ? s.profession.join(", ") : s.profession;
+        const holiday = getHolidayLabel(s);
+        const phone = getDisplayPhone(s);
+
+        html += `<li><b>${s.name}</b> – ${profList} – ${holiday} – Tel: ${phone}</li>`;
     });
-    html += "</ul>";
 
+    html += "</ul>";
     container.innerHTML = html;
 })();
 </script>

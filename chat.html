@@ -10,6 +10,7 @@
     .container { max-width:900px; margin:16px auto; padding:12px; }
     .meta { background:#fff; padding:10px 12px; border-radius:8px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
     .meta div { margin:4px 0; }
+    .you-are { font-size:13px; color:#007700; margin-top:6px; }
     .chat-window { background:#fff; height:60vh; overflow:auto; border-radius:8px; margin-top:12px; padding:12px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
     .msg { margin:8px 0; max-width:75%; padding:8px 10px; border-radius:10px; }
     .msg.me { background:#dcf8c6; margin-left:auto; text-align:right; }
@@ -19,14 +20,17 @@
     button { padding:10px 14px; border-radius:8px; border:none; background:#28a745; color:#fff; font-weight:bold; cursor:pointer; }
     a.back { display:inline-block; margin-top:8px; color:#007bff; text-decoration:none; }
     .note { font-size:13px; color:#666; margin-top:8px; }
+    .timestamp { font-size:11px; color:#888; margin-top:6px; }
+    .who { font-size:12px; color:#555; }
   </style>
 </head>
 <body>
 <header>Chat – Szaki-App</header>
 <div class="container">
   <div class="meta" id="meta">
-    <div><strong>Megrendelő:</strong> <span id="senderText">-</span></div>
+    <div><strong>Megrendelő:</strong> <span id="megrendelonevText">-</span></div>
     <div><strong>Szakember:</strong> <span id="partnerText">-</span></div>
+    <div id="youAre" class="you-are" aria-live="polite"></div>
     <a id="backLink" class="back" href="#">◀ Vissza a kereséshez</a>
   </div>
 
@@ -53,11 +57,27 @@
     return new URLSearchParams(window.location.search).get(name) || "";
   }
 
+  // URL paramok
   const sender = decodeURIComponent(getParam('sender') || '').trim() || 'Megrendelő';
   const partner = decodeURIComponent(getParam('partner') || '').trim() || 'Szakember';
+  const megrendelonevParam = decodeURIComponent(getParam('megrendelonev') || '').trim() || '';
 
-  document.getElementById('senderText').textContent = sender;
-  document.getElementById('partnerText').textContent = partner;
+  // Fejléc logika:
+  // - Ha megrendelonev param megvan (valassz-szakit.html adta át), akkor egyértelműen ezt mutatjuk Megrendelőnek,
+  //   és partner lesz a Szakember.
+  // - Mindig mutatjuk, hogy "Te most: <sender>" (az aktuális böngésző felhasználója).
+  if (megrendelonevParam) {
+    document.getElementById('megrendelonevText').textContent = megrendelonevParam;
+    document.getElementById('partnerText').textContent = partner;
+  } else {
+    // nincs explicit megrendelonev: visszabiztonsági viselkedés (korábbi működés)
+    // ez esetben a sender paramot írjuk ki Megrendelőként és partner lesz a Szakember
+    document.getElementById('megrendelonevText').textContent = sender;
+    document.getElementById('partnerText').textContent = partner;
+  }
+
+  // Egyértelmű jelzés a felhasználónak, hogy ő melyik név
+  document.getElementById('youAre').textContent = 'Te most: ' + sender;
 
   (function setupBackLink(){
     const params = new URLSearchParams(window.location.search);
@@ -88,18 +108,18 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // Egyedi chat ID (rendezve, hogy mindkét fél ugyanarra a gyűjteményre írjon)
+  // Egyedi chat ID (rendezve)
   function chatId(a,b){
     const names = [String(a).trim().toLowerCase(), String(b).trim().toLowerCase()].sort();
     return names.join('_');
   }
 
   const cid = chatId(sender, partner);
-  // <-- Változtatás: 'uzenetek' gyűjteményt használjuk, hogy illeszkedjen a Firestore szabályaidhoz
+  // 'uzenetek' gyűjteményt használunk (illeszkedik a tűzfal/szabályokhoz)
   const messagesCol = collection(db, 'chats', cid, 'uzenetek');
   const q = query(messagesCol, orderBy('when', 'asc'));
 
-  // Valós idő figyelés
+  // Valós idejű figyelés: ha érkezik új dokumentum, kirendereljük
   onSnapshot(q, snapshot => {
     const wnd = document.getElementById('chatWindow');
     wnd.innerHTML = '';
@@ -114,17 +134,25 @@
   function appendMessageToWindow(m){
     const wnd = document.getElementById('chatWindow');
     const d = document.createElement('div');
+    // ha a message.from megegyezik a sender paraméterrel, akkor ez 'me'
     d.className = 'msg ' + (m.from === sender ? 'me' : 'other');
+
     const who = document.createElement('div');
-    who.style.fontSize = '12px'; who.style.color = '#555'; who.textContent = m.from;
-    const text = document.createElement('div'); text.style.marginTop = '4px'; text.textContent = m.text;
-    const ts = document.createElement('div'); ts.style.fontSize = '11px'; ts.style.color = '#888'; ts.style.marginTop = '6px';
+    who.className = 'who';
+    who.textContent = m.from;
+
+    const text = document.createElement('div');
+    text.style.marginTop = '4px';
+    text.textContent = m.text;
+
+    const ts = document.createElement('div');
+    ts.className = 'timestamp';
     try {
-      // kezeli a serverTimestamp objektumot is és a sima dátum stringet is
       if (m.when && m.when.toDate) ts.textContent = m.when.toDate().toLocaleString();
       else if (m.when) ts.textContent = new Date(m.when).toLocaleString();
       else ts.textContent = '';
     } catch (e) { ts.textContent = ''; }
+
     d.appendChild(who); d.appendChild(text); d.appendChild(ts);
     wnd.appendChild(d);
     wnd.scrollTop = wnd.scrollHeight;

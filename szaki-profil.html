@@ -373,6 +373,48 @@
         });
     })();
 </script>
+<script>
+  // Csabi és Zsolti kiemelt badge szövegének beállítása
+  document.addEventListener('DOMContentLoaded', () => {
+    // 1) Keressük meg az eredeti "KIEMELT SZAKEMBER" címkét (Csabinál)
+    let templateBadge = null;
+    document.querySelectorAll('span, div').forEach(el => {
+      if (el.textContent.trim() === 'KIEMELT SZAKEMBER') {
+        templateBadge = el;
+      }
+    });
+
+    if (!templateBadge) return;
+
+    // Szöveg frissítése mindenhol, ahol ez a címke van
+    templateBadge.textContent = 'KIEMELT SZAKEMBER – Platina rang – Mester levél';
+
+    // Ha több ilyen badge van (pl. festő, gipszkarton), azokat is írjuk át
+    document.querySelectorAll('span, div').forEach(el => {
+      if (el !== templateBadge && el.textContent.trim() === 'KIEMELT SZAKEMBER') {
+        el.textContent = 'KIEMELT SZAKEMBER – Platina rang – Mester levél';
+      }
+    });
+
+    // 2) Zsolti kártyájára is tegyük rá ugyanezt a címkét
+    const cards = Array.from(document.querySelectorAll('.card'));
+    const zsoltCard = cards.find(el => /zsolt/i.test(el.textContent));
+
+    if (zsoltCard) {
+      // Ha már van rajta ilyen badge, nem kell még egy
+      const alreadyHas = Array
+        .from(zsoltCard.querySelectorAll('span, div'))
+        .some(el => el.textContent.includes('KIEMELT SZAKEMBER'));
+
+      if (!alreadyHas && templateBadge) {
+        const clone = templateBadge.cloneNode(true);
+        // próbáljuk a kártya elejére tenni (fejléc / jobb felső)
+        const header = zsoltCard.querySelector('.card-header') || zsoltCard;
+        header.appendChild(clone);
+      }
+    }
+  });
+</script>
 
 </body>
 </html>

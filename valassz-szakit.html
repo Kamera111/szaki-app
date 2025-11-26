@@ -2,188 +2,178 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8" />
-    <title>Válassz szakembert – Szaki-App</title>
+    <title>Szakember választás – Szaki-App</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
+            margin:0;
+            padding:0;
+            background:#f2f2f2;
+            font-family:Arial, sans-serif;
         }
 
         header {
-            background: #ff8c00;
-            color: #fff;
-            padding: 16px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
+            background:#ff8c00;
+            color:white;
+            padding:14px;
+            font-size:20px;
+            font-weight:bold;
+            text-align:center;
         }
 
         .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 16px;
+            max-width:900px;
+            margin:20px auto;
+            padding:10px;
         }
 
-        .szaki-card {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 14px 16px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            margin-bottom: 14px;
+        .card {
+            background:white;
+            border-radius:12px;
+            padding:16px;
+            margin-bottom:16px;
+            box-shadow:0 2px 6px rgba(0,0,0,0.08);
         }
 
-        .szaki-header-line {
-            display: flex;
-            justify-content: space-between;
-            gap: 12px;
-            align-items: baseline;
+        .name {
+            font-size:20px;
+            font-weight:bold;
         }
 
-        .szaki-name {
-            font-size: 18px;
-            font-weight: bold;
+        .profession {
+            font-size:14px;
+            color:#666;
         }
 
-        .szaki-profession {
-            font-size: 14px;
-            color: #555;
-            margin-top: 6px;
+        .online {
+            color:#28a745;
+            font-weight:bold;
+            font-size:13px;
+        }
+        .offline {
+            color:#c00;
+            font-weight:bold;
+            font-size:13px;
         }
 
-        .szaki-phone {
-            font-size: 14px;
-            margin-top: 6px;
-            color: #333;
+        .actions {
+            margin-top:12px;
+            display:flex;
+            gap:10px;
         }
 
-        .szaki-email {
-            font-size: 13px;
-            margin-top: 4px;
-            color: #555;
+        button {
+            flex:1;
+            padding:10px;
+            border:none;
+            border-radius:8px;
+            font-size:14px;
+            font-weight:bold;
+            cursor:pointer;
         }
-
-        .szaki-online {
-            margin-top: 5px;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .online { color:#28a745; }
-        .offline { color:#c00; }
 
         .btn-chat {
-            margin-top: 12px;
-            width: 100%;
-            padding: 10px;
-            background: #28a745;
-            color: white;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 15px;
-            font-weight: bold;
+            background:#007bff;
+            color:white;
         }
-
-        .btn-chat:active {
-            transform: translateY(1px);
-        }
-
-        .no-result {
-            font-size: 18px;
-            margin-top: 20px;
-            text-align: center;
-            color: #444;
+        .btn-profile {
+            background:#555;
+            color:white;
         }
     </style>
 </head>
-
 <body>
 
-<header>Válassz szakembert</header>
+<header>Szakember választása</header>
 
-<div class="container">
-    <div id="szaki-lista"></div>
-</div>
+<div class="container" id="list"></div>
 
 <script type="module">
 
     import { db } from "./firebase-config.js";
-    import {
-        collection,
-        getDocs,
-        query,
-        where
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    import { markUserOnline } from "./users-status.js";
-
-    // A MEGRENDELŐT ONLINE-nak jelöljük
-    markUserOnline("megrendelo_" + Date.now());
+    import { getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { findBestSzakik } from "./matching.js";
+    import { maskPhone } from "./masking.js";
 
     const params = new URLSearchParams(window.location.search);
-    const keresettSzakma = params.get("szakma") || "";
-    const megrendelonev = params.get("name") || "Megrendelő";
 
-    const listBox = document.getElementById("szaki-lista");
+    const orderId       = params.get("orderId");
+    const profession    = params.get("szakma");
+    const city          = params.get("city") || "Budapest";
+    const description   = params.get("desc") || "";
+    const userName      = params.get("name") || "Megrendelő";
 
-    async function loadSzakik() {
-        listBox.innerHTML = "<p>Betöltés…</p>";
-
-        const szakikRef = collection(db, "szakik");
-
-        let qRef;
-        if (keresettSzakma) {
-            qRef = query(szakikRef, where("szakmak", "array-contains", keresettSzakma));
-        } else {
-            qRef = szakikRef;
-        }
-
-        const snap = await getDocs(qRef);
-
-        if (snap.empty) {
-            listBox.innerHTML = `<div class="no-result">
-                Ehhez a szakmához nincs elérhető szaki.
-            </div>`;
-            return;
-        }
-
-        listBox.innerHTML = "";
-
-        snap.forEach(doc => {
-            const d = doc.data();
-
-            const div = document.createElement("div");
-            div.className = "szaki-card";
-
-            div.innerHTML = `
-                <div class="szaki-header-line">
-                    <div class="szaki-name">${d.name}</div>
-                    <div class="szaki-online ${d.online ? "online" : "offline"}">
-                        ${d.online ? "ONLINE" : "offline"}
-                    </div>
-                </div>
-
-                <div class="szaki-profession">${d.szakmak.join(", ")}</div>
-
-                <div class="szaki-phone">Telefon: ${d.phoneMasked || "***"}</div>
-                <div class="szaki-email">Email: ${d.emailMasked || "***"}</div>
-
-                <button class="btn-chat"
-                    onclick="window.location.href =
-                    'chat.html?sender=${encodeURIComponent(megrendelonev)}&partner=${encodeURIComponent(d.name)}'">
-                    Chat indítása
-                </button>
-            `;
-
-            listBox.appendChild(div);
-        });
+    if (!orderId || !profession) {
+        document.getElementById("list").innerHTML =
+            "<p>Hiányzó adatok. Térj vissza a munka megadásához.</p>";
+        throw new Error("Missing params");
     }
 
-    loadSzakik();
+    const container = document.getElementById("list");
+
+    // 🔥 Matching — 3 szakember ajánlása
+    const rec = await findBestSzakik({
+        profession,
+        city,
+        description
+    });
+
+    // ha nincs elérhető szaki
+    if (!rec || rec.length === 0) {
+        container.innerHTML = "<p>Nincs elérhető szakember ehhez a munkához.</p>";
+        return;
+    }
+
+    // szakik renderelése
+    rec.slice(0, 3).forEach(sz => {
+
+        const div = document.createElement("div");
+        div.className = "card";
+
+        const onlineLabel = sz.isOnline
+            ? `<span class="online">● elérhető</span>`
+            : `<span class="offline">● nem elérhető</span>`;
+
+        div.innerHTML = `
+            <div class="name">${sz.name}</div>
+            <div class="profession">${sz.profession}</div>
+            <div>${onlineLabel}</div>
+            <div style="margin-top:6px;">Telefon: <b>${maskPhone(sz.phone)}</b></div>
+        `;
+
+        // gombok
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        // CHAT
+        const chatBtn = document.createElement("button");
+        chatBtn.className = "btn-chat";
+        chatBtn.textContent = "Chat indítása";
+        chatBtn.onclick = () => {
+
+            window.location.href =
+                `chat.html?sender=${encodeURIComponent(userName)}` +
+                `&partner=${encodeURIComponent(sz.name)}` +
+                `&orderId=${encodeURIComponent(orderId)}` +
+                `&szakma=${encodeURIComponent(profession)}`;
+        };
+
+        // PROFIL
+        const viewBtn = document.createElement("button");
+        viewBtn.className = "btn-profile";
+        viewBtn.textContent = "Profil megtekintése";
+        viewBtn.onclick = () => {
+            window.location.href =
+                `szaki-profil.html?name=${encodeURIComponent(sz.name)}`;
+        };
+
+        actions.appendChild(chatBtn);
+        actions.appendChild(viewBtn);
+        div.appendChild(actions);
+
+        container.appendChild(div);
+    });
 
 </script>
 

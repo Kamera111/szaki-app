@@ -13,11 +13,10 @@
       font-weight:bold; font-size:18px; text-align:center;
     }
 
-    .top-bar{
+    .top-bar {
       max-width:900px; margin:0 auto; background:white;
       padding:10px 14px; border-bottom:1px solid #eee; font-size:13px;
     }
-    .top-row{ display:flex; flex-wrap:wrap; gap:16px; }
 
     #chat-box{
       max-width:900px; margin:12px auto; padding:12px 14px;
@@ -28,12 +27,6 @@
     .msg{ margin:6px 0; font-size:14px; }
     .own{ font-weight:bold; }
     .meta{ font-size:11px; color:#777; margin-left:6px; }
-
-    .warning-msg{
-      margin:6px 0; padding:10px; background:#fff7e1;
-      border-left:4px solid #ff8c00; border-radius:6px;
-      font-size:13px; color:#8a5a00;
-    }
 
     .input-row{
       max-width:900px; margin:0 auto 14px; padding:0 14px;
@@ -51,20 +44,57 @@
       cursor:pointer;
     }
 
-    /* Szaki választó gombok */
-    #select-buttons{
-      max-width:900px; margin:10px auto; display:flex;
-      gap:10px; padding:0 14px;
+    /* ---- POPUP ---- */
+    #rating-popup {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.55);
+      display:none;
+      justify-content:center;
+      align-items:center;
+      z-index:999;
     }
 
-    #select-worker{
-      flex:1; padding:12px; background:#28a745; color:white;
-      border:none; border-radius:8px; font-weight:bold; cursor:pointer;
+    #rating-box {
+      background:white;
+      width:90%;
+      max-width:420px;
+      padding:20px;
+      border-radius:12px;
+      text-align:center;
+      box-shadow:0 4px 20px rgba(0,0,0,0.25);
     }
 
-    #select-other{
-      flex:1; padding:12px; background:#c00; color:white;
-      border:none; border-radius:8px; font-weight:bold; cursor:pointer;
+    .star {
+      font-size:32px;
+      cursor:pointer;
+      color:#ddd;
+    }
+    .star.active {
+      color:#ffb300;
+    }
+
+    textarea {
+      width:100%;
+      padding:10px;
+      margin-top:12px;
+      border-radius:8px;
+      border:1px solid #aaa;
+      resize:none;
+      height:80px;
+    }
+
+    #submit-rating {
+      margin-top:14px;
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      background:#ff8c00;
+      color:white;
+      font-size:15px;
+      font-weight:bold;
+      cursor:pointer;
     }
   </style>
 </head>
@@ -75,15 +105,29 @@
 
 <div class="top-bar" id="top-bar"></div>
 
-<!-- SZAKI VÁLASZTÁS GOMBOK -->
-<div id="select-buttons">
-  <button id="select-worker">Ezt a szakit választom</button>
-  <button id="select-other">Másik szakit választottam</button>
-</div>
-
 <div id="chat-box">
   <p><i>Csatlakoztál a beszélgetéshez…</i></p>
 </div>
+
+<!-- ------------------ ÉRTÉKELŐ POPUP ------------------- -->
+<div id="rating-popup">
+  <div id="rating-box">
+    <h3>Értékeld a szakembert</h3>
+
+    <div id="stars">
+      <span class="star" data-v="1">★</span>
+      <span class="star" data-v="2">★</span>
+      <span class="star" data-v="3">★</span>
+      <span class="star" data-v="4">★</span>
+      <span class="star" data-v="5">★</span>
+    </div>
+
+    <textarea id="rating-text" placeholder="Rövid vélemény…"></textarea>
+
+    <button id="submit-rating">Értékelés elküldése</button>
+  </div>
+</div>
+<!-- ------------------------------------------------------ -->
 
 <div class="input-row">
   <input type="text" id="message-input" placeholder="Írj üzenetet…" />
@@ -95,109 +139,80 @@
   import { app, db } from "./firebase-config.js";
   import {
       collection, doc, addDoc, query, orderBy, onSnapshot,
-      serverTimestamp, updateDoc, setDoc
+      serverTimestamp, updateDoc, setDoc, getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  // -------------------------------------------------------------
-  // URL PARAMÉTEREK
-  // -------------------------------------------------------------
+  /* ============ PARAMÉTEREK =============== */
   const params = new URLSearchParams(window.location.search);
 
-  const USER_NAME = params.get("sender");
-  const PARTNER_NAME = params.get("partner");
-  const ORDER_ID = params.get("orderId");   // <<< ORDER ID BEÉPÍTVE !!! >>>
+  let USER_NAME = params.get("sender") || localStorage.getItem("szakiName");
+  const PARTNER_NAME = params.get("partner") || "Ismeretlen";
+  const ORDER_ID = params.get("orderId") || null;
 
-  if (!USER_NAME || !PARTNER_NAME || !ORDER_ID) {
-      alert("Hibás chat hivatkozás! (hiányzik: sender, partner vagy orderId)");
+  if (!USER_NAME) {
+      USER_NAME = prompt("Add meg a neved:") || "Ismeretlen";
+      localStorage.setItem("szakiName", USER_NAME);
   }
 
-  const ROOM_ID = createRoomId(USER_NAME, PARTNER_NAME);
+  const ROOM_ID = [USER_NAME.toLowerCase(), PARTNER_NAME.toLowerCase()].sort().join("__");
 
-  // -------------------------------------------------------------
-  // HELYI MEGOSZTÁS SZÁMLÁLÓ
-  // -------------------------------------------------------------
-  let sharedCount = Number(localStorage.getItem(USER_NAME + "_share") || 0);
+  document.getElementById("top-bar").innerHTML =
+    `<b>Te:</b> ${USER_NAME} &nbsp; | &nbsp;
+     <b>Szakember:</b> ${PARTNER_NAME}
+     ${ORDER_ID ? ` | <b>Megrendelés azonosító:</b> ${ORDER_ID}` : ""}`;
 
-  function addShare() {
-      sharedCount++;
-      localStorage.setItem(USER_NAME + "_share", sharedCount);
-      alert("Köszönjük a megosztást! (" + sharedCount + "/5)");
-  }
-  window.addShare = addShare;
-
-  // -------------------------------------------------------------
-  // FEJLÉC FELTÖLTÉSE
-  // -------------------------------------------------------------
-  document.getElementById("top-bar").innerHTML = `
-    <div class="top-row">
-      <div><b>Te:</b> ${USER_NAME}</div>
-      <div><b>Partner:</b> ${PARTNER_NAME}</div>
-      <div><b>Megrendelés ID:</b> ${ORDER_ID}</div>
-      <button onclick="addShare()">Megosztottam az oldalt</button>
-    </div>
-  `;
-
-  // -------------------------------------------------------------
-  // FIRESTORE – CHAT REFERENCIA
-  // -------------------------------------------------------------
+  /* ============ FIRESTORE REFERENCIÁK =============== */
   const chatRef = doc(db, "chats", ROOM_ID);
   const messagesRef = collection(db, "chats", ROOM_ID, "uzenetek");
 
-  // chat meta adatok frissítése
-  await setDoc(chatRef, {
-      roomId: ROOM_ID,
-      orderId: ORDER_ID,           // <<< ORDER_ID HOZZÁADVA !!!
-      users: [USER_NAME, PARTNER_NAME],
-      lastMessageAt: serverTimestamp(),
-      status: "active"
-  }, { merge: true });
+  try {
+      await updateDoc(chatRef, {
+          roomId: ROOM_ID,
+          members: {
+              you: USER_NAME,
+              partner: PARTNER_NAME,
+              orderId: ORDER_ID
+          },
+          status: "active",
+          lastMessageAt: serverTimestamp()
+      });
+  } catch (e) {}
 
-  // -------------------------------------------------------------
-  // ÜZENET FIGYELÉSE
-  // -------------------------------------------------------------
+  /* ============ CHAT FIGYELŐ =============== */
   const chatBox = document.getElementById("chat-box");
   const q = query(messagesRef, orderBy("timestamp"));
 
-  onSnapshot(q, (snapshot) => {
+  onSnapshot(q, (snap) => {
       chatBox.innerHTML = "";
-      snapshot.forEach((docSnap) => {
-          const msg = docSnap.data();
+      snap.forEach(m => {
+          const d = m.data();
 
-          const line = document.createElement("p");
-          line.className = "msg";
+          const p = document.createElement("p");
+          p.className = "msg";
 
-          const own = msg.senderName === USER_NAME ? "own" : "";
-          const time = formatTimestamp(msg.timestamp);
+          const own = d.senderName === USER_NAME ? "own" : "";
+          const time = d.timestamp?.toDate().toLocaleTimeString("hu-HU",{hour:"2-digit",minute:"2-digit"});
 
-          line.innerHTML =
-            `<span class="${own}">${msg.senderName}:</span> ` +
-            `${escapeHtml(msg.text)} <span class="meta">(${time})</span>`;
+          p.innerHTML =
+            `<span class="${own}">${d.senderName}:</span> ` +
+            `${escapeHtml(d.text)} <span class="meta">(${time})</span>`;
 
-          chatBox.appendChild(line);
+          chatBox.appendChild(p);
       });
 
       chatBox.scrollTop = chatBox.scrollHeight;
   });
 
-  // -------------------------------------------------------------
-  // üzenet küldés
-  // -------------------------------------------------------------
-  document.getElementById("send-btn").onclick = () => userSendMessage();
-  document.getElementById("message-input").onkeydown = (e) => {
-      if (e.key === "Enter") userSendMessage();
+  /* ============ ÜZENET KÜLDÉS =============== */
+  document.getElementById("send-btn").onclick = sendMsg;
+  document.getElementById("message-input").onkeydown = e => {
+      if (e.key === "Enter") sendMsg();
   };
 
-  async function userSendMessage() {
+  async function sendMsg() {
       const input = document.getElementById("message-input");
       const text = input.value.trim();
       if (!text) return;
-
-      // tiltott tartalom ellenőrzése
-      if (isContactInfo(text) && sharedCount < 5) {
-          showWarning();
-          input.value = "";
-          return;
-      }
 
       await addDoc(messagesRef, {
           senderName: USER_NAME,
@@ -205,83 +220,95 @@
           timestamp: serverTimestamp()
       });
 
-      await updateDoc(chatRef, { lastMessageAt: serverTimestamp() });
+      await updateDoc(chatRef, {
+          lastMessageAt: serverTimestamp()
+      });
 
       input.value = "";
   }
 
-  // -------------------------------------------------------------
-  // SZAKI KIVÁLASZTÁSA VAGY ELUTASÍTÁSA
-  // -------------------------------------------------------------
-  document.getElementById("select-worker").onclick = async () => {
-      await updateDoc(chatRef, {
-          status: "selected",
-          selectedBy: USER_NAME,
-          selectedAt: serverTimestamp()
+  /* =====================================================
+       MEGRENDELŐ ÉRTÉKELŐ POPUP
+  ====================================================== */
+
+  const popup = document.getElementById("rating-popup");
+  const stars = [...document.querySelectorAll(".star")];
+  let selectedStars = 0;
+
+  stars.forEach(s => {
+      s.onclick = () => {
+          selectedStars = Number(s.dataset.v);
+          stars.forEach(st => st.classList.remove("active"));
+          for (let i=0; i<selectedStars; i++) stars[i].classList.add("active");
+      };
+  });
+
+  function openRatingPopup(){
+      popup.style.display = "flex";
+  }
+
+  /* ----- ÉRTÉKELÉS KÜLDÉSE ----- */
+  document.getElementById("submit-rating").onclick = async () => {
+
+      const text = document.getElementById("rating-text").value.trim();
+
+      if (selectedStars < 1) {
+          alert("Adj csillagot!");
+          return;
+      }
+
+      // --- ratings gyűjtemény ---
+      await addDoc(collection(db, "ratings"), {
+          szakiName: PARTNER_NAME,
+          fromUser: USER_NAME,
+          stars: selectedStars,
+          text,
+          createdAt: serverTimestamp()
       });
 
-      alert("Kiválasztottad ezt a szakit! 👍");
-      document.getElementById("select-buttons").style.display = "none";
+      // --- ratingSummary frissítése ---
+      await updateRatingSummary(PARTNER_NAME);
+
+      alert("Köszönjük az értékelést!");
+      popup.style.display = "none";
   };
 
-  document.getElementById("select-other").onclick = async () => {
+  async function updateRatingSummary(szakiName){
+      const snap = await getDocs(collection(db, "ratings"));
+      let sum = 0, count = 0;
 
-      // szakinak üzenet küldése
-      await addDoc(messagesRef, {
-          senderName: "Rendszer",
-          text: "Sajnos nem téged választott a megrendelő.",
-          timestamp: serverTimestamp()
+      snap.forEach(d => {
+          const r = d.data();
+          if (r.szakiName === szakiName){
+              sum += r.stars;
+              count++;
+          }
       });
 
-      await updateDoc(chatRef, {
-          status: "rejected",
-          rejectedAt: serverTimestamp()
+      await setDoc(doc(db, "szakik", szakiName, "ratingSummary", "stats"), {
+          avg: count ? (sum / count) : 0,
+          count
       });
-
-      alert("Visszajelzés elküldve!");
-
-      document.getElementById("select-buttons").style.display = "none";
-  };
-
-  // -------------------------------------------------------------
-  // SEGÉDFÜGGVÉNYEK
-  // -------------------------------------------------------------
-  function isContactInfo(text) {
-      const phoneRegex = /(06\d{1,}|(\+36)\d{1,})/g;
-      const emailRegex = /\S+@\S+\.\S+/g;
-      return phoneRegex.test(text) || emailRegex.test(text);
   }
 
-  function showWarning() {
-      const warn = document.createElement("div");
-      warn.className = "warning-msg";
-      warn.innerHTML = `
-        Kedves szaki/megrendelő!<br><br>
-        <b>Elérhetőséget csak 5 megosztás után engedünk.</b><br><br>
-        Köszönjük a támogatást! 🙏
-      `;
-      chatBox.appendChild(warn);
-      chatBox.scrollTop = chatBox.scrollHeight;
-  }
+  /* =====================================================
+       CHAT BEZÁRÁSAKOR MUTASSUK AZ ÉRTÉKELŐ POPUPOT
+  ====================================================== */
 
-  function createRoomId(a, b) {
-      return [a.toLowerCase(), b.toLowerCase()].sort().join("__");
-  }
+  window.addEventListener("beforeunload", () => {
+      if (USER_NAME !== PARTNER_NAME) {
+          openRatingPopup();
+      }
+  });
 
-  function escapeHtml(s) {
+  /* =====================================================
+       SEGÉDEK
+  ====================================================== */
+  function escapeHtml(s){
       const div = document.createElement("div");
       div.innerText = s;
       return div.innerHTML;
   }
-
-  function formatTimestamp(ts) {
-      try {
-          const d = ts?.toDate ? ts.toDate() : new Date();
-          return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-      } catch { return ""; }
-  }
-
-  function pad(n){ return n<10 ? "0"+n : n; }
 
 </script>
 

@@ -41,12 +41,12 @@
         .share-main-btn {
             display: block;
             width: 100%;
+            margin-top: 10px;
             padding: 12px;
             border-radius: 10px;
-            margin-top: 10px;
             border: none;
             background: #ff8c00;
-            color: white;
+            color: #fff;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
@@ -60,106 +60,109 @@
             font-size: 18px;
             font-weight: bold;
             margin: 4px 0 12px;
+            color: #333;
         }
 
         .szaki-card {
-            background: white;
+            background: #ffffff;
             border-radius: 12px;
             padding: 14px 16px;
-            margin-bottom: 14px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 14px;
         }
 
         .szaki-header-line {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
+            gap: 12px;
+            align-items: baseline;
         }
 
         .szaki-name {
             font-size: 17px;
             font-weight: bold;
+            color: #222;
         }
 
         .szaki-badge {
-            padding: 4px 10px;
+            font-size: 11px;
+            padding: 3px 8px;
             border-radius: 999px;
             background: #ffe6bf;
-            font-size: 11px;
+            color: #8a4b00;
             white-space: nowrap;
         }
 
         .szaki-profession {
             font-size: 13px;
+            color: #555;
             margin-top: 4px;
-            color: #444;
         }
 
         .szaki-note {
-            margin-top: 6px;
             font-size: 13px;
-        }
-
-        .szaki-phone {
-            font-size: 13px;
-            margin-top: 6px;
-        }
-
-        .szaki-holiday {
-            font-size: 12px;
             color: #444;
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
-        .szaki-status {
+        .szaki-phone, .szaki-email {
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        .szaki-email b, .szaki-phone b {
+            font-weight: bold;
+        }
+
+        .szaki-status-online {
+            color: #009900;
             font-size: 12px;
+            font-weight: bold;
             margin-top: 4px;
         }
-
-        .szaki-status.real {
-            color: #007700;
-        }
-        .szaki-status.demo {
-            color: #990000;
+        .szaki-status-offline {
+            color: #cc0000;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 4px;
         }
 
         .szaki-actions {
-            margin-top: 12px;
             display: flex;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-chat, .btn-share {
+            flex: 1 1 130px;
+            padding: 9px 8px;
+            border-radius: 999px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
         }
 
         .btn-chat {
-            flex: 1;
-            padding: 10px;
             background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 999px;
-            font-size: 13px;
+            color: #fff;
             font-weight: bold;
-            cursor: pointer;
-        }
-
-        .btn-chat.disabled {
-            background: #999999;
-            cursor: not-allowed;
         }
 
         .btn-share {
-            flex: 1;
-            padding: 10px;
             background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 999px;
-            font-size: 13px;
-            cursor: pointer;
+            color: #fff;
         }
+
+        .btn-chat:active,
+        .btn-share:active,
+        .share-main-btn:active {
+            transform: translateY(1px);
+            filter: brightness(0.95);
+        }
+
     </style>
 </head>
-
 <body>
 
 <header>Szaki profilok</header>
@@ -167,8 +170,8 @@
 <div class="container">
 
     <div class="info-box">
-        <b>Minden funkció teljesen INGYENES!</b><br>
-        Küldd el ismerőseidnek!
+        <b>Szakik és Megrendelők számára INGYENES az összes funkció!</b><br>
+        Csak nyomd meg a MEGOSZTÁS gombot és ajánld ismerőseidnek!
         <button class="share-main-btn" onclick="sharePage()">MEGOSZTÁS</button>
     </div>
 
@@ -183,153 +186,136 @@
         if (navigator.share) {
             navigator.share({
                 title: "Szaki-App",
-                text: "Nézd meg a Szaki-App szakember oldalát!",
+                text: "Ajánlom ezt a szakikereső oldalt!",
                 url: url
             }).catch(() => {});
         } else {
             navigator.clipboard.writeText(url);
-            alert("Link vágólapra másolva.");
-        }
-    }
-
-    function shareSzaki(szaki) {
-        const url = window.location.href;
-        const text = `Ajánlott szakember a Szaki-Appon: ${szaki.name}`;
-        if (navigator.share) {
-            navigator.share({ title: szaki.name, text, url });
-        } else {
-            navigator.clipboard.writeText(url);
-            alert("A szakember linkje vágólapra másolva!");
+            alert("Link kimásolva!");
         }
     }
 
     function openChatWith(szakiName) {
-        window.location.href = "chat.html?partner=" + encodeURIComponent(szakiName);
+        const sender = localStorage.getItem("szakiName") || "Megrendelő";
+        window.location.href =
+            "chat.html?sender=" + encodeURIComponent(sender) +
+            "&partner=" + encodeURIComponent(szakiName);
     }
 
-    function renderSzakik() {
-        const lista = document.getElementById("szaki-lista");
-        lista.innerHTML = "";
+    (function renderList() {
 
-        const all = SzakiAdatok.getAllSzakik();
-        const getPhone = SzakiAdatok.getDisplayPhone;
-        const getHoliday = SzakiAdatok.getHolidayLabel;
+        const all = window.SzakiAdatok.getAllSzakik();
+        const container = document.getElementById("szaki-lista");
+        container.innerHTML = "";
 
-        // --- Csoportosítás szakma szerint ---
-        const byProf = {};
+        const grouped = {};
 
         all.forEach(sz => {
-            const professions = Array.isArray(sz.profession) ? sz.profession : [sz.profession];
-
-            professions.forEach(p => {
-                if (!byProf[p]) byProf[p] = [];
-                byProf[p].push(sz);
-            });
+            if (Array.isArray(sz.profession)) {
+                sz.profession.forEach(p => {
+                    if (!grouped[p]) grouped[p] = [];
+                    grouped[p].push(sz);
+                });
+            } else {
+                if (!grouped[sz.profession]) grouped[sz.profession] = [];
+                grouped[sz.profession].push(sz);
+            }
         });
 
-        Object.keys(byProf).sort().forEach(prof => {
+        Object.keys(grouped).sort().forEach(prof => {
 
             const section = document.createElement("div");
             section.className = "profession-section";
 
-            const title = document.createElement("div");
-            title.className = "profession-title";
-            title.textContent = prof + " szakemberek";
-            section.appendChild(title);
+            const t = document.createElement("div");
+            t.className = "profession-title";
+            t.textContent = prof + " szakemberek";
+            section.appendChild(t);
 
-            byProf[prof].forEach(sz => {
+            grouped[prof].forEach(szaki => {
 
                 const card = document.createElement("div");
                 card.className = "szaki-card";
 
-                // Fejléc
-                const header = document.createElement("div");
-                header.className = "szaki-header-line";
+                const headerLine = document.createElement("div");
+                headerLine.className = "szaki-header-line";
 
-                const name = document.createElement("div");
-                name.className = "szaki-name";
-                name.textContent = sz.name;
+                const nameEl = document.createElement("div");
+                nameEl.className = "szaki-name";
+                nameEl.textContent = szaki.name;
 
                 const badge = document.createElement("div");
                 badge.className = "szaki-badge";
 
-                if (sz.name === "Csabi") badge.textContent = "PLATINA – Mester szint";
-                else if (sz.name === "Zsolti") badge.textContent = "IGAZOLT – Platina szint";
-                else if (sz.isReal) badge.textContent = "Igazolt szakember";
-                else badge.textContent = "Nem elérhető";
+                if (szaki.name === "Csabi") badge.textContent = "PLATINA – Mester szaki";
+                else if (szaki.name === "Zsolti") badge.textContent = "Igazolt szakember";
+                else if (!szaki.isReal) badge.textContent = "Betáblázva (demó)";
+                else badge.textContent = "Szakember";
 
-                header.appendChild(name);
-                header.appendChild(badge);
-                card.appendChild(header);
+                headerLine.appendChild(nameEl);
+                headerLine.appendChild(badge);
+                card.appendChild(headerLine);
 
-                // Több szakma kijelzése
                 const profEl = document.createElement("div");
                 profEl.className = "szaki-profession";
-                const profList = Array.isArray(sz.profession) ? sz.profession.join(", ") : sz.profession;
-                profEl.textContent = profList;
+                profEl.textContent =
+                    Array.isArray(szaki.profession)
+                        ? szaki.profession.join(", ")
+                        : szaki.profession;
                 card.appendChild(profEl);
 
-                if (sz.note) {
-                    const note = document.createElement("div");
-                    note.className = "szaki-note";
-                    note.textContent = sz.note;
-                    card.appendChild(note);
+                if (szaki.note) {
+                    const noteEl = document.createElement("div");
+                    noteEl.className = "szaki-note";
+                    noteEl.textContent = szaki.note;
+                    card.appendChild(noteEl);
                 }
 
-                const tel = document.createElement("div");
-                tel.className = "szaki-phone";
-                tel.innerHTML = "<b>Telefon:</b> " + getPhone(sz);
-                card.appendChild(tel);
+                const phoneEl = document.createElement("div");
+                phoneEl.className = "szaki-phone";
+                phoneEl.innerHTML =
+                    "<b>Telefonszám:</b> " + window.SzakiAdatok.getMaskedPhone(szaki);
+                card.appendChild(phoneEl);
 
-                const hol = document.createElement("div");
-                hol.className = "szaki-holiday";
-                hol.textContent = getHoliday(sz);
-                card.appendChild(hol);
+                const emailEl = document.createElement("div");
+                emailEl.className = "szaki-email";
+                emailEl.innerHTML =
+                    "<b>Email:</b> " + window.SzakiAdatok.getMaskedEmail(szaki);
+                card.appendChild(emailEl);
 
-                const status = document.createElement("div");
-                status.className = "szaki-status " + (sz.isReal ? "real" : "demo");
-                status.textContent = sz.isOnline ? "ONLINE – azonnal elérhető" : "Offline";
-                card.appendChild(status);
+                const statusEl = document.createElement("div");
+                statusEl.className =
+                    szaki.isOnline ? "szaki-status-online" : "szaki-status-offline";
+                statusEl.textContent =
+                    szaki.isOnline ? "ONLINE" : "OFFLINE";
+                card.appendChild(statusEl);
 
-                // Gombok
                 const actions = document.createElement("div");
                 actions.className = "szaki-actions";
 
                 const chatBtn = document.createElement("button");
                 chatBtn.className = "btn-chat";
-
-                if (sz.isReal) {
-                    chatBtn.textContent = "Chat indítása";
-                    chatBtn.onclick = () => openChatWith(sz.name);
-                } else {
-                    chatBtn.textContent = "Nem elérhető";
-                    chatBtn.classList.add("disabled");
-                }
+                chatBtn.textContent = "Chat indítása";
+                chatBtn.onclick = () => openChatWith(szaki.name);
 
                 const shareBtn = document.createElement("button");
                 shareBtn.className = "btn-share";
                 shareBtn.textContent = "Megosztás";
-                shareBtn.onclick = () => shareSzaki(sz);
+                shareBtn.onclick = sharePage;
 
                 actions.appendChild(chatBtn);
                 actions.appendChild(shareBtn);
-                card.appendChild(actions);
 
+                card.appendChild(actions);
                 section.appendChild(card);
             });
 
-            lista.appendChild(section);
+            container.appendChild(section);
         });
-    }
 
-    renderSzakik();
+    })();
+
 </script>
-...
-<!-- már meglévő scriptjeid alá -->
-
-<script type="module" src="szaki-online.js"></script>
-</body>
-</html>
 
 </body>
 </html>

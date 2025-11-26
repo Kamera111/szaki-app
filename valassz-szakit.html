@@ -1,159 +1,189 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-<meta charset="UTF-8" />
-<title>Válassz szakit – Szaki-App</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" />
+    <title>Válassz szakembert – Szaki-App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<style>
-    body {
-        background:#f5f5f5;
-        margin:0;
-        font-family:Arial,sans-serif;
-        padding:15px;
-    }
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
 
-    h2 { text-align:center; margin-bottom:20px; }
+        header {
+            background: #ff8c00;
+            color: #fff;
+            padding: 16px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+        }
 
-    .worker-card{
-        background:white;
-        border-radius:10px;
-        padding:15px;
-        margin-bottom:14px;
-        box-shadow:0 2px 8px rgba(0,0,0,0.08);
-    }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 16px;
+        }
 
-    .worker-name{
-        font-size:18px;
-        font-weight:bold;
-    }
+        .szaki-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 14px;
+        }
 
-    .worker-prof{
-        color:#666;
-        margin-top:4px;
-    }
+        .szaki-header-line {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: baseline;
+        }
 
-    .worker-status{
-        margin-top:6px;
-        font-size:13px;
-        color:#444;
-    }
+        .szaki-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
 
-    .select-btn{
-        margin-top:12px;
-        width:100%;
-        padding:10px;
-        background:#ff8c00;
-        color:white;
-        border:none;
-        border-radius:8px;
-        font-weight:bold;
-        cursor:pointer;
-    }
-</style>
+        .szaki-profession {
+            font-size: 14px;
+            color: #555;
+            margin-top: 6px;
+        }
+
+        .szaki-phone {
+            font-size: 14px;
+            margin-top: 6px;
+            color: #333;
+        }
+
+        .szaki-email {
+            font-size: 13px;
+            margin-top: 4px;
+            color: #555;
+        }
+
+        .szaki-online {
+            margin-top: 5px;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .online { color:#28a745; }
+        .offline { color:#c00; }
+
+        .btn-chat {
+            margin-top: 12px;
+            width: 100%;
+            padding: 10px;
+            background: #28a745;
+            color: white;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .btn-chat:active {
+            transform: translateY(1px);
+        }
+
+        .no-result {
+            font-size: 18px;
+            margin-top: 20px;
+            text-align: center;
+            color: #444;
+        }
+    </style>
 </head>
+
 <body>
 
-<h2>Válassz szakit</h2>
+<header>Válassz szakembert</header>
 
-<div id="worker-list"></div>
+<div class="container">
+    <div id="szaki-lista"></div>
+</div>
 
 <script type="module">
 
-//---------------------------------------------------------
-// IMPORTOK
-//---------------------------------------------------------
-import { app, db } from "./firebase-config.js";
-import {
-    collection, getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { db } from "./firebase-config.js";
+    import {
+        collection,
+        getDocs,
+        query,
+        where
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import {
-    watchUserStatus,
-    formatLastActive
-} from "./users-status.js";
+    import { markUserOnline } from "./users-status.js";
 
-import "./masking.js";
-import "./szaki-adatok.js";
+    // A MEGRENDELŐT ONLINE-nak jelöljük
+    markUserOnline("megrendelo_" + Date.now());
 
-//---------------------------------------------------------
-// URL PARAMÉTEREK
-//---------------------------------------------------------
-const params = new URLSearchParams(window.location.search);
-const megrendelonev = params.get("name") || "Megrendelő";
-const szakma = params.get("szakma");
+    const params = new URLSearchParams(window.location.search);
+    const keresettSzakma = params.get("szakma") || "";
+    const megrendelonev = params.get("name") || "Megrendelő";
 
-//---------------------------------------------------------
-// SZAKI LISTA BETÖLTÉSE
-//---------------------------------------------------------
-const listEl = document.getElementById("worker-list");
+    const listBox = document.getElementById("szaki-lista");
 
-// Saját adatbázis (helyi)
-const allSzakik = window.SzakiAdatok.getAllSzakik()
-    .filter(s => {
-        if (Array.isArray(s.profession)) return s.profession.includes(szakma);
-        return s.profession === szakma;
-    });
+    async function loadSzakik() {
+        listBox.innerHTML = "<p>Betöltés…</p>";
 
-// Firestore (felhasználói státusz + elérhetőségek)
-const usersRef = collection(db, "users");
-const snap = await getDocs(usersRef);
+        const szakikRef = collection(db, "szakik");
 
-const firestoreUsers = {};
-snap.forEach(d => firestoreUsers[d.id] = d.data());
+        let qRef;
+        if (keresettSzakma) {
+            qRef = query(szakikRef, where("szakmak", "array-contains", keresettSzakma));
+        } else {
+            qRef = szakikRef;
+        }
 
-//---------------------------------------------------------
-// LISTA KIRAJZOLÁSA
-//---------------------------------------------------------
-allSzakik.forEach(sz => {
+        const snap = await getDocs(qRef);
 
-    // Firestore user adatok
-    const fUser = firestoreUsers[sz.name] || {};
-
-    // MASZKOLT TELEFON
-    const maskedPhone = window.Mask.phone(sz.phone);
-
-    const card = document.createElement("div");
-    card.className = "worker-card";
-
-    card.innerHTML = `
-        <div class="worker-name">${sz.name}</div>
-        <div class="worker-prof">${sz.profession}</div>
-
-        <div class="worker-status" id="status-${sz.name.replace(/\s+/g,'')}">
-            Státusz betöltése…
-        </div>
-
-        <div style="margin-top:6px; font-size:13px;">
-            Telefonszám: <b>${maskedPhone}</b>
-        </div>
-
-        <button class="select-btn"
-            onclick="window.location.href='chat.html?sender=${encodeURIComponent(megrendelonev)}&partner=${encodeURIComponent(sz.name)}'">
-            Chat indítása
-        </button>
-    `;
-
-    listEl.appendChild(card);
-
-    //-----------------------------------------------------
-    // REALTIME ONLINE STÁTUSZ MEGFIGYELÉS
-    //-----------------------------------------------------
-    const statusEl = document.getElementById("status-" + sz.name.replace(/\s+/g,''));
-
-    watchUserStatus(sz.name, (data) => {
-        if (!data) {
-            statusEl.textContent = "Nincs adat";
+        if (snap.empty) {
+            listBox.innerHTML = `<div class="no-result">
+                Ehhez a szakmához nincs elérhető szaki.
+            </div>`;
             return;
         }
 
-        if (data.isOnline) {
-            statusEl.textContent = "🟢 Online";
-        } else {
-            statusEl.textContent = "⚪ Utoljára aktív: " + formatLastActive(data.lastActive);
-        }
-    });
-});
+        listBox.innerHTML = "";
+
+        snap.forEach(doc => {
+            const d = doc.data();
+
+            const div = document.createElement("div");
+            div.className = "szaki-card";
+
+            div.innerHTML = `
+                <div class="szaki-header-line">
+                    <div class="szaki-name">${d.name}</div>
+                    <div class="szaki-online ${d.online ? "online" : "offline"}">
+                        ${d.online ? "ONLINE" : "offline"}
+                    </div>
+                </div>
+
+                <div class="szaki-profession">${d.szakmak.join(", ")}</div>
+
+                <div class="szaki-phone">Telefon: ${d.phoneMasked || "***"}</div>
+                <div class="szaki-email">Email: ${d.emailMasked || "***"}</div>
+
+                <button class="btn-chat"
+                    onclick="window.location.href =
+                    'chat.html?sender=${encodeURIComponent(megrendelonev)}&partner=${encodeURIComponent(d.name)}'">
+                    Chat indítása
+                </button>
+            `;
+
+            listBox.appendChild(div);
+        });
+    }
+
+    loadSzakik();
 
 </script>
 

@@ -1,187 +1,159 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8" />
-    <title>Válassz szakembert – Szaki-App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-        body {
-            margin: 0; padding: 0;
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-        }
-        header {
-            background: #ff8c00; color:#fff;
-            padding: 16px; text-align:center;
-            font-size:20px; font-weight:bold;
-        }
-        .container {
-            max-width:900px; margin:0 auto; padding:16px;
-        }
-        .info-box {
-            background:white; padding:14px 16px;
-            border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.08);
-            margin-bottom:16px; font-size:14px; line-height:1.4;
-        }
-        .profession-title {
-            font-size:18px; font-weight:bold;
-            margin:18px 0 12px; color:#333;
-        }
-        .szaki-card {
-            background:white; border-radius:12px;
-            padding:14px 16px;
-            box-shadow:0 2px 10px rgba(0,0,0,0.08);
-            margin-bottom:14px;
-        }
-        .szaki-header-line {
-            display:flex; justify-content:space-between;
-            gap:12px; align-items:baseline;
-        }
-        .szaki-name { font-size:17px; font-weight:bold; color:#222; }
-        .szaki-badge {
-            font-size:11px; padding:3px 8px;
-            border-radius:999px; background:#ffe6bf;
-            color:#8a4b00; white-space:nowrap;
-        }
-        .szaki-profession { margin-top:4px; font-size:13px; color:#555; }
-        .szaki-phone { margin-top:6px; font-size:13px; }
-        .szaki-phone b { font-weight:bold; }
-        .szaki-status { margin-top:6px; font-size:12px; }
-        .szaki-status.real { color:#007700; }
-        .szaki-status.demo { color:#aa0000; }
+<meta charset="UTF-8" />
+<title>Válassz szakit – Szaki-App</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        .szaki-actions {
-            margin-top:12px; display:flex; gap:8px;
-        }
-        .btn-chat, .btn-share {
-            flex:1; padding:9px 8px; border-radius:999px;
-            border:none; font-size:13px; cursor:pointer;
-        }
-        .btn-chat { background:#28a745; color:white; font-weight:bold; }
-        .btn-chat.disabled {
-            background:#ccc; color:#666; cursor:not-allowed;
-        }
-        .btn-share { background:#007bff; color:white; }
-    </style>
-</head>
-
-<body>
-<header>Válassz szakembert</header>
-
-<div class="container">
-
-    <div class="info-box" id="info-box">
-        Betöltés…
-    </div>
-
-    <div id="szaki-lista"></div>
-</div>
-
-<script src="szaki-adatok.js"></script>
-<script type="module">
-    import { getMaskedContact, canRevealRealData } from "./masking.js";
-
-    // URL paraméterek
-    const params = new URLSearchParams(window.location.search);
-    const szakmaQuery = params.get("szakma") || "";
-    const megrendelonev = params.get("name") || "Megrendelő";
-
-    // Fejléc doboz
-    const infoBox = document.getElementById("info-box");
-    infoBox.innerHTML =
-        `<b>Megrendelő neve:</b> ${megrendelonev}<br>
-         <b>Keresett szakma:</b> ${szakmaQuery}<br><br>
-         Válassz a lenti szakemberek közül és indíts chatet!`;
-
-    // SZAKI LISTA
-    const list = document.getElementById("szaki-lista");
-
-    const szakik = window.SzakiAdatok.getAllSzakik()
-        .map(s => ({
-            ...s,
-            maskedPhone: getMaskedContact(megrendelonev, s.phone)
-        }))
-        .filter(s => {
-            if (!szakmaQuery) return true;
-            if (Array.isArray(s.profession)) {
-                return s.profession.includes(szakmaQuery);
-            }
-            return s.profession === szakmaQuery;
-        });
-
-    if (szakik.length === 0) {
-        list.innerHTML =
-            `<p style="margin-top:20px; font-size:18px;">
-                Nincs szakember ehhez a szakmához.
-             </p>`;
+<style>
+    body {
+        background:#f5f5f5;
+        margin:0;
+        font-family:Arial,sans-serif;
+        padding:15px;
     }
 
-    szakik.forEach(szaki => {
-        const card = document.createElement("div");
-        card.className = "szaki-card";
+    h2 { text-align:center; margin-bottom:20px; }
 
-        const badgeText = szaki.isReal
-            ? (szaki.name === "Csabi"
-                ? "KIEMELT SZAKEMBER – Platina rang"
-                : "Igazolt szakember")
-            : "Naptára betáblázva";
+    .worker-card{
+        background:white;
+        border-radius:10px;
+        padding:15px;
+        margin-bottom:14px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    }
 
-        card.innerHTML = `
-            <div class="szaki-header-line">
-                <div class="szaki-name">${szaki.name}</div>
-                <div class="szaki-badge">${badgeText}</div>
-            </div>
+    .worker-name{
+        font-size:18px;
+        font-weight:bold;
+    }
 
-            <div class="szaki-profession">
-                ${Array.isArray(szaki.profession) ? szaki.profession.join(", ") : szaki.profession}
-            </div>
+    .worker-prof{
+        color:#666;
+        margin-top:4px;
+    }
 
-            <div class="szaki-phone">
-                <b>Telefon:</b> ${szaki.maskedPhone}
-                ${!canRevealRealData(megrendelonev) ? `
-                  <span style="color:#c00; font-size:11px;">
-                    (5 megosztás után látható)
-                  </span>` : ""}
-            </div>
+    .worker-status{
+        margin-top:6px;
+        font-size:13px;
+        color:#444;
+    }
 
-            <div class="szaki-status ${szaki.isReal ? "real" : "demo"}">
-                ${szaki.isReal ? "Elérhető – indíts chatet!" : "Jelenleg nem fogad munkát"}
-            </div>
-        `;
+    .select-btn{
+        margin-top:12px;
+        width:100%;
+        padding:10px;
+        background:#ff8c00;
+        color:white;
+        border:none;
+        border-radius:8px;
+        font-weight:bold;
+        cursor:pointer;
+    }
+</style>
+</head>
+<body>
 
-        // Gombok
-        const actions = document.createElement("div");
-        actions.className = "szaki-actions";
+<h2>Válassz szakit</h2>
 
-        const chatBtn = document.createElement("button");
-        chatBtn.className = "btn-chat";
-        chatBtn.textContent = "Chat indítása";
+<div id="worker-list"></div>
 
-        if (!szaki.isReal) {
-            chatBtn.classList.add("disabled");
-            chatBtn.onclick = () => alert("Ez a szaki most nem elérhető.");
-        } else {
-            chatBtn.onclick = () => {
-                window.location.href =
-                    `chat.html?sender=${encodeURIComponent(megrendelonev)}&partner=${encodeURIComponent(szaki.name)}`;
-            };
+<script type="module">
+
+//---------------------------------------------------------
+// IMPORTOK
+//---------------------------------------------------------
+import { app, db } from "./firebase-config.js";
+import {
+    collection, getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import {
+    watchUserStatus,
+    formatLastActive
+} from "./users-status.js";
+
+import "./masking.js";
+import "./szaki-adatok.js";
+
+//---------------------------------------------------------
+// URL PARAMÉTEREK
+//---------------------------------------------------------
+const params = new URLSearchParams(window.location.search);
+const megrendelonev = params.get("name") || "Megrendelő";
+const szakma = params.get("szakma");
+
+//---------------------------------------------------------
+// SZAKI LISTA BETÖLTÉSE
+//---------------------------------------------------------
+const listEl = document.getElementById("worker-list");
+
+// Saját adatbázis (helyi)
+const allSzakik = window.SzakiAdatok.getAllSzakik()
+    .filter(s => {
+        if (Array.isArray(s.profession)) return s.profession.includes(szakma);
+        return s.profession === szakma;
+    });
+
+// Firestore (felhasználói státusz + elérhetőségek)
+const usersRef = collection(db, "users");
+const snap = await getDocs(usersRef);
+
+const firestoreUsers = {};
+snap.forEach(d => firestoreUsers[d.id] = d.data());
+
+//---------------------------------------------------------
+// LISTA KIRAJZOLÁSA
+//---------------------------------------------------------
+allSzakik.forEach(sz => {
+
+    // Firestore user adatok
+    const fUser = firestoreUsers[sz.name] || {};
+
+    // MASZKOLT TELEFON
+    const maskedPhone = window.Mask.phone(sz.phone);
+
+    const card = document.createElement("div");
+    card.className = "worker-card";
+
+    card.innerHTML = `
+        <div class="worker-name">${sz.name}</div>
+        <div class="worker-prof">${sz.profession}</div>
+
+        <div class="worker-status" id="status-${sz.name.replace(/\s+/g,'')}">
+            Státusz betöltése…
+        </div>
+
+        <div style="margin-top:6px; font-size:13px;">
+            Telefonszám: <b>${maskedPhone}</b>
+        </div>
+
+        <button class="select-btn"
+            onclick="window.location.href='chat.html?sender=${encodeURIComponent(megrendelonev)}&partner=${encodeURIComponent(sz.name)}'">
+            Chat indítása
+        </button>
+    `;
+
+    listEl.appendChild(card);
+
+    //-----------------------------------------------------
+    // REALTIME ONLINE STÁTUSZ MEGFIGYELÉS
+    //-----------------------------------------------------
+    const statusEl = document.getElementById("status-" + sz.name.replace(/\s+/g,''));
+
+    watchUserStatus(sz.name, (data) => {
+        if (!data) {
+            statusEl.textContent = "Nincs adat";
+            return;
         }
 
-        const shareBtn = document.createElement("button");
-        shareBtn.className = "btn-share";
-        shareBtn.textContent = "Megosztás";
-        shareBtn.onclick = () => {
-            const link = window.location.href;
-            navigator.clipboard.writeText(link);
-            alert("Link másolva! Oszd meg 5× a valós számért.");
-        };
-
-        actions.appendChild(chatBtn);
-        actions.appendChild(shareBtn);
-
-        card.appendChild(actions);
-        list.appendChild(card);
+        if (data.isOnline) {
+            statusEl.textContent = "🟢 Online";
+        } else {
+            statusEl.textContent = "⚪ Utoljára aktív: " + formatLastActive(data.lastActive);
+        }
     });
+});
 
 </script>
 

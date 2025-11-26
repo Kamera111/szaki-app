@@ -7,134 +7,125 @@
 
     <style>
         body {
-            background: #f5f5f5;
             font-family: Arial, sans-serif;
-            padding: 20px;
-            margin: 0;
+            background:#f5f5f5;
+            margin:0;
+            padding:20px;
         }
+
         .box {
-            background: white;
-            padding: 22px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 650px;
-            margin: auto;
+            max-width:600px;
+            margin:0 auto;
+            background:white;
+            padding:20px;
+            border-radius:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.12);
         }
+
         h2 {
-            margin: 0 0 12px;
-            font-size: 22px;
+            margin-top:0;
+            text-align:center;
         }
+
+        label {
+            font-weight:bold;
+            margin-top:15px;
+            display:block;
+        }
+
         input, select {
-            width: 100%;
-            padding: 13px;
-            margin: 12px 0;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            font-size: 15px;
+            width:100%;
+            padding:12px;
+            border-radius:8px;
+            border:1px solid #ccc;
+            margin-top:6px;
+            font-size:15px;
         }
+
         button {
-            width: 100%;
-            padding: 14px;
-            font-size: 17px;
-            background: #ff8c00;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: bold;
-            cursor: pointer;
+            width:100%;
+            padding:14px;
+            background:#ff8c00;
+            border:none;
+            border-radius:8px;
+            color:white;
+            font-weight:bold;
+            font-size:17px;
+            margin-top:20px;
+            cursor:pointer;
         }
+
         button:active {
-            transform: translateY(1px);
-            filter: brightness(0.95);
+            transform:translateY(1px);
+            filter:brightness(0.95);
+        }
+
+        .info {
+            margin-top:20px;
+            font-size:13px;
+            color:#666;
+            background:#fff3d1;
+            border-left:4px solid #ff8c00;
+            padding:12px;
+            border-radius:6px;
         }
     </style>
 </head>
+
 <body>
 
 <div class="box">
-    <h2>Új megrendelő – 1. lépés</h2>
-    <p style="font-size:13px; margin-top:-4px; color:#666;">
-        Add meg az alapadatokat, majd tovább léphetsz a munka részleteihez.
-    </p>
+    <h2>Új megrendelő</h2>
 
-    <input id="nev" type="text" placeholder="Teljes neved" />
-    <input id="elerhetoseg" type="text" placeholder="Telefonszám / Email" />
-    <input id="varos" type="text" placeholder="Város / Kerület (pl.: Budapest, XIII.)" />
+    <label>Neved</label>
+    <input id="name" type="text" placeholder="Add meg a neved…" />
 
+    <label>Milyen szakembert keresel?</label>
     <select id="szakma">
         <option value="">Válassz szakmát</option>
         <option value="Kőműves">Kőműves</option>
         <option value="Festő">Festő</option>
         <option value="Burkoló">Burkoló</option>
-        <option value="Gipszkartonos">Gipszkartonos</option>
+        <option value="Gipszkartonszerelő">Gipszkartonszerelő</option>
         <option value="Villanyszerelő">Villanyszerelő</option>
         <option value="Vízszerelő">Vízszerelő</option>
         <option value="Gázszerelő">Gázszerelő</option>
-        <option value="Fűtésszerelő">Fűtésszerelő</option>
-        <option value="Klímaszerelő">Klímaszerelő</option>
+        <option value="Teljes felújítás">Teljes felújítás</option>
     </select>
 
-    <label style="font-size:14px; margin-top:8px;">Munka várható mérete</label>
-    <select id="meret">
-        <option value="">Válassz méretet</option>
-        <option value="1 napos kisebb munka">1 napos kisebb munka</option>
-        <option value="1–3 napos közepes munka">1–3 napos közepes munka</option>
-        <option value="Több napos nagy munka">Több napos nagy munka</option>
-        <option value="Nagy projekt / Lakásfelújítás">Nagy projekt / Teljes felújítás</option>
-    </select>
+    <button onclick="goNext()">Tovább</button>
 
-    <button onclick="lepes2()">Tovább a részletekhez</button>
+    <div class="info">
+        A megrendelők nem látnak telefonszámot vagy email címet.<br>
+        A beszélgetést a <b>Chat</b> felületen keresztül kell intézni.
+    </div>
 </div>
 
 <script type="module">
-    import { db } from "./firebase-config.js";
-    import { setDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { markUserOnline } from "./users-status.js";
 
-    async function lepes2() {
+    // Mikor belép a megrendelő az oldalra → online jelzés
+    markUserOnline("megrendelo_" + Date.now());
 
-        const nev = document.getElementById("nev").value.trim();
-        const eler = document.getElementById("elerhetoseg").value.trim();
-        const varos = document.getElementById("varos").value.trim();
+    // Következő oldal
+    window.goNext = function () {
+        const name = document.getElementById("name").value.trim();
         const szakma = document.getElementById("szakma").value;
-        const meret = document.getElementById("meret").value;
 
-        if (!nev || !eler || !varos || !szakma || !meret) {
-            alert("Kérlek tölts ki minden mezőt!");
+        if (!name || !szakma) {
+            alert("Tölts ki minden mezőt!");
             return;
         }
 
-        // 🔥 ADATOK MENTÉSE LOCAL STORAGE-BE (2. lépéshez továbbvitel)
-        localStorage.setItem("mr_nev", nev);
-        localStorage.setItem("mr_elerhetoseg", eler);
-        localStorage.setItem("mr_varos", varos);
-        localStorage.setItem("mr_szakma", szakma);
-        localStorage.setItem("mr_meret", meret);
+        // megyünk a szaki választó oldalra
+        const link =
+            "valassz-szakit.html?megrendelonev=" +
+            encodeURIComponent(name) +
+            "&szakma=" +
+            encodeURIComponent(szakma);
 
-        // 🔥 FIRESTORE: megrendelő alapszintű adatlap létrehozása
-        try {
-            const id = nev.toLowerCase().replace(/[^a-z0-9]/g, "") + "_" + Date.now();
-
-            await setDoc(doc(db, "megrendelok", id), {
-                nev,
-                elerhetoseg: eler,
-                varos,
-                szakmaFo: szakma,
-                meret,
-                createdAt: serverTimestamp(),
-                status: "alapadatok_kesz"  // később a 2. lépés állapotot frissíti
-            });
-
-            console.log("Megrendelő mentve Firestore-ba:", id);
-
-        } catch (err) {
-            console.error("Firestore hiba:", err);
-            alert("Hiba történt az adatok mentésekor.");
-            return;
-        }
-
-        // 🔥 TOVÁBBLÉPÉS a részletes 2. lépéshez:
-        window.location.href = "munka-reszletei.html";
-    }
+        window.location.href = link;
+    };
 </script>
 
 </body>

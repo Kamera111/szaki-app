@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8" />
+<title>Admin – Chat Monitoring</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<style>
+    body {
+        margin:0; padding:0;
+        font-family:Arial, sans-serif;
+        background:#f4f4f4;
+    }
+
+    header {
+        background:#222; color:white;
+        padding:14px; font-size:20px;
+        text-align:center; font-weight:bold;
+    }
+
+    .container {
+        max-width:1000px;
+        margin:20px auto;
+        background:white;
+        padding:20px;
+        border-radius:10px;
+        box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    table {
+        width:100%;
+        border-collapse:collapse;
+        margin-top:10px;
+    }
+
+    th, td {
+        padding:10px;
+        border-bottom:1px solid #ddd;
+        font-size:14px;
+        text-align:left;
+    }
+
+    th {
+        background:#333;
+        color:white;
+    }
+
+    tr:hover {
+        background:#f9f9f9;
+    }
+
+    .btn-open {
+        padding:6px 10px;
+        background:#ff8c00;
+        color:white;
+        border:none;
+        border-radius:6px;
+        cursor:pointer;
+        font-size:13px;
+        font-weight:bold;
+    }
+
+    .status {
+        font-weight:bold;
+        padding:4px 8px;
+        border-radius:6px;
+        color:white;
+    }
+
+    .active { background:#28a745; }
+    .selected { background:#007bff; }
+    .rejected { background:#c00; }
+</style>
+</head>
+
+<body>
+
+<header>Admin – Chat Monitoring</header>
+
+<div class="container">
+    <h2>Folyamatban lévő beszélgetések</h2>
+    <p><i>Valós időben frissül Firestore alapján</i></p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Chat szoba</th>
+                <th>Megrendelés ID</th>
+                <th>Felhasználók</th>
+                <th>Státusz</th>
+                <th>Utolsó üzenet</th>
+                <th>Művelet</th>
+            </tr>
+        </thead>
+        <tbody id="chat-list"></tbody>
+    </table>
+</div>
+
+<script type="module">
+
+// Firestore importok
+import { app, db } from "./firebase-config.js";
+import {
+    collection, query, orderBy,
+    onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+// -----------------------------------------------------
+// FIGYELJÜK A teljes "chats" táblát
+// -----------------------------------------------------
+const chatListEl = document.getElementById("chat-list");
+
+const chatsRef = collection(db, "chats");
+const q = query(chatsRef, orderBy("lastMessageAt", "desc"));
+
+onSnapshot(q, (snapshot) => {
+    chatListEl.innerHTML = "";
+
+    snapshot.forEach((doc) => {
+        const data = doc.data();
+        const roomId = data.roomId;
+        const orderId = data.orderId || "N/A";
+        const users = data.users?.join(", ") || "-";
+        const lastTime = formatTime(data.lastMessageAt);
+        const status = data.status || "active";
+
+        let cssClass = "active";
+        if (status === "selected") cssClass = "selected";
+        if (status === "rejected") cssClass = "rejected";
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${roomId}</td>
+            <td>${orderId}</td>
+            <td>${users}</td>
+            <td><span class="status ${cssClass}">${status}</span></td>
+            <td>${lastTime}</td>
+            <td>
+                <button class="btn-open"
+                    onclick="window.open('chat.html?sender=${users.split(', ')[0]}&partner=${users.split(', ')[1]}&orderId=${orderId}','_blank')">
+                    Megnyitás
+                </button>
+            </td>
+        `;
+
+        chatListEl.appendChild(tr);
+    });
+});
+
+// -----------------------------------------------------
+// Idő formázó
+// -----------------------------------------------------
+function formatTime(ts) {
+    try {
+        const d = ts?.toDate();
+        if (!d) return "-";
+        return d.toLocaleString("hu-HU");
+    } catch { return "-"; }
+}
+
+</script>
+
+</body>
+</html>

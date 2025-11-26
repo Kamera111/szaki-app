@@ -8,182 +8,150 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 20px;
+            background:#f5f5f5;
+            margin:0;
+            padding:20px;
         }
 
         .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width:600px;
+            margin:auto;
+            background:white;
+            padding:20px;
+            border-radius:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.12);
         }
 
         h2 {
-            margin-top: 0;
-            text-align: center;
+            text-align:center;
         }
 
         label {
-            font-weight: bold;
-            display: block;
-            margin-top: 15px;
+            font-weight:bold;
+            display:block;
+            margin-top:15px;
         }
 
         input, select {
-            width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            margin-top: 6px;
-            font-size: 15px;
+            width:100%;
+            padding:12px;
+            border-radius:8px;
+            border:1px solid #ccc;
+            margin-top:5px;
+            font-size:15px;
+        }
+
+        .multi-select {
+            width:100%;
+            padding:12px;
+            border-radius:8px;
+            border:1px solid #ccc;
+            margin-top:6px;
+            font-size:15px;
+            height:120px;
         }
 
         button {
-            margin-top: 22px;
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            background: #ff8c00;
-            color: white;
-            font-size: 17px;
-            cursor: pointer;
+            margin-top:20px;
+            width:100%;
+            padding:14px;
+            border:none;
+            border-radius:8px;
+            background:#ff8c00;
+            color:white;
+            font-size:17px;
+            font-weight:bold;
+            cursor:pointer;
         }
 
         button:active {
-            transform: translateY(1px);
-            filter: brightness(0.95);
+            transform:translateY(1px);
         }
 
-        .success-box {
-            max-width: 600px;
-            margin: 20px auto;
-            background: #e8ffe8;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid #99dd99;
-            color: #155d15;
-            display: none;
+        .info {
+            margin-top:20px;
+            font-size:13px;
+            color:#666;
+            background:#fff3d1;
+            border-left:4px solid #ff8c00;
+            padding:12px;
+            border-radius:6px;
         }
-
-        .error-box {
-            max-width: 600px;
-            margin: 20px auto;
-            background: #ffe8e8;
-            padding: 14px;
-            border-radius: 10px;
-            border: 1px solid #dd9999;
-            color: #8a0000;
-            display: none;
-        }
-
     </style>
 </head>
+
 <body>
 
 <div class="container">
     <h2>Szaki regisztráció</h2>
 
-    <label>Név *</label>
-    <input type="text" id="nev" placeholder="Pl.: Kovács Béla">
+    <label>Név</label>
+    <input id="name" type="text" placeholder="Add meg a neved…">
 
-    <label>Szakma *</label>
-    <select id="szakma">
-        <option value="">Válassz szakmát…</option>
-        <option>Kőműves</option>
-        <option>Festő</option>
-        <option>Burkoló</option>
-        <option>Gipszkartonos</option>
-        <option>Villanyszerelő</option>
-        <option>Vízszerelő</option>
-        <option>Gázszerelő</option>
+    <label>Telefonszám</label>
+    <input id="phone" type="text" placeholder="+36…" />
+
+    <label>Email cím</label>
+    <input id="email" type="email" placeholder="email@example.com" />
+
+    <label>Mely szakmákban dolgozol?</label>
+    <select id="szakmak" class="multi-select" multiple>
+        <option value="Kőműves">Kőműves</option>
+        <option value="Festő">Festő</option>
+        <option value="Burkoló">Burkoló</option>
+        <option value="Gipszkartonszerelő">Gipszkartonszerelő</option>
+        <option value="Villanyszerelő">Villanyszerelő</option>
+        <option value="Vízszerelő">Vízszerelő</option>
+        <option value="Gázszerelő">Gázszerelő</option>
+        <option value="Teljes felújítás">Teljes felújítás</option>
     </select>
 
-    <label>Telefonszám *</label>
-    <input type="text" id="telefon" placeholder="+36 …">
+    <button onclick="regisztral()">Regisztráció</button>
 
-    <button id="reg-btn">Regisztráció</button>
+    <div class="info">
+        A telefonszám és email a felhasználóknak csillagozva jelenik meg.<br>
+        Teljes hozzáférés → 5 megosztás után.
+    </div>
 </div>
 
-<div class="success-box" id="success-box"></div>
-<div class="error-box" id="error-box"></div>
-
 <script type="module">
-    import { app, db } from "./firebase-config.js";
-    import {
-        collection,
-        addDoc,
-        query,
-        where,
-        getDocs,
-        serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { db } from "./firebase-config.js";
+    import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { maskPhone, maskEmail } from "./masking.js";
+    import { markUserOnline } from "./users-status.js";
 
-    const regBtn = document.getElementById("reg-btn");
-    const successBox = document.getElementById("success-box");
-    const errorBox = document.getElementById("error-box");
+    // Szaki belép → online
+    markUserOnline("szaki_" + Date.now());
 
-    regBtn.addEventListener("click", async () => {
-        successBox.style.display = "none";
-        errorBox.style.display = "none";
+    window.regisztral = async function () {
+        const name = document.getElementById("name").value.trim();
+        const phone = document.getElementById("phone").value.trim();
+        const email = document.getElementById("email").value.trim();
 
-        const nev = document.getElementById("nev").value.trim();
-        const szakma = document.getElementById("szakma").value.trim();
-        const telefon = document.getElementById("telefon").value.trim();
+        const szakmak = [...document.getElementById("szakmak").selectedOptions]
+            .map(o => o.value);
 
-        if (!nev || !szakma || !telefon) {
-            showError("Minden mező kitöltése kötelező!");
+        if (!name || !phone || !email || szakmak.length === 0) {
+            alert("Minden mezőt tölts ki!");
             return;
         }
 
-        try {
-            // Ellenőrzés: létezik-e már ilyen telefonszám
-            const q = query(
-                collection(db, "szakik"),
-                where("telefon", "==", telefon)
-            );
-            const snap = await getDocs(q);
+        const ref = doc(db, "szakik", name.toLowerCase());
 
-            if (!snap.empty) {
-                showError("Ezzel a telefonszámmal már van regisztrált szakember!");
-                return;
-            }
+        await setDoc(ref, {
+            name,
+            phone,
+            phoneMasked: maskPhone(phone),
+            email,
+            emailMasked: maskEmail(email),
+            szakmak,
+            createdAt: serverTimestamp(),
+            online: true
+        });
 
-            // Mentés Firestore-ba
-            await addDoc(collection(db, "szakik"), {
-                nev,
-                szakma,
-                telefon,
-                online: false,
-                createdAt: serverTimestamp(),
-                rating: 0,
-                jobsDone: 0
-            });
-
-            showSuccess("Sikeres regisztráció! A szakember felkerült a rendszerbe.");
-            setTimeout(() => {
-                window.location.href = "szaki-profilok.html";
-            }, 1500);
-
-        } catch (err) {
-            console.error(err);
-            showError("Hiba történt a regisztráció közben.");
-        }
-    });
-
-    function showSuccess(msg) {
-        successBox.textContent = msg;
-        successBox.style.display = "block";
-    }
-
-    function showError(msg) {
-        errorBox.textContent = msg;
-        errorBox.style.display = "block";
-    }
+        alert("Sikeres regisztráció! A profilod mostantól elérhető.");
+        window.location.href = "index.html";
+    };
 </script>
 
 </body>

@@ -1,122 +1,108 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8" />
-    <title>Munka részletei – Szaki-App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Munka részletei – Szaki-App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-        }
+  <style>
+    body {
+      background:#f5f5f5;
+      font-family: Arial, sans-serif;
+      margin:0; padding:0;
+    }
 
-        .wrapper {
-            max-width: 900px;
-            margin: 0 auto 40px;
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 30px 25px 35px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-        }
+    .wrapper {
+      max-width: 900px;
+      margin: 20px auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.08);
+    }
 
-        h1 {
-            text-align: center;
-            margin-top: 0;
-        }
+    input, select, textarea {
+      width:100%;
+      padding:10px;
+      margin-top:6px;
+      margin-bottom:18px;
+      border:1px solid #ccc;
+      border-radius:8px;
+      font-size:15px;
+    }
 
-        label {
-            font-weight: bold;
-            margin-top: 12px;
-            display: block;
-        }
-
-        textarea, input {
-            width: 100%;
-            box-sizing: border-box;
-            margin-top: 6px;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            font-size: 15px;
-        }
-
-        textarea {
-            height: 120px;
-            resize: vertical;
-        }
-
-        button {
-            margin-top: 20px;
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            background: #ff8c00;
-            color: #fff;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        button:active {
-            transform: translateY(1px);
-            filter: brightness(0.93);
-        }
-    </style>
+    button {
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      background:#ff8c00;
+      color:white;
+      font-weight:bold;
+      cursor:pointer;
+      font-size:16px;
+    }
+  </style>
 </head>
 
 <body>
 
 <div class="wrapper">
-    <h1>Munka részletei</h1>
+  <h2>Munka részletei</h2>
 
-    <label>Munka leírása (max 310 karakter)</label>
-    <textarea id="leiras" maxlength="310" placeholder="Pl.: 20 m² padlóburkolás, anyag megvan…"></textarea>
+  <label>Szakma</label>
+  <select id="profession">
+    <option value="Burkoló">Burkoló</option>
+    <option value="Festő">Festő</option>
+    <option value="Villanyszerelő">Villanyszerelő</option>
+    <option value="Gépész">Gépész</option>
+    <option value="Teljes felújítás">Teljes felújítás</option>
+  </select>
 
-    <label>Időpont (nem kötelező)</label>
-    <input id="idopont" type="text" placeholder="Pl.: holnap délelőtt, péntek 14:00…">
+  <label>Város</label>
+  <input type="text" id="city" value="Budapest">
 
-    <button onclick="sendJob()">Tovább → Szaki keresés</button>
+  <label>Munka leírása</label>
+  <textarea id="description" rows="5" placeholder="Írd le a munkát..."></textarea>
+
+  <label>Megrendelő neve</label>
+  <input type="text" id="customerName" placeholder="Név">
+
+  <button id="sendBtn">Munka elküldése</button>
 </div>
 
-<!-- Firebase + munka küldés -->
 <script type="module">
-    import { kuldMunka } from "./munka-kuldes.js";
+  import { sendWork } from "./munka-kuldes.js";
 
-    const params = new URLSearchParams(window.location.search);
-    const nev = params.get("name") || "";
-    const szakma = params.get("szakma") || "";
+  document.getElementById("sendBtn").onclick = async () => {
 
-    async function sendJob() {
-        const leiras = document.getElementById("leiras").value.trim();
-        const idopont = document.getElementById("idopont").value.trim();
+      const profession = document.getElementById("profession").value;
+      const city = document.getElementById("city").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const customerName = document.getElementById("customerName").value.trim();
 
-        if (!leiras) {
-            alert("Írd le a munkát!");
-            return;
-        }
+      if (!description || !customerName || !city) {
+          alert("Minden mező kötelező!");
+          return;
+      }
 
-        try {
-            const valasz = await kuldMunka({
-                megrendeloNev: nev,
-                szakma: szakma,
-                leiras: leiras,
-                idopont: idopont
-            });
+      // MUNKAKÜLDÉS + MATCHING
+      const result = await sendWork({
+          profession,
+          city,
+          description,
+          customerName
+      });
 
-            if (valasz && valasz.redirectUrl) {
-                window.location.href = valasz.redirectUrl;
-            } else {
-                alert("Hiba: nincs redirect URL.");
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Hiba a munkaküldésnél.");
-        }
-    }
+      console.log("MUNKA ELKÜLDVE:", result);
+
+      // ÁTIRÁNYÍTÁS A SZAKI VÁLASZTÓ OLDALRA
+      const url =
+        "valassz-szakit.html?orderId=" + result.orderId +
+        "&prof=" + encodeURIComponent(profession);
+
+      window.location.href = url;
+  };
 </script>
 
 </body>

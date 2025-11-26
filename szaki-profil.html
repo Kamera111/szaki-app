@@ -1,183 +1,175 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <title>Szaki profil – Szaki-App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
         body {
-            margin: 0;
-            padding: 0;
-            background: #f5f5f5;
-            font-family: Arial, sans-serif;
+            margin:0; padding:20px;
+            font-family:Arial; background:#f5f5f5;
         }
-
-        header {
-            background: #ff8c00;
-            color: white;
-            padding: 16px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 16px;
-        }
-
         .card {
-            background: white;
-            padding: 16px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            max-width:600px; margin:auto; background:white;
+            padding:20px; border-radius:10px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.1);
         }
-
-        .name {
-            font-size: 22px;
-            font-weight: bold;
-            margin-bottom: 6px;
+        h2 { margin:0 0 10px 0; }
+        .online { color:#28a745; font-weight:bold; }
+        .offline { color:#c00; font-weight:bold; }
+        .mask { color:#777; }
+        .section-title {
+            margin-top:20px; font-weight:bold; font-size:16px;
+            border-bottom:1px solid #ddd; padding-bottom:6px;
         }
-
-        .professions {
-            font-size: 15px;
-            color: #444;
-            margin-bottom: 12px;
-        }
-
-        .status-online {
-            font-weight: bold;
-            color: #28a745;
-            margin-bottom: 12px;
-        }
-
-        .status-offline {
-            font-weight: bold;
-            color: #c00;
-            margin-bottom: 12px;
-        }
-
-        .info-line {
-            font-size: 14px;
-            margin: 6px 0;
-        }
-
-        .btn-chat {
-            margin-top: 18px;
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            background: #28a745;
-            color: white;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .btn-chat:active {
-            transform: translateY(1px);
-        }
-
-        .back-btn {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .back-btn a {
-            color:#007bff;
+        .btn {
+            display:block; width:100%; margin-top:16px;
+            padding:12px; background:#ff8c00; color:white;
+            font-size:16px; border:none; border-radius:8px;
+            font-weight:bold; cursor:pointer; text-align:center;
             text-decoration:none;
-            font-size:14px;
+        }
+        .skills, .info-line {
+            margin:4px 0; font-size:14px;
+        }
+        .label { font-weight:bold; }
+        .avatar {
+            width:110px; height:110px; border-radius:50%;
+            object-fit:cover; border:3px solid #ff8c00;
+            margin-bottom:15px;
         }
     </style>
 </head>
 
 <body>
 
-<header>Szaki profil</header>
+<div class="card">
 
-<div class="container">
-    <div id="profile-card" class="card">
-        Betöltés…
-    </div>
+    <img id="avatar" class="avatar" src="" alt="Profilkép">
 
-    <div class="back-btn">
-        <a href="szaki-profilok.html">◀ Vissza a listához</a>
-    </div>
+    <h2 id="name">Betöltés…</h2>
+    <div id="online-status"></div>
+
+    <div class="section-title">Szakmák</div>
+    <div id="professions" class="skills"></div>
+
+    <div class="section-title">Elérhetőségek (maszkolva)</div>
+    <div class="info-line"><span class="label">Telefon:</span> <span id="phone" class="mask"></span></div>
+    <div class="info-line"><span class="label">E-mail:</span> <span id="email" class="mask"></span></div>
+
+    <div class="section-title">Bemutatkozó</div>
+    <div id="description" class="skills"></div>
+
+    <div class="section-title">Legutóbb online</div>
+    <div id="last-online" class="skills"></div>
+
+    <a id="chat-btn" class="btn">Chat indítása</a>
 </div>
 
 <script type="module">
 
-    import { db } from "./firebase-config.js";
+    import { app, db } from "./firebase-config.js";
     import {
-        doc,
-        getDoc
+        doc, getDoc
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    import { markUserOnline } from "./users-status.js";
+    import {
+        maskPhone, maskEmail
+    } from "./masking.js";
 
-    // A szaki profil URL: szaki-profil.html?name=Zsolti
+    import {
+        getLastOnline
+    } from "./users-status.js";
+
+    // ---------------------------------------------------
+    // URL PARAMÉTEREK
+    // ---------------------------------------------------
     const params = new URLSearchParams(window.location.search);
-    const szakiNev = params.get("name");
+    const szakiId = params.get("id");              // Firestore dokumentum ID
+    const megrendeloNev = params.get("megrendelonev") || "";
+    const orderId = params.get("orderId") || "";
 
-    const box = document.getElementById("profile-card");
-
-    if (!szakiNev) {
-        box.innerHTML = "<p>Hiba: nincs megadva a szaki neve az URL-ben.</p>";
-        throw new Error("Nincs name paraméter");
+    if (!szakiId) {
+        alert("Hiba: nincs megadva szaki ID!");
     }
 
-    // Megrendelő online jelölése
-    markUserOnline("megrendelo_" + Date.now());
+    // ---------------------------------------------------
+    // ELEMEK
+    // ---------------------------------------------------
+    const nameEl = document.getElementById("name");
+    const profEl = document.getElementById("professions");
+    const phoneEl = document.getElementById("phone");
+    const emailEl = document.getElementById("email");
+    const descEl = document.getElementById("description");
+    const avatarEl = document.getElementById("avatar");
+    const onlineEl = document.getElementById("online-status");
+    const lastOnlineEl = document.getElementById("last-online");
+    const chatBtn = document.getElementById("chat-btn");
 
-    // ------------------------------
-    // SZAKI ADATOK FIRESTORE-BÓL
-    // ------------------------------
-    async function loadProfile() {
+    // ---------------------------------------------------
+    // SZAKI ADATOK BETÖLTÉSE FIRESTORE-BÓL
+    // ---------------------------------------------------
+    async function loadSzaki() {
 
-        const ref = doc(db, "szakik", szakiNev);
+        const ref = doc(db, "users", szakiId);
         const snap = await getDoc(ref);
 
         if (!snap.exists()) {
-            box.innerHTML = `<p>Nincs ilyen szakember: <b>${szakiNev}</b></p>`;
+            nameEl.textContent = "Nincs ilyen szakember.";
             return;
         }
 
-        const d = snap.data();
+        const data = snap.data();
 
-        const isOnline = d.online ? "status-online" : "status-offline";
-        const onlineText = d.online ? "ONLINE" : "offline";
+        // ---------------------------------------------------
+        // NÉV, AVATAR
+        // ---------------------------------------------------
+        nameEl.textContent = data.name || "Ismeretlen";
+        avatarEl.src = data.avatar || "https://via.placeholder.com/110";
 
-        box.innerHTML = `
-            <div class="name">${d.name}</div>
+        // ---------------------------------------------------
+        // SZAKMÁK
+        // ---------------------------------------------------
+        if (Array.isArray(data.professions)) {
+            profEl.textContent = data.professions.join(", ");
+        } else {
+            profEl.textContent = data.profession || "-";
+        }
 
-            <div class="${isOnline}">${onlineText}</div>
+        // ---------------------------------------------------
+        // TELEFON & EMAIL MASZKOLÁSA
+        // ---------------------------------------------------
+        phoneEl.textContent = data.phone ? maskPhone(data.phone) : "-";
+        emailEl.textContent = data.email ? maskEmail(data.email) : "-";
 
-            <div class="professions">
-                Szakmák: ${d.szakmak.join(", ")}
-            </div>
+        // ---------------------------------------------------
+        // BEMUTATKOZÁS
+        // ---------------------------------------------------
+        descEl.textContent = data.description || "Nincs megadva.";
 
-            <div class="info-line"><b>Telefon:</b> ${d.phoneMasked || "***"}</div>
-            <div class="info-line"><b>Email:</b> ${d.emailMasked || "***"}</div>
+        // ---------------------------------------------------
+        // ONLINE / OFFLINE
+        // ---------------------------------------------------
+        const last = await getLastOnline(data.name);
+        if (last === "online") {
+            onlineEl.innerHTML = `<span class="online">● Online</span>`;
+        } else {
+            onlineEl.innerHTML = `<span class="offline">● Offline</span>`;
+        }
 
-            ${d.note ? `<div class="info-line"><b>Megjegyzés:</b> ${d.note}</div>` : ""}
+        lastOnlineEl.textContent = last || "Nincs adat";
 
-            ${
-                d.holidays
-                ? `<div class="info-line"><b>Nyaralás:</b> ${d.holidays.from} – ${d.holidays.to}</div>`
-                : ""
-            }
-
-            <button class="btn-chat"
-                onclick="window.location.href =
-                'chat.html?sender=${encodeURIComponent("Megrendelő")}&partner=${encodeURIComponent(d.name)}'">
-                Chat indítása
-            </button>
-        `;
+        // ---------------------------------------------------
+        // CHAT GOMB
+        // ---------------------------------------------------
+        chatBtn.href =
+            `chat.html?sender=${encodeURIComponent(megrendeloNev)}` +
+            `&partner=${encodeURIComponent(data.name)}` +
+            `&orderId=${encodeURIComponent(orderId)}`;
     }
 
-    loadProfile();
+    loadSzaki();
 
 </script>
 

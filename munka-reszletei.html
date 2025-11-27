@@ -1,108 +1,136 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-  <meta charset="UTF-8">
-  <title>Munka részletei – Szaki-App</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Munka részletei – Szaki-App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      background:#f5f5f5;
-      font-family: Arial, sans-serif;
-      margin:0; padding:0;
-    }
+    <style>
+        body {
+            background: #f2f2f2;
+            margin: 0;
+            padding: 25px 10px;
+            font-family: Arial, sans-serif;
+        }
 
-    .wrapper {
-      max-width: 900px;
-      margin: 20px auto;
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow:0 2px 10px rgba(0,0,0,0.08);
-    }
+        .wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px 20px 35px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+        }
 
-    input, select, textarea {
-      width:100%;
-      padding:10px;
-      margin-top:6px;
-      margin-bottom:18px;
-      border:1px solid #ccc;
-      border-radius:8px;
-      font-size:15px;
-    }
+        h1 {
+            text-align: center;
+            margin: 0;
+        }
 
-    button {
-      width:100%;
-      padding:12px;
-      border:none;
-      border-radius:8px;
-      background:#ff8c00;
-      color:white;
-      font-weight:bold;
-      cursor:pointer;
-      font-size:16px;
-    }
-  </style>
+        p.leiras {
+            text-align: center;
+            color: #666;
+            margin: 10px 0 20px;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 15px;
+            display: block;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-top: 6px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #bbb;
+            resize: vertical;
+            font-size: 15px;
+        }
+
+        .szam {
+            margin-top: 6px;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #bbb;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 17px;
+            background: #ff8c00;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .info-box {
+            background: #fff9df;
+            padding: 12px;
+            margin-top: 20px;
+            border-left: 4px solid #ff8c00;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #444;
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="wrapper">
-  <h2>Munka részletei</h2>
 
-  <label>Szakma</label>
-  <select id="profession">
-    <option value="Burkoló">Burkoló</option>
-    <option value="Festő">Festő</option>
-    <option value="Villanyszerelő">Villanyszerelő</option>
-    <option value="Gépész">Gépész</option>
-    <option value="Teljes felújítás">Teljes felújítás</option>
-  </select>
+    <h1>2. lépés – Munka részletei</h1>
+    <p class="leiras">Írd le minél pontosabban a feladatot.</p>
 
-  <label>Város</label>
-  <input type="text" id="city" value="Budapest">
+    <label>Munka leírása (legalább 30 karakter)</label>
+    <textarea id="munkaLeiras" placeholder="Pl.: 20 m² burkolás a nappaliban, régi burkolat felszedése, új 60x60-as lapok..."></textarea>
 
-  <label>Munka leírása</label>
-  <textarea id="description" rows="5" placeholder="Írd le a munkát..."></textarea>
+    <label>Helyiségek száma</label>
+    <input type="number" id="helyisegek" class="szam" min="1" max="20" placeholder="Pl.: 3">
 
-  <label>Megrendelő neve</label>
-  <input type="text" id="customerName" placeholder="Név">
+    <label>Becsült munkadíj kereted (nem kötelező)</label>
+    <input type="number" id="budget" class="szam" placeholder="Pl.: 250000">
 
-  <button id="sendBtn">Munka elküldése</button>
+    <button id="tovabb">Tovább a szakikhoz</button>
+
+    <div class="info-box">
+        A megadott adatok alapján a rendszer kiválasztja a megfelelő szakembereket, először az online elérhetőket.
+    </div>
+
 </div>
 
-<script type="module">
-  import { sendWork } from "./munka-kuldes.js";
+<script>
+    const leiras = document.getElementById("munkaLeiras");
+    const tovabb = document.getElementById("tovabb");
 
-  document.getElementById("sendBtn").onclick = async () => {
+    // Kötelező a min. 30 karakter
+    function ellenoriz() {
+        const ok = leiras.value.trim().length >= 30;
+        tovabb.disabled = !ok;
+    }
 
-      const profession = document.getElementById("profession").value;
-      const city = document.getElementById("city").value.trim();
-      const description = document.getElementById("description").value.trim();
-      const customerName = document.getElementById("customerName").value.trim();
+    leiras.addEventListener("input", ellenoriz);
 
-      if (!description || !customerName || !city) {
-          alert("Minden mező kötelező!");
-          return;
-      }
+    document.getElementById("tovabb").addEventListener("click", () => {
+        localStorage.setItem("mr_leiras", leiras.value.trim());
+        localStorage.setItem("mr_helyisegek", document.getElementById("helyisegek").value);
+        localStorage.setItem("mr_budget", document.getElementById("budget").value);
 
-      // MUNKAKÜLDÉS + MATCHING
-      const result = await sendWork({
-          profession,
-          city,
-          description,
-          customerName
-      });
-
-      console.log("MUNKA ELKÜLDVE:", result);
-
-      // ÁTIRÁNYÍTÁS A SZAKI VÁLASZTÓ OLDALRA
-      const url =
-        "valassz-szakit.html?orderId=" + result.orderId +
-        "&prof=" + encodeURIComponent(profession);
-
-      window.location.href = url;
-  };
+        window.location.href = "valassz-szakit.html";
+    });
 </script>
 
 </body>

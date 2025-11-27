@@ -6,34 +6,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <style>
-        body { margin:0; padding:0; background:#f5f5f5; font-family:Arial,sans-serif; }
-        header{
-            background:#ff8c00; color:white; padding:16px; text-align:center;
-            font-size:20px; font-weight:bold;
+        body{
+            margin:0; padding:0;
+            background:#f5f5f5;
+            font-family:Arial, sans-serif;
         }
-        .container{ max-width:900px; margin:0 auto; padding:16px; }
+
+        header{
+            background:#ff8c00;
+            color:white;
+            text-align:center;
+            padding:16px;
+            font-size:20px;
+            font-weight:bold;
+        }
+
+        .container{
+            max-width:900px;
+            margin:0 auto;
+            padding:16px;
+        }
 
         .info-box{
-            background:white; padding:14px 16px; border-radius:10px;
-            box-shadow:0 2px 8px rgba(0,0,0,0.08); font-size:14px; margin-bottom:16px;
+            background:white;
+            padding:14px 16px;
+            margin-bottom:16px;
+            border-radius:10px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+            font-size:14px;
         }
 
         .szaki-card{
-            background:white; border-radius:12px; padding:14px 16px;
-            margin-bottom:14px; box-shadow:0 2px 10px rgba(0,0,0,0.08);
+            background:white;
+            padding:14px 16px;
+            margin-bottom:12px;
+            border-radius:12px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.1);
         }
-        .szaki-name{ font-size:18px; font-weight:bold; }
-        .szaki-profession{ font-size:14px; color:#555; margin-top:4px; }
-        .actions{ margin-top:14px; display:flex; gap:10px; }
 
-        .btn-choose, .btn-reject, .btn-chat{
-            flex:1; padding:10px; border:none; border-radius:8px;
-            font-weight:bold; cursor:pointer; color:white; font-size:14px;
+        .szaki-name{
+            font-size:18px;
+            font-weight:bold;
         }
+
+        .szaki-profession{
+            font-size:14px;
+            margin-top:4px;
+            color:#555;
+        }
+
+        .actions{
+            display:flex;
+            gap:10px;
+            margin-top:14px;
+        }
+
+        .btn-chat, .btn-choose, .btn-reject{
+            flex:1;
+            padding:10px;
+            border:none;
+            border-radius:8px;
+            font-weight:bold;
+            font-size:14px;
+            cursor:pointer;
+            color:white;
+        }
+
+        .btn-chat{ background:#007bff; }
         .btn-choose{ background:#28a745; }
         .btn-reject{ background:#c00; }
-        .btn-chat{ background:#007bff; }
-
     </style>
 </head>
 
@@ -43,91 +84,133 @@
 
 <div class="container">
 
-    <div class="info-box" id="info-box"></div>
+    <div id="info-box" class="info-box"></div>
 
     <div id="szaki-lista"></div>
+
 </div>
 
+<!-- STATIKUS SZAKI LISTA (Pótlista, ha Firestore üres) -->
 <script src="szaki-adatok.js"></script>
+
+<!-- MATCHING FLOW -->
 <script src="matching-job-flow.js"></script>
 
+<!-- FIREBASE -->
 <script type="module">
 
-    import { db } from "./firebase-config.js";
-    import {
-        doc, setDoc, getDoc, updateDoc,
-        collection, addDoc, serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { db } from "./firebase-config.js";
 
-    // Matching flow inicializálása
-    window.MatchFlow_initFirestore(db);
+import {
+    collection,
+    query,
+    where,
+    getDocs,
+    doc,
+    getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // PARAMÉTEREK
-    const params = new URLSearchParams(window.location.search);
-    const megrendelonev = params.get("name") || "Megrendelő";
-    const szakma = params.get("szakma") || "";
-    let orderId = params.get("orderId") || null;
 
-    // INFO DOBOZ KITÖLTÉSE
-    document.getElementById("info-box").innerHTML = `
-        <b>Megrendelő:</b> ${megrendelonev} <br>
-        <b>Keresett szakma:</b> ${szakma}
-    `;
+// =============================
+// PARAMÉTEREK BETÖLTÉSE
+// =============================
+const params = new URLSearchParams(window.location.search);
 
-    // ORDER ID létrehozása ha még nincs
-    async function ensureOrderId(){
-        if(orderId) return orderId;
+const megrendelonev = params.get("megrendelonev") || localStorage.getItem("mr_nev") || "";
+const szakma = params.get("szakma") || localStorage.getItem("mr_szakma") || "";
+const orderId = params.get("orderId") || null;
 
-        orderId = await window.MatchFlow_createJob(megrendelonev, szakma);
 
-        const newUrl = window.location.pathname +
-                       `?name=${encodeURIComponent(megrendelonev)}&szakma=${encodeURIComponent(szakma)}&orderId=${orderId}`;
+// =============================
+// FEJLÉC KITÖLTÉSE
+// =============================
+document.getElementById("info-box").innerHTML = `
+    <b>Megrendelő:</b> ${megrendelonev}<br>
+    <b>Keresett szakma:</b> ${szakma}<br>
+    <b>Munka azonosító:</b> ${orderId}
+`;
 
-        window.history.replaceState({}, "", newUrl);
-        return orderId;
+
+// =============================
+// SZAKIK LEKÉRÉSE FIRESTORE-BÓL
+// =============================
+async function loadWorkers() {
+
+    const list = document.getElementById("szaki-lista");
+    list.innerHTML = "Betöltés...";
+
+    let items = [];
+
+    try {
+        const q = query(
+            collection(db, "szakik"),
+            where("profession", "==", szakma)
+        );
+
+        const snap = await getDocs(q);
+
+        snap.forEach(d => items.push(d.data()));
+
+    } catch (e) {
+        console.error(e);
     }
 
-    await ensureOrderId();
+    // Ha üres a Firestore → fallback local lista
+    if (items.length === 0) {
+        items = window.SzakiAdatok.findByProfession(szakma);
+    }
 
-    // SZAKIK KIRAJZOLÁSA
-    const lista = document.getElementById("szaki-lista");
-    const szakik = window.SzakiAdatok.findByProfession(szakma);
+    list.innerHTML = "";
 
-    szakik.forEach(sz => {
-        const card = document.createElement("div");
-        card.className = "szaki-card";
+    items.forEach(sz => renderCard(sz));
+}
 
-        card.innerHTML = `
-            <div class="szaki-name">${sz.name}</div>
-            <div class="szaki-profession">${sz.profession}</div>
+// =============================
+// SZAKI CARD KIRAJZOLÓ
+// =============================
+function renderCard(sz) {
 
-            <div class="actions">
-                <button class="btn-chat">Chat</button>
-                <button class="btn-choose">Ezt a szakit választom</button>
-                <button class="btn-reject">Másik szakit választottam</button>
-            </div>
-        `;
+    const list = document.getElementById("szaki-lista");
 
-        // CHAT
-        card.querySelector(".btn-chat").onclick = function(){
-            window.location.href =
-                `chat.html?sender=${encodeURIComponent(megrendelonev)}&partner=${encodeURIComponent(sz.name)}&orderId=${orderId}`;
-        };
+    const card = document.createElement("div");
+    card.className = "szaki-card";
 
-        // VÁLASZTÁS → NYERT SZAKI
-        card.querySelector(".btn-choose").onclick = async function(){
-            await window.MatchFlow_chooseWorker(orderId, sz.name);
-            alert("Kiválasztottad: " + sz.name);
-        };
+    card.innerHTML = `
+        <div class="szaki-name">${sz.name}</div>
+        <div class="szaki-profession">${sz.profession}</div>
 
-        // ELUTASÍTÁS → VESZTETT SZAKI
-        card.querySelector(".btn-reject").onclick = async function(){
-            await window.MatchFlow_rejectWorker(orderId, sz.name);
-            alert("Elutasítva: " + sz.name);
-        };
+        <div class="actions">
+            <button class="btn-chat">Chat</button>
+            <button class="btn-choose">Ezt választom</button>
+            <button class="btn-reject">Másik szaki kell</button>
+        </div>
+    `;
 
-        lista.appendChild(card);
-    });
+    // CHAT
+    card.querySelector(".btn-chat").onclick = () => {
+        window.location.href = `chat.html?sender=${encodeURIComponent(megrendelonev)}&partner=${encodeURIComponent(sz.name)}&orderId=${orderId}`;
+    };
+
+    // VÁLASZTÁS
+    card.querySelector(".btn-choose").onclick = async () => {
+        await window.MatchFlow_chooseWorker(orderId, sz.name);
+        alert(`Kiválasztottad: ${sz.name}`);
+    };
+
+    // ELUTASÍTÁS
+    card.querySelector(".btn-reject").onclick = async () => {
+        await window.MatchFlow_rejectWorker(orderId, sz.name);
+        alert(`Elutasítva: ${sz.name}`);
+    };
+
+    list.appendChild(card);
+}
+
+
+// =============================
+// INDÍTÁS
+// =============================
+loadWorkers();
 
 </script>
 

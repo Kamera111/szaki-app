@@ -1,137 +1,263 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Munka részletei – Szaki-App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
         body {
+            font-family: Arial, sans-serif;
             background: #f2f2f2;
             margin: 0;
-            padding: 25px 10px;
-            font-family: Arial, sans-serif;
+            padding: 20px;
         }
 
         .wrapper {
             max-width: 900px;
             margin: 0 auto;
-            background: white;
-            padding: 25px 20px 35px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.07);
+            background: #fff;
+            padding: 25px 20px 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0,0,0,0.07);
         }
 
         h1 {
             text-align: center;
-            margin: 0;
+            margin-top: 0;
         }
 
-        p.leiras {
-            text-align: center;
-            color: #666;
-            margin: 10px 0 20px;
+        .step {
+            display: none;
+            animation: fade 0.3s ease;
         }
 
-        label {
-            font-weight: bold;
-            margin-top: 15px;
+        .step.active {
             display: block;
+        }
+
+        @keyframes fade {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            background: #ff8c00;
+            color: white;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #ccc;
         }
 
         textarea {
             width: 100%;
-            height: 150px;
-            margin-top: 6px;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #bbb;
-            resize: vertical;
+            height: 140px;
             font-size: 15px;
-        }
-
-        .szam {
-            margin-top: 6px;
-            width: 100%;
             padding: 10px;
             border-radius: 8px;
             border: 1px solid #bbb;
-            font-size: 15px;
+            resize: none;
         }
 
-        button {
-            width: 100%;
-            margin-top: 25px;
-            padding: 17px;
-            background: #ff8c00;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 18px;
-            font-weight: bold;
+        .chip {
+            display: inline-block;
+            padding: 10px 16px;
+            background: #eee;
+            margin: 6px;
+            border-radius: 20px;
             cursor: pointer;
         }
 
-        button:active {
-            transform: translateY(1px);
+        .chip.selected {
+            background: #ff8c00;
+            color: white;
         }
 
-        .info-box {
-            background: #fff9df;
-            padding: 12px;
-            margin-top: 20px;
-            border-left: 4px solid #ff8c00;
-            border-radius: 6px;
+        .char-counter {
+            text-align: right;
             font-size: 13px;
-            color: #444;
+            margin-top: 6px;
+            color: #555;
         }
+
+        .summary-box {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            margin-top: 20px;
+        }
+
     </style>
 </head>
 
 <body>
-
 <div class="wrapper">
+    <h1>Munka részletei</h1>
 
-    <h1>2. lépés – Munka részletei</h1>
-    <p class="leiras">Írd le minél pontosabban a feladatot.</p>
+    <!-- STEP 1 -->
+    <div class="step active" id="step1">
+        <h2>1. lépés – Válaszd ki a szakmá(ka)t</h2>
 
-    <label>Munka leírása (legalább 30 karakter)</label>
-    <textarea id="munkaLeiras" placeholder="Pl.: 20 m² burkolás a nappaliban, régi burkolat felszedése, új 60x60-as lapok..."></textarea>
+        <div id="chips-container"></div>
 
-    <label>Helyiségek száma</label>
-    <input type="number" id="helyisegek" class="szam" min="1" max="20" placeholder="Pl.: 3">
-
-    <label>Becsült munkadíj kereted (nem kötelező)</label>
-    <input type="number" id="budget" class="szam" placeholder="Pl.: 250000">
-
-    <button id="tovabb">Tovább a szakikhoz</button>
-
-    <div class="info-box">
-        A megadott adatok alapján a rendszer kiválasztja a megfelelő szakembereket, először az online elérhetőket.
+        <div class="btn-row">
+            <div></div>
+            <button onclick="goStep(2)">Tovább</button>
+        </div>
     </div>
 
+    <!-- STEP 2 -->
+    <div class="step" id="step2">
+        <h2>2. lépés – Írd le a munkát (max. 310 karakter)</h2>
+
+        <textarea id="description" maxlength="310" placeholder="Írd le minél pontosabban a feladatot..."></textarea>
+        <div class="char-counter" id="charCount">0 / 310</div>
+
+        <div class="btn-row">
+            <button onclick="goStep(1)">Vissza</button>
+            <button onclick="goStep(3)">Tovább</button>
+        </div>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step" id="step3">
+        <h2>3. lépés – Ellenőrzés</h2>
+
+        <div class="summary-box">
+            <p><strong>Szakmák:</strong> <span id="sumSkills"></span></p>
+            <p><strong>Leírás:</strong><br><span id="sumDesc"></span></p>
+        </div>
+
+        <div class="btn-row">
+            <button onclick="goStep(2)">Vissza</button>
+            <button onclick="submitJob()">Küldés</button>
+        </div>
+    </div>
 </div>
 
 <script>
-    const leiras = document.getElementById("munkaLeiras");
-    const tovabb = document.getElementById("tovabb");
+/* ---------------------------------------------------
+   ÁLLAPOT – MINDEN LÉPÉSNÉL MEGMARAD
+--------------------------------------------------- */
+let selectedSkills = JSON.parse(sessionStorage.getItem("selectedSkills") || "[]");
+let descriptionText = sessionStorage.getItem("descriptionText") || "";
 
-    // Kötelező a min. 30 karakter
-    function ellenoriz() {
-        const ok = leiras.value.trim().length >= 30;
-        tovabb.disabled = !ok;
+/* ---------------------------------------------------
+   SZAKMÁK LISTÁJA
+--------------------------------------------------- */
+const skills = [
+    "Burkoló", "Festő", "Gipszkarton", "Kőműves",
+    "Villanyszerelő", "Víz-gáz-fűtés", "Asztalos",
+    "Tetőfedő", "Kertész", "Teljes felújítás"
+];
+
+/* ---------------------------------------------------
+   STEP VÁLTÁS + ADATMEGŐRZÉS
+--------------------------------------------------- */
+function goStep(n) {
+    document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
+    document.getElementById("step" + n).classList.add("active");
+
+    if (n === 2) {
+        document.getElementById("description").value = descriptionText;
+        updateCharCount();
+    }
+    if (n === 3) {
+        renderSummary();
+    }
+}
+
+/* ---------------------------------------------------
+   SZAKMA CHIPEK
+--------------------------------------------------- */
+function renderChips() {
+    const c = document.getElementById("chips-container");
+    c.innerHTML = "";
+
+    skills.forEach(skill => {
+        const chip = document.createElement("div");
+        chip.className = "chip" + (selectedSkills.includes(skill) ? " selected" : "");
+        chip.innerText = skill;
+        chip.onclick = () => toggleSkill(skill);
+        c.appendChild(chip);
+    });
+}
+
+function toggleSkill(skill) {
+    if (selectedSkills.includes(skill)) {
+        selectedSkills = selectedSkills.filter(s => s !== skill);
+    } else {
+        selectedSkills.push(skill);
     }
 
-    leiras.addEventListener("input", ellenoriz);
+    sessionStorage.setItem("selectedSkills", JSON.stringify(selectedSkills));
+    renderChips();
+}
 
-    document.getElementById("tovabb").addEventListener("click", () => {
-        localStorage.setItem("mr_leiras", leiras.value.trim());
-        localStorage.setItem("mr_helyisegek", document.getElementById("helyisegek").value);
-        localStorage.setItem("mr_budget", document.getElementById("budget").value);
+/* ---------------------------------------------------
+   LEÍRÁS + KARAKTERSZÁMLÁLÓ
+--------------------------------------------------- */
+const desc = document.getElementById("description");
 
-        window.location.href = "valassz-szakit.html";
-    });
+desc?.addEventListener("input", () => {
+    descriptionText = desc.value;
+    sessionStorage.setItem("descriptionText", descriptionText);
+    updateCharCount();
+});
+
+function updateCharCount() {
+    const cc = document.getElementById("charCount");
+    cc.innerText = `${descriptionText.length} / 310`;
+}
+
+/* ---------------------------------------------------
+   ÖSSZEGZÉS (3. LÉPÉS)
+--------------------------------------------------- */
+function renderSummary() {
+    document.getElementById("sumSkills").innerText = selectedSkills.join(", ");
+    document.getElementById("sumDesc").innerText = descriptionText;
+}
+
+/* ---------------------------------------------------
+   FIRESTORE KÜLDÉSRE ELŐKÉSZÍTVE
+--------------------------------------------------- */
+function submitJob() {
+    if (selectedSkills.length === 0) {
+        alert("Válassz legalább egy szakmát!");
+        return;
+    }
+    if (descriptionText.length < 10) {
+        alert("A leírás legyen legalább 10 karakter.");
+        return;
+    }
+
+    alert("A munka sikeresen rögzítve! (A Firestore bekötve lesz a következő lépésben.)");
+
+    sessionStorage.removeItem("selectedSkills");
+    sessionStorage.removeItem("descriptionText");
+
+    window.location.href = "munka-kuldes.html";
+}
+
+/* ---------------------------------------------------
+   INIT
+--------------------------------------------------- */
+renderChips();
+updateCharCount();
+
 </script>
-
 </body>
 </html>

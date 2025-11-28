@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Munka részletei – Szaki-App</title>
 
     <style>
@@ -22,24 +22,10 @@
             box-shadow: 0 4px 18px rgba(0,0,0,0.07);
         }
 
-        h1 {
-            text-align: center;
-            margin-top: 0;
-        }
+        h1 { text-align: center; margin-top: 0; }
 
-        .step {
-            display: none;
-            animation: fade 0.3s ease;
-        }
-
-        .step.active {
-            display: block;
-        }
-
-        @keyframes fade {
-            from { opacity: 0; transform: translateY(6px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
+        .step { display: none; }
+        .step.active { display: block; }
 
         .btn-row {
             display: flex;
@@ -57,9 +43,7 @@
             cursor: pointer;
         }
 
-        button:disabled {
-            background: #ccc;
-        }
+        button:disabled { background: #ccc; }
 
         textarea {
             width: 100%;
@@ -99,18 +83,17 @@
             border: 1px solid #ddd;
             margin-top: 20px;
         }
-
     </style>
 </head>
 
 <body>
+
 <div class="wrapper">
     <h1>Munka részletei</h1>
 
-    <!-- STEP 1 -->
+    <!-- ----- STEP 1 ----- -->
     <div class="step active" id="step1">
         <h2>1. lépés – Válaszd ki a szakmá(ka)t</h2>
-
         <div id="chips-container"></div>
 
         <div class="btn-row">
@@ -119,11 +102,13 @@
         </div>
     </div>
 
-    <!-- STEP 2 -->
+    <!-- ----- STEP 2 ----- -->
     <div class="step" id="step2">
         <h2>2. lépés – Írd le a munkát (max. 310 karakter)</h2>
 
-        <textarea id="description" maxlength="310" placeholder="Írd le minél pontosabban a feladatot..."></textarea>
+        <textarea id="description" maxlength="310"
+                  placeholder="Írd le minél pontosabban a feladatot..."></textarea>
+
         <div class="char-counter" id="charCount">0 / 310</div>
 
         <div class="btn-row">
@@ -132,7 +117,7 @@
         </div>
     </div>
 
-    <!-- STEP 3 -->
+    <!-- ----- STEP 3 ----- -->
     <div class="step" id="step3">
         <h2>3. lépés – Ellenőrzés</h2>
 
@@ -146,28 +131,36 @@
             <button onclick="submitJob()">Küldés</button>
         </div>
     </div>
+
 </div>
 
-<script>
-/* ---------------------------------------------------
-   ÁLLAPOT – MINDEN LÉPÉSNÉL MEGMARAD
---------------------------------------------------- */
+<script type="module">
+import { db, auth } from "./firebase-config.js";
+import {
+    collection,
+    addDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* --------------------------
+   ÁLLAPOT – MEGŐRZÉS
+-------------------------- */
 let selectedSkills = JSON.parse(sessionStorage.getItem("selectedSkills") || "[]");
 let descriptionText = sessionStorage.getItem("descriptionText") || "";
 
-/* ---------------------------------------------------
-   SZAKMÁK LISTÁJA
---------------------------------------------------- */
+/* --------------------------
+   SZAKMA LISTA
+-------------------------- */
 const skills = [
     "Burkoló", "Festő", "Gipszkarton", "Kőműves",
     "Villanyszerelő", "Víz-gáz-fűtés", "Asztalos",
     "Tetőfedő", "Kertész", "Teljes felújítás"
 ];
 
-/* ---------------------------------------------------
-   STEP VÁLTÁS + ADATMEGŐRZÉS
---------------------------------------------------- */
-function goStep(n) {
+/* --------------------------
+   STEP VÁLTÁS
+-------------------------- */
+window.goStep = function(n) {
     document.querySelectorAll(".step").forEach(s => s.classList.remove("active"));
     document.getElementById("step" + n).classList.add("active");
 
@@ -178,11 +171,11 @@ function goStep(n) {
     if (n === 3) {
         renderSummary();
     }
-}
+};
 
-/* ---------------------------------------------------
-   SZAKMA CHIPEK
---------------------------------------------------- */
+/* --------------------------
+   Szakma chipek
+-------------------------- */
 function renderChips() {
     const c = document.getElementById("chips-container");
     c.innerHTML = "";
@@ -191,25 +184,24 @@ function renderChips() {
         const chip = document.createElement("div");
         chip.className = "chip" + (selectedSkills.includes(skill) ? " selected" : "");
         chip.innerText = skill;
-        chip.onclick = () => toggleSkill(skill);
+
+        chip.onclick = () => {
+            if (selectedSkills.includes(skill)) {
+                selectedSkills = selectedSkills.filter(s => s !== skill);
+            } else {
+                selectedSkills.push(skill);
+            }
+            sessionStorage.setItem("selectedSkills", JSON.stringify(selectedSkills));
+            renderChips();
+        };
+
         c.appendChild(chip);
     });
 }
 
-function toggleSkill(skill) {
-    if (selectedSkills.includes(skill)) {
-        selectedSkills = selectedSkills.filter(s => s !== skill);
-    } else {
-        selectedSkills.push(skill);
-    }
-
-    sessionStorage.setItem("selectedSkills", JSON.stringify(selectedSkills));
-    renderChips();
-}
-
-/* ---------------------------------------------------
-   LEÍRÁS + KARAKTERSZÁMLÁLÓ
---------------------------------------------------- */
+/* --------------------------
+   Leírás + Karakterszámláló
+-------------------------- */
 const desc = document.getElementById("description");
 
 desc?.addEventListener("input", () => {
@@ -219,22 +211,23 @@ desc?.addEventListener("input", () => {
 });
 
 function updateCharCount() {
-    const cc = document.getElementById("charCount");
-    cc.innerText = `${descriptionText.length} / 310`;
+    document.getElementById("charCount").innerText =
+        `${descriptionText.length} / 310`;
 }
 
-/* ---------------------------------------------------
-   ÖSSZEGZÉS (3. LÉPÉS)
---------------------------------------------------- */
+/* --------------------------
+   Összegzés
+-------------------------- */
 function renderSummary() {
     document.getElementById("sumSkills").innerText = selectedSkills.join(", ");
-    document.getElementById("sumDesc").innerText = descriptionText;
+    document.getElementById("sumDesc").innerText   = descriptionText;
 }
 
-/* ---------------------------------------------------
-   FIRESTORE KÜLDÉSRE ELŐKÉSZÍTVE
---------------------------------------------------- */
-function submitJob() {
+/* --------------------------
+   FIRESTORE MENTÉS
+-------------------------- */
+window.submitJob = async function() {
+
     if (selectedSkills.length === 0) {
         alert("Válassz legalább egy szakmát!");
         return;
@@ -244,20 +237,42 @@ function submitJob() {
         return;
     }
 
-    alert("A munka sikeresen rögzítve! (A Firestore bekötve lesz a következő lépésben.)");
+    let user = auth.currentUser;
+    let uid = user ? user.uid : null;
+    let email = user ? user.email : null;
 
-    sessionStorage.removeItem("selectedSkills");
-    sessionStorage.removeItem("descriptionText");
+    const data = {
+        szakmak: selectedSkills,
+        leiras: descriptionText,
+        status: "uj",
+        createdAt: serverTimestamp(),
+        megrendeloUid: uid,
+        megrendeloEmail: email
+    };
 
-    window.location.href = "munka-kuldes.html";
-}
+    try {
+        await addDoc(collection(db, "megrendelesek"), data);
 
-/* ---------------------------------------------------
+        sessionStorage.removeItem("selectedSkills");
+        sessionStorage.removeItem("descriptionText");
+
+        alert("A munka sikeresen rögzítve!");
+
+        window.location.href = "munka-kuldes.html";
+
+    } catch (e) {
+        console.error(e);
+        alert("Hiba történt a rögzítés során!");
+    }
+};
+
+/* --------------------------
    INIT
---------------------------------------------------- */
+-------------------------- */
 renderChips();
 updateCharCount();
 
 </script>
+
 </body>
 </html>

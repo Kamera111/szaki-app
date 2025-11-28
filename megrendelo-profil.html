@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8" />
+    <title>Megrendelő profil – Szaki-App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <style>
+        body {
+            background:#f5f5f5;
+            margin:0;
+            font-family:Arial,sans-serif;
+        }
+
+        header {
+            background:#ff8c00;
+            padding:16px;
+            color:#fff;
+            font-size:20px;
+            font-weight:bold;
+            text-align:center;
+        }
+
+        .box {
+            max-width:900px;
+            margin:20px auto;
+            background:white;
+            border-radius:12px;
+            padding:20px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .label {
+            font-weight:bold;
+            margin-top:8px;
+        }
+
+        .value {
+            margin-bottom:12px;
+            color:#444;
+        }
+
+        .btn {
+            display:block;
+            width:100%;
+            background:#ff8c00;
+            color:white;
+            padding:14px;
+            margin-top:14px;
+            font-size:16px;
+            font-weight:bold;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            text-align:center;
+        }
+
+        .logout {
+            background:#b71c1c !important;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>Megrendelő profil</header>
+
+<div class="box">
+    <h2>Üdv, <span id="user-name">Betöltés…</span></h2>
+
+    <p class="label">E-mail:</p>
+    <p class="value" id="user-email"></p>
+
+    <p class="label">Szerepkör:</p>
+    <p class="value" id="user-role"></p>
+
+    <button class="btn" onclick="window.location.href='uj-megrendelo.html'">
+        Új munka leadása
+    </button>
+
+    <button class="btn logout" id="logout-btn">
+        Kilépés
+    </button>
+</div>
+
+
+<script type="module">
+    import { auth, db } from "./firebase-config.js";
+
+    import {
+        onAuthStateChanged,
+        signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    import {
+        doc,
+        getDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+    // 🔄 Felhasználó figyelése
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+            window.location.href = "login.html";
+            return;
+        }
+
+        // Felhasználói adatok lekérése Firestore-ból
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
+
+        if (!snap.exists()) {
+            alert("Hiba: nincs felhasználói profil adat!");
+            return;
+        }
+
+        const u = snap.data();
+
+        document.getElementById("user-name").textContent = u.name;
+        document.getElementById("user-email").textContent = u.email;
+        document.getElementById("user-role").textContent =
+            u.role === "megrendelo" ? "Megrendelő" : u.role;
+    });
+
+
+    // ➡️ Kilépés
+    document.getElementById("logout-btn").onclick = async () => {
+        await signOut(auth);
+        window.location.href = "login.html";
+    };
+
+</script>
+
+</body>
+</html>

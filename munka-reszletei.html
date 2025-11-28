@@ -43,7 +43,10 @@
             cursor: pointer;
         }
 
-        button:disabled { background: #ccc; }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
 
         textarea {
             width: 100%;
@@ -71,9 +74,10 @@
 
         .char-counter {
             text-align: right;
-            font-size: 13px;
+            font-size: 14px;
             margin-top: 6px;
-            color: #555;
+            color: #333;
+            font-weight: bold;
         }
 
         .summary-box {
@@ -104,16 +108,18 @@
 
     <!-- ----- STEP 2 ----- -->
     <div class="step" id="step2">
-        <h2>2. lépés – Írd le a munkát (max. 310 karakter)</h2>
+        <h2>2. lépés – Írd le a munkát (min. 250 – max. 310 karakter)</h2>
 
         <textarea id="description" maxlength="310"
                   placeholder="Írd le minél pontosabban a feladatot..."></textarea>
 
-        <div class="char-counter" id="charCount">0 / 310</div>
+        <div class="char-counter" id="charCount">0 / 310 – még 250 karakter kell</div>
 
         <div class="btn-row">
             <button onclick="goStep(1)">Vissza</button>
-            <button onclick="goStep(3)">Tovább</button>
+
+            <!-- MINIMUM 250 KARAKTER UTÁN AKTIVÁLÓDIK -->
+            <button id="btnToStep3" disabled style="background:#ccc;">Tovább</button>
         </div>
     </div>
 
@@ -134,7 +140,9 @@
 
 </div>
 
+
 <script type="module">
+
 import { db, auth } from "./firebase-config.js";
 import {
     collection,
@@ -157,6 +165,7 @@ const skills = [
     "Tetőfedő", "Kertész", "Teljes felújítás"
 ];
 
+
 /* --------------------------
    STEP VÁLTÁS
 -------------------------- */
@@ -172,6 +181,7 @@ window.goStep = function(n) {
         renderSummary();
     }
 };
+
 
 /* --------------------------
    Szakma chipek
@@ -199,8 +209,9 @@ function renderChips() {
     });
 }
 
+
 /* --------------------------
-   Leírás + Karakterszámláló
+   Leírás + 250-es MINIMUM RETURN
 -------------------------- */
 const desc = document.getElementById("description");
 
@@ -208,12 +219,45 @@ desc?.addEventListener("input", () => {
     descriptionText = desc.value;
     sessionStorage.setItem("descriptionText", descriptionText);
     updateCharCount();
+    validateMinLength();
 });
 
+
+/* --------------------------
+   Karakterszámláló + visszaszámláló
+-------------------------- */
 function updateCharCount() {
-    document.getElementById("charCount").innerText =
-        `${descriptionText.length} / 310`;
+    const min = 250;
+    const remaining = min - descriptionText.length;
+
+    const counter = document.getElementById("charCount");
+
+    if (remaining > 0) {
+        counter.innerText = `${descriptionText.length} / 310 – még ${remaining} karakter kell`;
+    } else {
+        counter.innerText = `${descriptionText.length} / 310 – ✓ Megvan a minimum`;
+    }
 }
+
+
+/* --------------------------
+   Minimum 250 char → gomb engedélyezés
+-------------------------- */
+function validateMinLength() {
+    const btn = document.getElementById("btnToStep3");
+    const min = 250;
+
+    if (descriptionText.length >= min) {
+        btn.disabled = false;
+        btn.style.background = "#ff8c00";
+        btn.onclick = () => goStep(3);
+    } else {
+        btn.disabled = true;
+        btn.style.background = "#ccc";
+        btn.onclick = null;
+    }
+}
+
 
 /* --------------------------
    Összegzés
@@ -222,6 +266,7 @@ function renderSummary() {
     document.getElementById("sumSkills").innerText = selectedSkills.join(", ");
     document.getElementById("sumDesc").innerText   = descriptionText;
 }
+
 
 /* --------------------------
    FIRESTORE MENTÉS
@@ -232,8 +277,8 @@ window.submitJob = async function() {
         alert("Válassz legalább egy szakmát!");
         return;
     }
-    if (descriptionText.length < 10) {
-        alert("A leírás legyen legalább 10 karakter.");
+    if (descriptionText.length < 250) {
+        alert("A leírásnak minimum 250 karakter hosszúnak kell lennie!");
         return;
     }
 
@@ -266,11 +311,13 @@ window.submitJob = async function() {
     }
 };
 
+
 /* --------------------------
    INIT
 -------------------------- */
 renderChips();
 updateCharCount();
+validateMinLength();
 
 </script>
 

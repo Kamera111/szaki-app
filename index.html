@@ -46,6 +46,11 @@
             filter: brightness(0.88);
         }
 
+        /* ÚJ – gyorsindító gomb */
+        .quick-start {
+            background: #008f39 !important;
+        }
+
         .info-box {
             background: white;
             padding: 18px;
@@ -143,6 +148,11 @@
 
 <div class="container">
 
+    <!-- ÚJ – gyors belépés -->
+    <a class="btn quick-start" href="valassz-szakit.html">
+        🚀 PRÓBÁLD KI MOST – 10 MÁSODPERC ALATT!
+    </a>
+
     <div class="info-box">
         <b>Szakiknak és Megrendelőknek minden funkció INGYENES!</b><br><br>
         Küldd el a linket ismerőseidnek, vagy nyomj a <b>Megosztás</b> gombra!
@@ -198,7 +208,7 @@
 
         addMessage("user", text);
 
-        // 🚀 IDE a saját Cloudflare Worker URL-ed
+        // 🚀 A TE Cloudflare Worker URL-ed
         const url = "https://muddy-frost-2510.chisnyan.workers.dev/";
 
         try {
@@ -207,8 +217,8 @@
                 body: text
             });
 
-            const data = await res.json();
-            addMessage("ai", data.cleaned || "Hiba történt a válasz feldolgozásakor.");
+            const reply = await res.text();
+            addMessage("ai", reply);
         } catch (err) {
             addMessage("ai", "Hálózati hiba vagy nincs válasz a szervertől.");
         }

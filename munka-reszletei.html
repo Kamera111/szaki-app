@@ -87,6 +87,13 @@
             border: 1px solid #ddd;
             margin-top: 20px;
         }
+
+        /* AI gomb */
+        #ai-helper {
+            margin-top: 10px;
+            background: #008f39;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -114,6 +121,8 @@
                   placeholder="Írd le minél pontosabban a feladatot..."></textarea>
 
         <div class="char-counter" id="charCount">0 / 310 – még 250 karakter kell</div>
+
+        <button id="ai-helper">🤖 Szaki-AI segítsen megfogalmazni</button>
 
         <div class="btn-row">
             <button onclick="goStep(1)">Vissza</button>
@@ -150,11 +159,29 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+
+/* --------------------------
+   DEMÓ ÚJ FELHASZNÁLÓNAK
+-------------------------- */
+if (!sessionStorage.getItem("demoUsed")) {
+    sessionStorage.setItem("demoUsed", "1");
+
+    selectedSkills = ["Festő"];
+    descriptionText =
+        "Szeretnék 20 m² előszobát kifestetni fehér színre, kisebb javításokkal. A falakon repedések vannak, ezeket glettelni kellene, majd két rétegben alap+fedő festéssel készre kérném. A munkát minél előbb szeretném megcsináltatni.";
+
+    sessionStorage.setItem("selectedSkills", JSON.stringify(selectedSkills));
+    sessionStorage.setItem("descriptionText", descriptionText);
+}
+
+
+
 /* --------------------------
    ÁLLAPOT – MEGŐRZÉS
 -------------------------- */
 let selectedSkills = JSON.parse(sessionStorage.getItem("selectedSkills") || "[]");
 let descriptionText = sessionStorage.getItem("descriptionText") || "";
+
 
 /* --------------------------
    SZAKMA LISTA
@@ -211,7 +238,35 @@ function renderChips() {
 
 
 /* --------------------------
-   Leírás + 250-es MINIMUM RETURN
+   AI SZÖVEGSEGÍTŐ
+-------------------------- */
+document.getElementById("ai-helper").onclick = async () => {
+    const baseText =
+        "Kérlek fogalmazz meg 250–310 karakterben egy részletes, udvarias munkaleírást a következő feladatról:";
+
+    const userText = descriptionText || "20 m² előszoba festése kisebb hibajavítással.";
+
+    const finalPrompt = `${baseText} ${userText}`;
+
+    const res = await fetch("https://muddy-frost-2510.chisnyan.workers.dev/", {
+        method: "POST",
+        body: finalPrompt
+    });
+
+    const clean = await res.text();
+
+    descriptionText = clean.substring(0, 310);
+    sessionStorage.setItem("descriptionText", descriptionText);
+
+    document.getElementById("description").value = descriptionText;
+
+    updateCharCount();
+    validateMinLength();
+};
+
+
+/* --------------------------
+   Leírás + 250-es MINIMUM
 -------------------------- */
 const desc = document.getElementById("description");
 

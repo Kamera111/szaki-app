@@ -98,7 +98,6 @@
         .btn-choose{ background:#28a745; }
         .btn-reject{ background:#c00; }
 
-        /* Reklámhely */
         .ads-box{
             background:#fff7e6;
             padding:15px;
@@ -119,48 +118,31 @@
 <div class="container">
 
     <div id="info-box" class="info-box"></div>
-
-    <!-- Reklám hely -->
     <div class="ads-box">🔶 Reklám hely (Google Ads / saját banner)</div>
-
     <div id="szaki-lista"></div>
 
 </div>
 
-<!-- STATIKUS SZAKI LISTA -->
+<!-- Szaki alapadatok -->
 <script src="szaki-adatok.js"></script>
 
-<!-- ONLINE MOTOR -->
-<script src="szaki-online-engine.js"></script>
-
-<!-- MATCHING FLOW -->
-<script src="matching-job-flow.js"></script>
-
-<!-- FIREBASE -->
+<!-- Firebase -->
 <script type="module">
 
 import { db } from "./firebase-config.js";
-import {
-    collection,
-    query,
-    where,
-    getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { collection, query, where, getDocs } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
-// =============================
-// PARAMÉTEREK BETÖLTÉSE
-// =============================
+// --------------------------------------------------
+// PARAMÉTEREK
+// --------------------------------------------------
 const params = new URLSearchParams(window.location.search);
 
 const megrendelonev = params.get("megrendelonev") || localStorage.getItem("mr_nev") || "";
 const szakma = params.get("szakma") || localStorage.getItem("mr_szakma") || "";
 const orderId = params.get("orderId") || null;
 
-
-// =============================
-// FEJLÉC KITÖLTÉSE
-// =============================
 document.getElementById("info-box").innerHTML = `
     <b>Megrendelő:</b> ${megrendelonev}<br>
     <b>Keresett szakma:</b> ${szakma}<br>
@@ -168,44 +150,80 @@ document.getElementById("info-box").innerHTML = `
 `;
 
 
-// =============================
-// SZAKIK BETÖLTÉSE
-// =============================
-async function loadWorkers() {
+// --------------------------------------------------
+// ÁLSZAKI GENERÁTOR
+// --------------------------------------------------
+function generateFakeWorkersForProfession(prof) {
 
+    const fakeNames = [
+        "S. Béla", "K. András", "M. József", "P. Attila", "T. Norbert",
+        "Á. Csaba", "V. László", "D. Róbert", "H. Gergő", "R. Patrik",
+        "F. Bence", "O. Zoltán", "L. Dávid"
+    ];
+
+    const list = [];
+
+    // két online:
+    for (let i = 0; i < 2; i++) {
+        list.push({
+            name: fakeNames[Math.floor(Math.random()*fakeNames.length)],
+            profession: prof,
+            isOnline: true,
+            lastSeenMinutes: 0
+        });
+    }
+
+    // többi offline (5 db)
+    for (let i = 0; i < 5; i++) {
+        list.push({
+            name: fakeNames[Math.floor(Math.random()*fakeNames.length)],
+            profession: prof,
+            isOnline: false,
+            lastSeenMinutes: Math.floor(Math.random()*45)+5   // 5–50 perc
+        });
+    }
+
+    return list;
+}
+
+
+// --------------------------------------------------
+// SZAKIK BETÖLTÉSE
+// --------------------------------------------------
+async function loadWorkers() {
     const list = document.getElementById("szaki-lista");
     list.innerHTML = "Betöltés...";
 
-    let items = [];
+    let realWorkers = [];
 
     try {
-        const q = query(
-            collection(db, "szakik"),
-            where("profession", "==", szakma)
-        );
+        const q = query(collection(db, "szakik"), where("profession", "==", szakma));
         const snap = await getDocs(q);
-        snap.forEach(d => items.push(d.data()));
+
+        snap.forEach(d => realWorkers.push(d.data()));
 
     } catch (e) {
         console.error(e);
     }
 
-    // Firestore üres → SZAKI-ADATOK fallback
-    if (items.length === 0) {
-        items = window.SzakiAdatok.findByProfession(szakma);
+    // fallback (ha Firestore üres)
+    if (realWorkers.length === 0) {
+        realWorkers = window.SzakiAdatok.findByProfession(szakma);
     }
 
-    list.innerHTML = "";
+    const fakeWorkers = generateFakeWorkersForProfession(szakma);
+    const allWorkers = [...realWorkers, ...fakeWorkers];
 
-    items.forEach(sz => renderCard(sz));
+    // kirajzolás
+    list.innerHTML = "";
+    allWorkers.forEach(w => renderCard(w));
 }
 
 
-// =============================
-// SZAKI CARD KIRAJZOLÓ
-// =============================
+// --------------------------------------------------
+// SZAKI KÁRTYA
+// --------------------------------------------------
 function renderCard(sz) {
-
     const list = document.getElementById("szaki-lista");
 
     const card = document.createElement("div");
@@ -215,7 +233,7 @@ function renderCard(sz) {
         ? `<span class="status online">🟢 online</span>`
         : `<span class="status offline">⚫ offline</span>`;
 
-    const lastSeen = !sz.isOnline && sz.lastSeenMinutes
+    const lastSeen = !sz.isOnline
         ? `<div class="lastseen">Utoljára aktív: ${sz.lastSeenMinutes} perce</div>`
         : "";
 
@@ -235,21 +253,17 @@ function renderCard(sz) {
         </div>
     `;
 
-    // CHAT
+    // CHAT gomb → chat.html (AI kezeli az ál-szakit)
     card.querySelector(".btn-chat").onclick = () => {
         window.location.href =
             `chat.html?sender=${encodeURIComponent(megrendelonev)}&partner=${encodeURIComponent(sz.name)}&orderId=${orderId}`;
     };
 
-    // VÁLASZTÁS
-    card.querySelector(".btn-choose").onclick = async () => {
-        await window.MatchFlow_chooseWorker(orderId, sz.name);
+    card.querySelector(".btn-choose").onclick = () => {
         alert(`Kiválasztottad: ${sz.name}`);
     };
 
-    // ELUTASÍTÁS
-    card.querySelector(".btn-reject").onclick = async () => {
-        await window.MatchFlow_rejectWorker(orderId, sz.name);
+    card.querySelector(".btn-reject").onclick = () => {
         alert(`Elutasítva: ${sz.name}`);
     };
 
@@ -257,9 +271,9 @@ function renderCard(sz) {
 }
 
 
-// =============================
-// INDÍTÁS
-// =============================
+// --------------------------------------------------
+// START
+// --------------------------------------------------
 loadWorkers();
 
 </script>

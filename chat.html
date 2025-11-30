@@ -10,21 +10,26 @@
     header { background:#ff8c00; padding:12px 16px; color:#fff;
              font-weight:bold; font-size:18px; text-align:center; }
 
-    .top-bar { max-width:900px; margin:0 auto; background:white;
-               padding:10px 14px; border-bottom:1px solid #eee; font-size:13px; }
+    .top-bar {
+      max-width:900px; margin:0 auto; background:white;
+      padding:10px 14px; border-bottom:1px solid #eee; font-size:13px;
+    }
 
     #chat-box{
       max-width:900px; margin:12px auto; padding:12px 14px;
       background:white; border-radius:10px;
-      height:55vh; overflow-y:auto; box-shadow:0 2px 10px rgba(0,0,0,0.08);
+      height:55vh; overflow-y:auto;
+      box-shadow:0 2px 10px rgba(0,0,0,0.08);
     }
 
     .msg{ margin:6px 0; font-size:14px; }
     .own{ font-weight:bold; }
     .meta{ font-size:11px; color:#777; margin-left:6px; }
 
-    .input-row{ max-width:900px; margin:0 auto 14px; padding:0 14px;
-                display:flex; gap:8px; }
+    .input-row{
+      max-width:900px; margin:0 auto 14px; padding:0 14px;
+      display:flex; gap:8px;
+    }
 
     #message-input{
       flex:1; padding:10px; border-radius:8px;
@@ -36,7 +41,6 @@
       border-radius:8px; color:white; font-weight:bold;
       cursor:pointer;
     }
-
   </style>
 </head>
 
@@ -80,7 +84,7 @@
       localStorage.setItem("szakiName", USER_NAME);
   }
 
-  // --- Ál-szaki felismerés ---
+  // AI-válasz csak akkor, ha nem valódi szaki
   const isFakeWorker =
       PARTNER_NAME !== "Csabi" &&
       PARTNER_NAME !== "Zsolti" &&
@@ -93,10 +97,10 @@
   document.getElementById("top-bar").innerHTML =
     `<b>Te:</b> ${USER_NAME} &nbsp; | &nbsp;
      <b>Szakember:</b> ${PARTNER_NAME}
-     ${ORDER_ID ? ` | <b>Munka azonosító:</b> ${ORDER_ID}` : ""}`;
+     ${ORDER_ID ? ` | <b>Munka ID:</b> ${ORDER_ID}` : ""}`;
 
   /* ============================================
-     FIRESTORE REFERENCIÁK
+     FIRESTORE REF
   ============================================= */
   const chatRef = doc(db, "chats", ROOM_ID);
   const messagesRef = collection(db, "chats", ROOM_ID, "uzenetek");
@@ -111,7 +115,7 @@
   } catch (e) {}
 
   /* ============================================
-     CHAT LISTENER
+     REALTIME LISTENER
   ============================================= */
   const chatBox = document.getElementById("chat-box");
   const q = query(messagesRef, orderBy("timestamp"));
@@ -123,12 +127,12 @@
           const p = document.createElement("p");
           p.className = "msg";
 
-          const own = d.senderName === USER_NAME ? "own" : "";
+          const ownClass = d.senderName === USER_NAME ? "own" : "";
           const time = d.timestamp?.toDate().toLocaleTimeString("hu-HU",
                       {hour:"2-digit",minute:"2-digit"});
 
           p.innerHTML =
-            `<span class="${own}">${d.senderName}:</span> ` +
+            `<span class="${ownClass}">${d.senderName}:</span> ` +
             `${escapeHtml(d.text)} <span class="meta">(${time})</span>`;
 
           chatBox.appendChild(p);
@@ -138,97 +142,79 @@
   });
 
   /* ============================================
-     ÜZENET KÜLDÉS
+     KÜLDÉS
   ============================================= */
   document.getElementById("send-btn").onclick = sendMsg;
   document.getElementById("message-input").onkeydown = e => {
       if (e.key === "Enter") sendMsg();
   };
 
-async function sendMsg() {
-    const input = document.getElementById("message-input");
-    const text = input.value.trim();
-    if (!text) return;
+  async function sendMsg() {
+      const input = document.getElementById("message-input");
+      const text = input.value.trim();
+      if (!text) return;
 
-    // ÜZENET TÁROLÁSA
-    await addDoc(messagesRef, {
-        senderName: USER_NAME,
-        text,
-        timestamp: serverTimestamp()
-    });
+      await addDoc(messagesRef, {
+          senderName: USER_NAME,
+          text,
+          timestamp: serverTimestamp()
+      });
 
-    // CHAT META FRISSÍTÉSE
-    await updateDoc(chatRef, { lastMessageAt: serverTimestamp() });
+      await updateDoc(chatRef, { lastMessageAt: serverTimestamp() });
 
-    // INPUT MEZŐ ÜRÍTÉSE — EZ A FONTOS!!!
-    input.value = "";
-    input.focus();
+      // FONTOS FIX: mező törlése + fókusz vissza
+      input.value = "";
+      input.focus();
 
-    // Ál-szaki automatikus válasz
-    if (isFakeWorker) {
-        handleFakeWorkerReply();
-    }
-}
-
+      if (isFakeWorker) handleFakeWorkerReply();
+  }
 
   /* ============================================
-     ÁLSZAKI AI VÁLASZOK
+     ÁL-SZAKI AI
   ============================================= */
   const fakeReplies = [
-      "Szia! Köszi, hogy írtál! Most sajnos teljesen tele vagyok, nem tudok új munkát vállalni.",
-      "Üdv! Nagyon sajnálom, de épp be vagyok táblázva. Remélem találsz gyorsan szakembert!",
-      "Szia! Most nincs kapacitásom új munkára, ne haragudj.",
-      "Köszönöm az üzenetet! Most épp nem tudok több feladatot vállalni.",
-      "Helló! Jelenleg mindent betábláztam, sajnálom."
+      "Szia! Köszi, hogy írtál! Sajnos most tele vagyok.",
+      "Most épp be vagyok táblázva, ne haragudj!",
+      "Szia! Most nincs kapacitásom új munkára.",
+      "Köszi az üzenetet! Most nem tudok több munkát vállalni."
   ];
 
   const byeReplies = [
-      "További szép napot kívánok! 😊",
+      "Szép napot kívánok! 😊",
       "Sok sikert a munkához! 🙂",
-      "Szép napot, és köszi a megkeresést!",
-      "Vigyázz magadra, szép napot!",
-      "Köszönöm még egyszer, viszlát!"
+      "Köszönöm, vigyázz magadra!",
+      "További szép napot!"
   ];
 
   async function handleFakeWorkerReply() {
-
       fakeMessageCount++;
 
-      // 1. üzenet – udvarias elutasítás
       if (fakeMessageCount === 1) {
-          const msg = fakeReplies[Math.floor(Math.random() * fakeReplies.length)];
-
           await addDoc(messagesRef, {
               senderName: PARTNER_NAME,
-              text: msg,
+              text: fakeReplies[Math.floor(Math.random() * fakeReplies.length)],
               timestamp: serverTimestamp()
           });
           return;
       }
 
-      // 2. üzenet – elköszönés
       if (fakeMessageCount === 2) {
-          const msg = byeReplies[Math.floor(Math.random() * byeReplies.length)];
-
           await addDoc(messagesRef, {
               senderName: PARTNER_NAME,
-              text: msg,
+              text: byeReplies[Math.floor(Math.random() * byeReplies.length)],
               timestamp: serverTimestamp()
           });
 
-          // kilépés jelzése
           await addDoc(messagesRef, {
               senderName: "Rendszer",
               text: `${PARTNER_NAME} kilépett a beszélgetésből.`,
               timestamp: serverTimestamp()
           });
-
-          return;
       }
   }
 
   /* ============================================
-     SEGÉD – HTML sanitization
+     HTML ESCAPE
   ============================================= */
   function escapeHtml(s){
       const div = document.createElement("div");

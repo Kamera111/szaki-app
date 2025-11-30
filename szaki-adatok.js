@@ -1,164 +1,77 @@
-// Szaki-App – egységes szaki adatbázis + segédfüggvények
-// Másold be ezt a fájlt változtatás nélkül a projekt gyökerébe.
+// =====================================================
+// Szaki-App – Teljes szaki-adatbázis (valódi + ál-szakik)
+// AI automata válaszokkal és megjelenési logikával
+// =====================================================
 
 (function () {
 
-    // -------------------------------
-    // TELEFONSZÁM MASZKOLÁS (UNIVERZÁLIS)
-    // -------------------------------
+    // -----------------------------------------
+    // 1) TELEFONSZÁM MASZKOLÁS
+    // -----------------------------------------
     function maskPhone(phone) {
         if (!phone) return "";
-
-        // csak számok + plusz jel marad
         let clean = phone.replace(/[^0-9+]/g, "");
-
-        // ha túl rövid, nem maszkáljuk
         if (clean.length < 6) return clean;
-
-        // példák:
-        // +36301234567 → +3630*****67
-        // +36209998877 → +3620*****77
-        // +3612345678  → +361*****78
-
-        const prefix = clean.slice(0, 4);           // +3630
-        const suffix = clean.slice(-2);             // 67
-        const stars = "*****";                      // fix
-
-        return prefix + stars + suffix;
+        const prefix = clean.slice(0, 4);
+        const suffix = clean.slice(-2);
+        return prefix + "*****" + suffix;
     }
 
-    // -------------------------------
-    // EMAIL MASZKOLÁS (UNIVERZÁLIS)
-    // -------------------------------
+    // -----------------------------------------
+    // 2) EMAIL MASZKOLÁS
+    // -----------------------------------------
     function maskEmail(email) {
         if (!email || !email.includes("@")) return "";
-
         const [local, domain] = email.split("@");
-
-        // legalább az első karakter maradjon
-        const first = local.slice(0, 1);
-        return first + "*****@" + domain;
+        return local[0] + "*****@" + domain;
     }
 
-    // -------------------------------
-    // ALAP SZAKI LISTA
-    // -------------------------------
-    const SZAKIK = [
-        {
-            name: "Csabi",
-            profession: ["Festő", "Burkoló", "Teljes felújítás"],
-            note: "",
-            phone: "+36201234567",
-            email: "csabi@example.com",
-            isReal: true,
-            isOnline: true,
-            priority: 100,
-            maxJobs: Infinity,
-            calendarAvailability: "always"
-        },
-        {
-            name: "Zsolti",
-            profession: ["Villanyszerelő", "Gépész"],
-            note: "Gyors javítások, kisebb munkák azonnal",
-            phone: "+36307654321",
-            email: "zsolti@example.com",
-            isReal: true,
-            isOnline: true,
-            priority: 90,
-            maxJobs: Infinity,
-            calendarAvailability: "always"
-        },
-        {
-            name: "Demo Péter",
-            profession: "Villanyszerelő",
-            note: "Szabadság miatt nem elérhető",
-            phone: "+36701112222",
-            email: "demo@example.com",
-            isReal: false,
-            isOnline: false,
-            priority: 10,
-            maxJobs: 3,
-            holidays: { 
-                from: "2025-08-01", 
-                to: "2025-08-20" 
-            },
-            calendarAvailability: "busy"
-        },
-        {
-            name: "Anna",
-            profession: ["Festő"],
-            note: "Több lakást is felújítottam",
-            phone: "+36209998888",
-            email: "anna@example.com",
-            isReal: true,
-            isOnline: false,
-            priority: 30,
-            maxJobs: 3,
-            calendarAvailability: "normal"
-        }
+    // -----------------------------------------
+    // 3) ÁLSZAKI NEVEK
+    // -----------------------------------------
+    const VEZETEK = [
+        "K.", "S.", "T.", "F.", "P.", "V.", "M.", "B.", "H.", "Cs."
+    ];
+    const KERESZT = [
+        "Béla", "András", "Tamás", "Jenő", "Gábor", "László", "Tibi",
+        "Jani", "Pista", "Ákos", "Kornél", "Attila", "Zoli", "Robi",
+        "Dani", "Miki", "Ferenc", "Csaba", "Péter"
     ];
 
-    // -------------------------------
-    // EXPORT
-    // -------------------------------
-    window.SzakiAdatok = {
+    // -----------------------------------------
+    // 4) SZAKMÁK – MIND BŐVÍTVE, AHOGY KÉRTED
+    // -----------------------------------------
+    const SZAKMAK = [
+        "Festő", "Burkoló", "Gipszkarton", "Villanyszerelő",
+        "Gázkészülék-szerelő", "Autószerelő", "Asztalos",
+        "Épületasztalos", "Bútorasztalos", "Bútor összeszerelő",
+        "Kőműves", "Víz-gáz-fűtés", "Tetőfedő", "Kertész",
+        "Teljes felújítás"
+    ];
 
-        getAllSzakik: function () {
-            return SZAKIK.map(s => JSON.parse(JSON.stringify(s)));
-        },
+    // -----------------------------------------
+    // 5) ÁLSZAKIK GENERÁLÁSA (50+ db)
+    // -----------------------------------------
+    function generateFakeWorkers() {
+        const list = [];
 
-        // szakma alapján
-        findByProfession: function (szakma) {
-            return SZAKIK.filter(sz => {
-                if (Array.isArray(sz.profession)) {
-                    return sz.profession.includes(szakma);
-                }
-                return sz.profession === szakma;
-            }).map(s => JSON.parse(JSON.stringify(s)));
-        },
+        SZAKMAK.forEach(szakma => {
 
-        // Online szakik
-        getOnlineSzakik: function (szakma) {
-            return SZAKIK
-                .filter(sz => sz.isOnline)
-                .filter(sz => {
-                    if (Array.isArray(sz.profession)) return sz.profession.includes(szakma);
-                    return sz.profession === szakma;
-                })
-                .map(s => JSON.parse(JSON.stringify(s)));
-        },
+            // 2 online + 3 offline / szakma
+            for (let i = 0; i < 5; i++) {
+                const name = `${VEZETEK[Math.floor(Math.random() * VEZETEK.length)]} ${KERESZT[Math.floor(Math.random() * KERESZT.length)]}`;
 
-        // Offline fallback
-        getCalendarBasedBackup: function (szakma) {
-            return SZAKIK
-                .filter(sz => !sz.isOnline)
-                .filter(sz => {
-                    if (Array.isArray(sz.profession)) return sz.profession.includes(szakma);
-                    return sz.profession === szakma;
-                })
-                .sort((a, b) => (b.priority || 0) - (a.priority || 0))
-                .map(s => JSON.parse(JSON.stringify(s)));
-        },
+                list.push({
+                    name,
+                    profession: szakma,
+                    isReal: false,
+                    isFake: true,
 
-        // maszkos telefonszám
-        getMaskedPhone: function (szaki) {
-            return maskPhone(szaki?.phone || "");
-        },
+                    // első 2 → online, többi offline
+                    isOnline: i < 2,
 
-        // maszkos email
-        getMaskedEmail: function (szaki) {
-            return maskEmail(szaki?.email || "");
-        },
+                    // random utolsó aktivitás (5–120 perc)
+                    lastActiveMinutes: i < 2 ? 0 : Math.floor(Math.random() * 115) + 5,
 
-        // szabadság
-        getHolidayLabel: function (szaki) {
-            if (!szaki || !szaki.holidays) return "";
-            const h = szaki.holidays;
-            if (h.from && h.to) return `Nyaralás: ${h.from} – ${h.to}`;
-            if (h.from) return `Nyaralás kezdete: ${h.from}`;
-            if (h.to) return `Nyaralás vége: ${h.to}`;
-            return "";
-        }
-    };
-
-})();
+                    phone: "+3630" + Math.floor(1000000 + Math.random() * 8999999),
+                    email: "info@" + szakma.replace(/[^a-z0-9]/gi,

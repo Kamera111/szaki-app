@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Támogatás – SzakiChat</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+
+        header {
+            background: #007bff;
+            color: white;
+            padding: 18px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .box {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            margin: 30px auto;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .paypal-btn {
+            margin-top: 20px;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 20px;
+            background: #007bff;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 17px;
+        }
+
+        .back-btn:hover {
+            background: #005fcc;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    Támogatás – SzakiChat.hu
+</header>
+
+<div class="box">
+    <h2>Köszönjük, hogy támogatod az oldalt! ❤️</h2>
+    <p>
+        A SzakiChat teljesen ingyenes platform.<br>
+        Ha szeretnéd támogatni a fejlesztést, hostingot, szerver költségeket,
+        megteheted egy PayPal hozzájárulással. 🙏
+    </p>
+
+    <!-- PayPal támogatás gomb (szabad összeggel) -->
+    <div class="paypal-btn">
+        <form action="https://www.paypal.com/donate" method="post" target="_top">
+            <input type="hidden" name="hosted_button_id" value="DONATEBUTTONID">
+            <input type="image" 
+                   src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" 
+                   border="0" name="submit" 
+                   alt="Donate with PayPal button">
+        </form>
+    </div>
+</div>
+
+<a href="index.html" class="back-btn">Vissza a főoldalra</a>
+
+</body>
+</html>

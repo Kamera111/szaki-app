@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SzakiChat – Gyors szakemberkereső</title>
+
+<style>
+    body{
+        margin:0; padding:0;
+        background:#f5f5f5;
+        font-family:Arial, sans-serif;
+    }
+
+    header{
+        background:#ff8c00;
+        padding:18px;
+        text-align:center;
+        color:white;
+        font-size:22px;
+        font-weight:bold;
+    }
+
+    .container{
+        max-width:600px;
+        margin:20px auto;
+        padding:15px;
+        background:white;
+        border-radius:12px;
+        box-shadow:0 2px 12px rgba(0,0,0,0.1);
+    }
+
+    .ads{
+        margin:10px 0 20px;
+        padding:15px;
+        border:1px dashed #ff8c00;
+        border-radius:10px;
+        background:#fff7e6;
+        text-align:center;
+        font-size:15px;
+    }
+
+    .title{
+        font-size:20px;
+        font-weight:bold;
+        margin-bottom:15px;
+        text-align:center;
+    }
+
+    select{
+        width:100%;
+        padding:12px;
+        border-radius:8px;
+        border:1px solid #bbb;
+        font-size:16px;
+        margin-bottom:20px;
+    }
+
+    .info{
+        background:#f0f0f0;
+        padding:12px;
+        border-radius:10px;
+        font-size:14px;
+        margin:15px 0;
+    }
+
+    .btn{
+        display:block;
+        width:100%;
+        padding:14px;
+        background:#ff8c00;
+        color:white;
+        font-size:18px;
+        font-weight:bold;
+        border:none;
+        border-radius:10px;
+        cursor:pointer;
+        margin-top:10px;
+    }
+
+    .btn:disabled{
+        background:#bbb;
+        cursor:not-allowed;
+    }
+
+    .share-box{
+        margin-top:20px;
+        background:#e9f7ff;
+        padding:12px;
+        border-radius:10px;
+        font-size:14px;
+        text-align:center;
+    }
+
+</style>
+</head>
+
+<body>
+
+<header>SzakiChat.hu</header>
+
+<div class="container">
+
+    <div class="ads">🔶 Reklám hely</div>
+
+    <div class="title">Válassz szakmát</div>
+
+    <select id="szakma">
+        <option value="">--- Kérlek válassz ---</option>
+        <option>Festő</option>
+        <option>Burkoló</option>
+        <option>Villanyszerelő</option>
+        <option>Víz-gáz szerelő</option>
+        <option>Gipszkarton szerelő</option>
+        <option>Kőműves</option>
+        <option>Teljes felújítás</option>
+    </select>
+
+    <div class="info">
+        Az oldal használata INGYENES, ha legalább <b>5 helyre megosztod</b> az oldalt.<br><br>
+        Megosztás után minden szakember elérhetőségét megkapod.
+    </div>
+
+    <button class="btn" id="btn-tovabb" disabled>Tovább → Szakik listája</button>
+
+    <div class="share-box">
+        Megosztások száma: <b id="shareCount">0</b>/5
+        <br><br>
+        <button class="btn" style="font-size:16px;background:#007bff;" id="btn-share">Megosztás</button>
+    </div>
+
+</div>
+
+<script>
+    const szakmaSelect = document.getElementById("szakma");
+    const tovabbBtn = document.getElementById("btn-tovabb");
+    const shareBtn = document.getElementById("btn-share");
+    const shareCountEl = document.getElementById("shareCount");
+
+    let shareCount = localStorage.getItem("shareCount") || 0;
+    shareCount = parseInt(shareCount);
+    shareCountEl.textContent = shareCount;
+
+    szakmaSelect.addEventListener("change", () => {
+        tovabbBtn.disabled = szakmaSelect.value === "";
+    });
+
+    shareBtn.addEventListener("click", () => {
+        shareCount++;
+        localStorage.setItem("shareCount", shareCount);
+        shareCountEl.textContent = shareCount;
+        alert("Köszönjük a megosztást! ("+shareCount+"/5)");
+    });
+
+    tovabbBtn.addEventListener("click", () => {
+        const szakma = szakmaSelect.value;
+
+        window.location.href =
+            "szakik.html?szakma=" + encodeURIComponent(szakma);
+    });
+</script>
+
+</body>
+</html>

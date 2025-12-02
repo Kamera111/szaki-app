@@ -4,84 +4,130 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Támogatás – SzakiChat</title>
+
     <style>
         body {
             margin: 0;
             font-family: Arial, sans-serif;
             background: #f4f4f4;
             text-align: center;
-            padding: 20px;
         }
 
         header {
-            background: #007bff;
+            background: #007aff;
             color: white;
-            padding: 18px;
+            padding: 16px;
             font-size: 22px;
             font-weight: bold;
         }
 
-        .box {
-            background: white;
-            width: 90%;
+        .container {
             max-width: 500px;
             margin: 30px auto;
+            background: white;
             padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.15);
         }
 
         h2 {
             margin-top: 0;
+            color: #333;
+        }
+
+        p {
+            color: #555;
+            line-height: 1.6;
         }
 
         .paypal-btn {
-            margin-top: 20px;
+            margin-top: 25px;
         }
 
         .back-btn {
             display: inline-block;
-            margin-top: 30px;
+            margin-top: 25px;
             padding: 12px 20px;
-            background: #007bff;
+            background: #007aff;
             color: white;
-            border-radius: 8px;
             text-decoration: none;
-            font-size: 17px;
+            border-radius: 10px;
+            font-weight: bold;
         }
 
         .back-btn:hover {
-            background: #005fcc;
+            background: #0063d4;
         }
+
+        /* ❤️ Pulzáló szív */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            25% { transform: scale(1.25); }
+            40% { transform: scale(1); }
+            60% { transform: scale(1.25); }
+            100% { transform: scale(1); }
+        }
+
+        /* Lebegő PayPal támogatás gomb */
+        #supportFloatingBtn {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            background:#ff2d55;
+            padding:14px 22px;
+            border-radius:40px;
+            color:white;
+            font-weight:bold;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            cursor:pointer;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+            z-index: 9999;
+        }
+
+        .heart {
+            animation: heartbeat 1.4s infinite;
+        }
+
     </style>
 </head>
+
 <body>
 
-<header>
-    Támogatás – SzakiChat.hu
-</header>
+<header>Támogatás – SzakiChat.hu</header>
 
-<div class="box">
-    <h2>Köszönjük, hogy támogatod az oldalt! ❤️</h2>
+<div class="container">
+    <h2>Köszönjük a támogatást! ❤️</h2>
+
     <p>
-        A SzakiChat teljesen ingyenes platform.<br>
-        Ha szeretnéd támogatni a fejlesztést, hostingot, szerver költségeket,
-        megteheted egy PayPal hozzájárulással. 🙏
+        A SzakiChat.hu fenntartása és fejlesztése rengeteg időt, energiát és pénzt igényel.  
+        A rendszer teljesen ingyenes a felhasználók számára.  
+        Ha szeretnéd támogatni a fejlesztést, a szerver költségeket, hirdetésmentes működést,
+        megteheted PayPalon keresztül.
     </p>
 
-    <!-- PayPal támogatás gomb (szabad összeggel) -->
+    <!-- PAYPAL GOMB – SZABAD ÖSSZEG -->
     <div class="paypal-btn">
         <form action="https://www.paypal.com/donate" method="post" target="_top">
-            <input type="hidden" name="hosted_button_id" value="DONATEBUTTONID">
-            <input type="image" 
-                   src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" 
-                   border="0" name="submit" 
+            <input type="hidden" name="hosted_button_id" value="QGU3WXVSCH22A">
+            <input type="image"
+                   src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif"
+                   border="0"
+                   name="submit"
                    alt="Donate with PayPal button">
         </form>
     </div>
+
+    <a href="index.html" class="back-btn">⬅ Vissza a főoldalra</a>
 </div>
 
-<a href="index.html" class="back-btn">Vissza a főoldalra</a>
+<!-- Lebegő támogatási gomb -->
+<div id="supportFloatingBtn"
+     onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
+    <span class="heart">❤️</span>
+    <span>Támogatás</span>
+</div>
 
 </body>
 </html>

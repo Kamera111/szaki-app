@@ -2,100 +2,41 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>Szakember választása – SzakiChat</title>
+    <title>Szakember választás – SzakiChat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        header {
-            background:#007aff;
-            color:white;
-            padding:16px;
-            font-size:22px;
-            text-align:center;
-        }
-
-        .container {
-            max-width:450px;
-            margin:25px auto;
-            background:white;
-            padding:20px;
-            border-radius:12px;
-            box-shadow:0 4px 14px rgba(0,0,0,0.08);
-        }
-
-        .box { margin-bottom:28px; }
-        .ads-box {
-            background:#f1f1f1;
-            padding:12px;
-            border-radius:8px;
-            text-align:center;
-            color:#777;
-        }
-
-        .btn {
-            width:100%;
-            padding:12px;
-            background:#007aff;
-            border:none;
-            border-radius:8px;
-            cursor:pointer;
-            color:white;
-            font-weight:bold;
-        }
-
-        .btn:hover { transform:scale(1.03); }
-
-        /* ❤️ lebegő gomb */
-        @keyframes heartbeat {
-            0%{transform:scale(1);}
-            25%{transform:scale(1.25);}
-            40%{transform:scale(1);}
-            60%{transform:scale(1.25);}
-            100%{transform:scale(1);}
-        }
-        #supportFloatingBtn {
-            position:fixed;
-            bottom:22px;
-            right:22px;
-            background:#ff2d55;
-            padding:14px 22px;
-            border-radius:40px;
-            color:white;
-            font-weight:bold;
-            display:flex;
-            gap:10px;
-            cursor:pointer;
-            box-shadow:0 4px 15px rgba(0,0,0,0.25);
-        }
-        .heart { animation:heartbeat 1.4s infinite; }
-    </style>
 </head>
 
 <body>
 
-<header>Szakember választása</header>
+<header>Szakember választás</header>
 
 <div class="container">
 
-    <!-- INFO -->
-    <div class="box" id="infoBox">Betöltés...</div>
+    <!-- Megrendelő adatai + választott szakma -->
+    <div class="box" id="infoBox"></div>
 
-    <!-- MEGOSZTÁS LIMIT -->
-    <div class="box" id="shareBox" style="background:#fff4e6; padding:15px; border-radius:10px;">
-        Betöltés...
+    <!-- Megosztási figyelmeztetés -->
+    <div class="box box-info">
+        <b>A szakik elérhetősége zárolva!</b><br><br>
+        Oszd meg az oldalt legalább <b>5 alkalommal</b>.
+        <br><br>
+        Megosztások: <span id="shareCount">0</span> / 5
+        <br><br>
+        <button class="btn" id="shareBtn">Megosztom</button>
     </div>
 
-    <!-- REKLÁM -->
+    <!-- Reklám -->
     <div class="ads-box">
         🔶 Reklám hely – Google Ads vagy banner
     </div>
 
     <!-- SZAKI LISTA -->
     <div id="szakiLista"></div>
+
 </div>
 
-<!-- ❤️ támogatás gomb -->
+<!-- ❤️ TÁMOGATÓ GOMB -->
 <div id="supportFloatingBtn"
      onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
     <span class="heart">❤️</span> Támogasd a SzakiChat-et
@@ -103,158 +44,137 @@
 
 
 <script type="module">
-/* ======================================
+/* ============================================================
    FIREBASE IMPORT
-====================================== */
-import { db, auth } from "./firebase-config.js";
+============================================================ */
+import { auth, db } from "./firebase-config.js";
 
 import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
-    collection,
-    query,
-    where,
-    getDocs,
     doc,
     getDoc,
+    setDoc,
     updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
-/* ======================================
-   1) BELÉPÉS ELLENŐRZÉS
-====================================== */
+/* ============================================================
+   URL PARAMÉTER: SZAKMA
+============================================================ */
+const params = new URLSearchParams(window.location.search);
+const szakma = params.get("szakma");
+
+document.getElementById("infoBox").innerHTML =
+    `<b>Keresett szakma:</b> ${szakma}<br>
+     <small>Elérhető szakemberek:</small>`;
+
+
+/* ============================================================
+   USER + MEGOSZTÁS
+============================================================ */
 let uid = null;
 let userData = null;
 
+let shareCount = Number(localStorage.getItem("shareCount") || 0);
+document.getElementById("shareCount").innerText = shareCount;
+
+document.getElementById("shareBtn").onclick = () => {
+    shareCount++;
+    localStorage.setItem("shareCount", shareCount);
+    document.getElementById("shareCount").innerText = shareCount;
+    renderList();
+};
+
+
+/* ============================================================
+   BELÉPÉS ELLENŐRZÉS
+============================================================ */
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
+    if (!user) return (window.location.href = "login.html");
 
     uid = user.uid;
 
     const ref = doc(db, "users", uid);
     const snap = await getDoc(ref);
 
-    if (!snap.exists()) {
-        alert("Hiányzó profiladat!");
-        window.location.href = "profil.html";
-        return;
-    }
-
     userData = snap.data();
 
-    // csak megrendelő léphet be ide!
-    if (userData.role !== "megrendelo") {
-        window.location.href = "szaki-panel.html";
-        return;
-    }
-
-    loadPage();
+    renderList();
 });
 
 
-/* ======================================
-   2) HTML FRISSÍTÉS + SZAKMA BEOLVASÁS
-====================================== */
-async function loadPage() {
-    const params = new URLSearchParams(window.location.search);
-    const szakma = params.get("szakma") || "(ismeretlen)";
+/* ============================================================
+   SZAKI LISTA (ÁLTALAD KÉSŐBB FIRESTORE-BÓL JÖHET)
+============================================================ */
+const realSzakik = [
+    { id: "szaki1", name: "Csabi", szakma: "Festő", online: true },
+    { id: "szaki2", name: "Zsolti", szakma: "Villanyszerelő", online: false }
+];
 
-    document.getElementById("infoBox").innerHTML = `
-        <b>Keresett szakma:</b> ${szakma}<br>
-        <small>A következő szakik érhetők el:</small>
-    `;
+const fakeNames = ["Péter", "Attila", "Jani", "Gábor", "Tamás"];
+const fakeSzakik = fakeNames.map((n, i) => ({
+    id: "fake" + i,
+    name: n,
+    szakma: szakma,
+    online: false
+}));
 
-    updateShareBox();
-
-    await loadSzakik(szakma);
-}
-
-
-/* ======================================
-   3) MEGOSZTÁS LIMIT FIRESTORE-BÓL
-====================================== */
-async function updateShareBox() {
-    const count = userData.shareCount || 0;
-
-    document.getElementById("shareBox").innerHTML = `
-        <b>A szakik elérhetősége zárolva!</b><br><br>
-        Oszd meg az oldalt legalább <b>5 alkalommal</b> a feloldáshoz.<br><br>
-        Jelenlegi megosztások: <b>${count}</b> / 5<br><br>
-        <button class="btn" id="shareBtn">Megosztottam</button>
-    `;
-
-    document.getElementById("shareBtn").onclick = addShare;
-}
-
-async function addShare() {
-    let count = userData.shareCount || 0;
-    if (count < 5) count++;
-
-    await updateDoc(doc(db, "users", uid), {
-        shareCount: count
-    });
-
-    userData.shareCount = count;
-
-    updateShareBox();
-    loadSzakik(); // frissítés
-}
+let allWorkers = [...realSzakik, ...fakeSzakik];
 
 
-/* ======================================
-   4) SZAKI LISTA TÖLTÉSE FIRESTORE-BÓL
-====================================== */
-async function loadSzakik(szakma) {
-    const cont = document.getElementById("szakiLista");
-    cont.innerHTML = "Betöltés...";
+/* ============================================================
+   CHAT INDÍTÁSA – CHAT LÉTREHOZÁSA
+============================================================ */
+async function startChat(partnerID) {
+    // ABC sorrend a stabil chatID miatt
+    const chatID = uid < partnerID ? `${uid}_${partnerID}` : `${partnerID}_${uid}`;
 
-    const q = query(
-        collection(db, "users"),
-        where("role", "==", "szaki"),
-        where("szakma", "==", szakma)
-    );
+    const chatRef = doc(db, "chats", chatID);
+    const chatSnap = await getDoc(chatRef);
 
-    const snap = await getDocs(q);
-
-    cont.innerHTML = "";
-
-    if (snap.empty) {
-        cont.innerHTML = "<p>Nincs ilyen szakember online.</p>";
-        return;
+    // Ha még nincs chat → létrehozzuk
+    if (!chatSnap.exists()) {
+        await setDoc(chatRef, {
+            participants: [uid, partnerID],
+            createdAt: Date.now(),
+            lastMessage: "",
+            lastTimestamp: Date.now()
+        });
     }
 
-    snap.forEach(docu => {
-        const sz = docu.data();
-        const locked = (userData.shareCount || 0) < 5;
+    // Átirányítás a chat oldalra
+    window.location.href =
+        `chat.html?chatID=${chatID}&partner=${partnerID}`;
+}
 
-        const div = document.createElement("div");
-        div.className = "box";
 
-        div.innerHTML = `
+/* ============================================================
+   LISTA KIRAJZOLÁS
+============================================================ */
+function renderList() {
+    const cont = document.getElementById("szakiLista");
+    cont.innerHTML = "";
+
+    const locked = shareCount < 5;
+
+    allWorkers.forEach(sz => {
+        const box = document.createElement("div");
+        box.className = "box";
+
+        box.innerHTML = `
             <h3>${sz.name}</h3>
             <div><b>Szakma:</b> ${sz.szakma}</div>
-            <div style="margin-top:8px;">
-                <b>Elérhetőség:</b>
-                ${locked ? "<span style='color:red;'>🗝 Zárolva</span>" : sz.phone || "Nincs megadva"}
-            </div>
+            <div><b>Online:</b> ${sz.online ? "🟢" : "⚪"}</div>
 
-            <button class="btn" style="margin-top:12px;">
-                Chat indítása
-            </button>
+            <button class="btn" style="margin-top:12px;">Chat indítása</button>
         `;
 
-        div.querySelector(".btn").onclick = () => {
-            window.location.href =
-                "chat.html?partnerID=" + docu.id;
-        };
+        box.querySelector("button").onclick = () => startChat(sz.id);
 
-        cont.appendChild(div);
+        cont.appendChild(box);
     });
 }
 </script>

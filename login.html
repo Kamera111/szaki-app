@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8" />
+    <title>Belépés – SzakiChat</title>
+    <link rel="stylesheet" href="style.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+
+<body>
+
+<div class="container">
+    <h1>SzakiChat – Belépés</h1>
+
+    <div class="box">
+        <h3>Ki vagy?</h3>
+
+        <select id="roleSelect" style="width:100%; padding:12px; margin-top:10px; font-size:16px; border-radius:8px; border:1px solid #ccc;">
+            <option value="">Válassz:</option>
+            <option value="szaki">Szaki vagyok</option>
+            <option value="megrendelo">Megrendelő vagyok</option>
+        </select>
+    </div>
+
+    <div class="box">
+        <h3>Belépés e-mail címmel</h3>
+
+        <input id="email" type="email" placeholder="Email" style="width:100%; padding:12px; margin-bottom:12px; border-radius:8px; border:1px solid #ccc;">
+        <input id="pass" type="password" placeholder="Jelszó" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ccc;">
+
+        <button onclick="loginUser()" class="btn" style="width:100%; margin-top:14px;">Belépés</button>
+        <button onclick="registerUser()" class="btn" style="width:100%; margin-top:10px; background:#28a745;">Regisztráció</button>
+    </div>
+</div>
+
+<!-- ❤️ LEBEGŐ TÁMOGATÁS GOMB -->
+<div id="supportFloatingBtn" onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
+    <span class="heart">❤️</span> Támogasd a SzakiChat-et
+</div>
+
+
+<!-- FIREBASE -->
+<script type="module">
+import { app, db, auth } from "./firebase-config.js";
+import {
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+    doc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+// -----------------------
+// VALIDÁCIÓ
+// -----------------------
+function getRole() {
+    const r = document.getElementById("roleSelect").value;
+    if (!r) {
+        alert("Kérlek válaszd ki: Szaki vagy Megrendelő!");
+        return null;
+    }
+    return r;
+}
+
+
+// -----------------------
+// REGISZTRÁCIÓ
+// -----------------------
+window.registerUser = async function() {
+    const email = document.getElementById("email").value.trim();
+    const pass  = document.getElementById("pass").value.trim();
+    const role  = getRole();
+    if (!role) return;
+
+    if (!email || !pass) {
+        alert("Add meg az emailt és a jelszót!");
+        return;
+    }
+
+    try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+        const uid = userCred.user.uid;
+
+        // Firestore user dokumentum
+        await setDoc(doc(db, "users", uid), {
+            email,
+            role,
+            createdAt: Date.now(),
+            online: true
+        });
+
+        localStorage.setItem("role", role);
+        localStorage.setItem("uid", uid);
+
+        window.location.href = "szaki-panel.html";
+
+    } catch (e) {
+        alert("Hiba: " + e.message);
+    }
+}
+
+
+// -----------------------
+// BELÉPÉS
+// -----------------------
+window.loginUser = async function() {
+    const email = document.getElementById("email").value.trim();
+    const pass  = document.getElementById("pass").value.trim();
+    const role  = getRole();
+    if (!role) return;
+
+    try {
+        const userCred = await signInWithEmailAndPassword(auth, email, pass);
+        const uid = userCred.user.uid;
+
+        await setDoc(doc(db, "users", uid), {
+            email,
+            role,
+            online: true
+        }, { merge: true });
+
+        localStorage.setItem("role", role);
+        localStorage.setItem("uid", uid);
+
+        window.location.href = "szaki-panel.html";
+
+    } catch (e) {
+        alert("Hibás email/jelszó!");
+    }
+}
+</script>
+
+</body>
+</html>

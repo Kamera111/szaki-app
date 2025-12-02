@@ -5,6 +5,81 @@
     <title>Szakember választás – SzakiChat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            background:#f4f4f4;
+            margin:0;
+            font-family:Arial, sans-serif;
+        }
+
+        header {
+            background:#007aff;
+            color:white;
+            padding:16px;
+            text-align:center;
+            font-size:20px;
+            font-weight:bold;
+        }
+
+        .box {
+            background:white;
+            border-radius:12px;
+            padding:18px;
+            box-shadow:0 2px 10px rgba(0,0,0,0.08);
+            margin:14px;
+        }
+
+        .szakiItem {
+            background:white;
+            padding:16px;
+            border-radius:12px;
+            margin:12px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .szakiHeader {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        .szakiName {
+            font-size:18px;
+            font-weight:bold;
+        }
+
+        .szakiInfo {
+            color:#555;
+            margin-top:4px;
+        }
+
+        .btnChat {
+            margin-top:10px;
+            width:100%;
+            padding:12px;
+            background:#007aff;
+            color:white;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            font-size:16px;
+        }
+
+        .btnChat:hover {
+            transform:scale(1.02);
+        }
+
+        #lockMsg {
+            background:#ffe9e8;
+            color:#a10000;
+            padding:12px;
+            font-weight:bold;
+            text-align:center;
+            border-radius:8px;
+            display:none;
+        }
+    </style>
 </head>
 
 <body>
@@ -13,30 +88,19 @@
 
 <div class="container">
 
-    <!-- Megrendelő adatai + választott szakma -->
-    <div class="box" id="infoBox"></div>
-
-    <!-- Megosztási figyelmeztetés -->
-    <div class="box box-info">
-        <b>A szakik elérhetősége zárolva!</b><br><br>
-        Oszd meg az oldalt legalább <b>5 alkalommal</b>.
-        <br><br>
-        Megosztások: <span id="shareCount">0</span> / 5
-        <br><br>
-        <button class="btn" id="shareBtn">Megosztom</button>
+    <div class="box" id="headerBox">
+        Betöltés...
     </div>
 
-    <!-- Reklám -->
-    <div class="ads-box">
-        🔶 Reklám hely – Google Ads vagy banner
+    <div class="box" id="lockMsg">
+        🔒 A szakik elérhetősége zárolva! Minimum 5 megosztás szükséges.
     </div>
 
-    <!-- SZAKI LISTA -->
-    <div id="szakiLista"></div>
+    <div id="szakiLista">Betöltés...</div>
 
 </div>
 
-<!-- ❤️ TÁMOGATÓ GOMB -->
+<!-- ❤️ Támogatás gomb -->
 <div id="supportFloatingBtn"
      onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
     <span class="heart">❤️</span> Támogasd a SzakiChat-et
@@ -44,6 +108,7 @@
 
 
 <script type="module">
+
 /* ============================================================
    FIREBASE IMPORT
 ============================================================ */
@@ -54,129 +119,138 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
+    collection,
+    query,
+    where,
+    getDocs,
     doc,
     getDoc,
-    setDoc,
-    updateDoc
+    setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 
 
 /* ============================================================
    URL PARAMÉTER: SZAKMA
 ============================================================ */
 const params = new URLSearchParams(window.location.search);
-const szakma = params.get("szakma");
+const szakma = params.get("szakma") || localStorage.getItem("mr_szakma") || "";
+if (!szakma) window.location.href = "szakma-valasztas.html";
 
-document.getElementById("infoBox").innerHTML =
-    `<b>Keresett szakma:</b> ${szakma}<br>
-     <small>Elérhető szakemberek:</small>`;
+document.getElementById("headerBox").innerHTML = `
+    <b>Keresett szakma:</b> ${szakma}
+`;
+
 
 
 /* ============================================================
-   USER + MEGOSZTÁS
+   FELHASZNÁLÓ + SHARECOUNT BETÖLTÉSE
 ============================================================ */
 let uid = null;
-let userData = null;
+let shareCount = 0;
 
-let shareCount = Number(localStorage.getItem("shareCount") || 0);
-document.getElementById("shareCount").innerText = shareCount;
-
-document.getElementById("shareBtn").onclick = () => {
-    shareCount++;
-    localStorage.setItem("shareCount", shareCount);
-    document.getElementById("shareCount").innerText = shareCount;
-    renderList();
-};
-
-
-/* ============================================================
-   BELÉPÉS ELLENŐRZÉS
-============================================================ */
 onAuthStateChanged(auth, async (user) => {
-    if (!user) return (window.location.href = "login.html");
+    if (!user) window.location.href = "login.html";
 
     uid = user.uid;
 
-    const ref = doc(db, "users", uid);
-    const snap = await getDoc(ref);
+    const userRef = doc(db, "users", uid);
+    const userSnap = await getDoc(userRef);
 
-    userData = snap.data();
+    if (userSnap.exists()) {
+        shareCount = userSnap.data().shareCount || 0;
+    }
 
-    renderList();
+    if (shareCount < 5) {
+        document.getElementById("lockMsg").style.display = "block";
+    }
+
+    loadSzakik();
 });
 
 
-/* ============================================================
-   SZAKI LISTA (ÁLTALAD KÉSŐBB FIRESTORE-BÓL JÖHET)
-============================================================ */
-const realSzakik = [
-    { id: "szaki1", name: "Csabi", szakma: "Festő", online: true },
-    { id: "szaki2", name: "Zsolti", szakma: "Villanyszerelő", online: false }
-];
-
-const fakeNames = ["Péter", "Attila", "Jani", "Gábor", "Tamás"];
-const fakeSzakik = fakeNames.map((n, i) => ({
-    id: "fake" + i,
-    name: n,
-    szakma: szakma,
-    online: false
-}));
-
-let allWorkers = [...realSzakik, ...fakeSzakik];
-
 
 /* ============================================================
-   CHAT INDÍTÁSA – CHAT LÉTREHOZÁSA
+   SZAKIK LISTÁZÁSA FIRESTORE-BÓL
 ============================================================ */
-async function startChat(partnerID) {
-    // ABC sorrend a stabil chatID miatt
-    const chatID = uid < partnerID ? `${uid}_${partnerID}` : `${partnerID}_${uid}`;
+async function loadSzakik() {
+    const listDiv = document.getElementById("szakiLista");
+    listDiv.innerHTML = "Betöltés...";
+
+    const q = query(
+        collection(db, "users"),
+        where("role", "==", "szaki"),
+        where("szakma", "==", szakma.toLowerCase())
+    );
+
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+        listDiv.innerHTML =
+            "<p style='text-align:center; margin-top:20px;'>Nincs szakember ebben a kategóriában.</p>";
+        return;
+    }
+
+    listDiv.innerHTML = "";
+
+    snap.forEach(docu => {
+        const szaki = docu.data();
+        const id = docu.id;
+
+        const onlineIcon = szaki.online ? "🟢" : "⚪";
+
+        const phoneText = (shareCount >= 5)
+            ? (szaki.phone || "Nincs megadva")
+            : "🔒 Zárolva (min. 5 megosztás)";
+
+        const div = document.createElement("div");
+        div.className = "szakiItem";
+
+        div.innerHTML = `
+            <div class="szakiHeader">
+                <div class="szakiName">${szaki.name || "Nincs név"}</div>
+                <div>${onlineIcon}</div>
+            </div>
+
+            <div class="szakiInfo"><b>Szakma:</b> ${szaki.szakma}</div>
+            <div class="szakiInfo"><b>Telefon:</b> ${phoneText}</div>
+
+            <button class="btnChat" onclick="startChat('${id}')">
+                Chat indítása
+            </button>
+        `;
+
+        listDiv.appendChild(div);
+    });
+}
+
+
+
+/* ============================================================
+   CHAT LÉTREHOZÁSA / MEGNYITÁSA
+============================================================ */
+window.startChat = async function(partnerID) {
+
+    // Chat ID generálása
+    const chatID = uid < partnerID
+        ? uid + "_" + partnerID
+        : partnerID + "_" + uid;
 
     const chatRef = doc(db, "chats", chatID);
     const chatSnap = await getDoc(chatRef);
 
-    // Ha még nincs chat → létrehozzuk
     if (!chatSnap.exists()) {
         await setDoc(chatRef, {
             participants: [uid, partnerID],
-            createdAt: Date.now(),
             lastMessage: "",
             lastTimestamp: Date.now()
         });
     }
 
-    // Átirányítás a chat oldalra
     window.location.href =
         `chat.html?chatID=${chatID}&partner=${partnerID}`;
-}
+};
 
-
-/* ============================================================
-   LISTA KIRAJZOLÁS
-============================================================ */
-function renderList() {
-    const cont = document.getElementById("szakiLista");
-    cont.innerHTML = "";
-
-    const locked = shareCount < 5;
-
-    allWorkers.forEach(sz => {
-        const box = document.createElement("div");
-        box.className = "box";
-
-        box.innerHTML = `
-            <h3>${sz.name}</h3>
-            <div><b>Szakma:</b> ${sz.szakma}</div>
-            <div><b>Online:</b> ${sz.online ? "🟢" : "⚪"}</div>
-
-            <button class="btn" style="margin-top:12px;">Chat indítása</button>
-        `;
-
-        box.querySelector("button").onclick = () => startChat(sz.id);
-
-        cont.appendChild(box);
-    });
-}
 </script>
 
 </body>

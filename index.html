@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SzakiChat</title>
+    <title>SzakiChat – Főoldal</title>
     <link rel="stylesheet" href="style.css">
 
     <style>
-        /* ❤️ PULZÁLÓ SZÍV ANIMÁCIÓ */
+        /* ----------- PULZÁLÓ SZÍV ----------- */
         @keyframes heartbeat {
             0%   { transform: scale(1); }
             25%  { transform: scale(1.25); }
@@ -16,7 +16,6 @@
             100% { transform: scale(1); }
         }
 
-        /* ❤️ Lebegő gomb */
         .floating-support {
             position: fixed;
             bottom: 22px;
@@ -36,20 +35,55 @@
             z-index: 9999;
             transition: 0.25s ease;
         }
-
         .floating-support:hover {
             transform: scale(1.08);
             box-shadow: 0 6px 20px rgba(0,0,0,0.35);
         }
 
-        /* ❤️ A szív külön animál */
         .heart {
             font-size: 24px;
             animation: heartbeat 1.4s infinite;
-            transform-origin: center;
         }
 
-        /* 📱 Mobilnézet */
+        /* ----------- FŐLAP DIZÁJN ----------- */
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            text-align: center;
+        }
+
+        header {
+            background: #007aff;
+            color: white;
+            padding: 18px 10px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .container {
+            margin-top: 40px;
+        }
+
+        .btn {
+            display: block;
+            width: 80%;
+            max-width: 320px;
+            margin: 12px auto;
+            padding: 14px;
+            background: #007aff;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: 0.25s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
         @media (max-width: 480px) {
             .floating-support {
                 padding: 12px 16px;
@@ -64,10 +98,18 @@
 
 <body>
 
-    <h1>SzakiChat</h1>
-    <p>Üdvözöl a SzakiChat! Itt hamarosan minden funkció működni fog.</p>
+    <header>SzakiChat</header>
 
-    <!-- ❤️ Lebegő támogatási gomb -->
+    <div class="container">
+        <h2>Üdvözöl a SzakiChat!</h2>
+        <p>Itt indul a szakember- és megrendelő összekötő rendszer.</p>
+
+        <!-- 👉 Gombok a továbblépéshez -->
+        <a class="btn" href="login.html">Bejelentkezés</a>
+        <a class="btn" href="profil.html">Regisztráció</a>
+    </div>
+
+    <!-- ❤️ Lebegő támogatás gomb -->
     <a href="https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A"
        target="_blank"
        class="floating-support">

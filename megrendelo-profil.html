@@ -5,6 +5,76 @@
     <title>Megrendelő profil – SzakiChat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        header {
+            background: #007aff;
+            color: white;
+            padding: 16px;
+            font-size: 22px;
+            text-align:center;
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 25px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        }
+
+        .box { margin-bottom: 28px; }
+
+        .infoText {
+            background:#f2f2f2;
+            padding:10px;
+            border-radius:8px;
+            margin-top:6px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background:#007aff;
+            color:white;
+            font-weight:bold;
+            border:none;
+            border-radius:8px;
+            cursor:pointer;
+            margin-top:10px;
+        }
+
+        .btn:hover { transform: scale(1.03); }
+
+        /* ❤️ Pulzáló szív animáció */
+        @keyframes heartbeat {
+            0%{transform:scale(1);}
+            25%{transform:scale(1.25);}
+            40%{transform:scale(1);}
+            60%{transform:scale(1.25);}
+            100%{transform:scale(1);}
+        }
+
+        /* ❤️ Lebegő támogatás gomb */
+        #supportFloatingBtn {
+            position: fixed;
+            bottom: 22px;
+            right: 22px;
+            background:#ff2d55;
+            padding:14px 22px;
+            color:white;
+            border-radius:40px;
+            font-weight:bold;
+            display:flex;
+            gap:10px;
+            align-items:center;
+            cursor:pointer;
+            box-shadow:0 4px 14px rgba(0,0,0,0.3);
+        }
+
+        .heart { animation: heartbeat 1.4s infinite; }
+    </style>
 </head>
 
 <body>
@@ -13,10 +83,10 @@
 
 <div class="container">
 
-    <!-- NÉV – csak kiírjuk, nem módosítható -->
+    <!-- NÉV -->
     <div class="box">
         <b>Név:</b><br>
-        <div id="nameDisplay" class="infoText"></div>
+        <div id="nameDisplay" class="infoText">Betöltés...</div>
     </div>
 
     <!-- SZEREP -->
@@ -25,60 +95,108 @@
         <div class="infoText">Megrendelő</div>
     </div>
 
-    <!-- MEGOSZTÁS KIJELZÉS -->
+    <!-- MEGOSZTÁS -->
     <div class="box">
         <b>Megosztások száma:</b><br>
-        <div id="shareCountBox" style="font-size:20px; margin:8px 0;"></div>
+        <div id="shareCountBox" style="font-size:20px; margin-top:6px;" class="infoText">0 / 5</div>
 
         <button class="btn" onclick="addShare()">Megosztottam! (+1)</button>
 
-        <p id="unlockInfo" style="margin-top:10px; font-size:15px;"></p>
+        <p id="unlockInfo" style="margin-top:12px; font-size:15px;"></p>
     </div>
 
-    <!-- CHAT ELŐZMÉNYEK (később kötjük be) -->
+    <!-- KÉSŐBBI FUNKCIÓ -->
     <div class="box">
         <b>Korábbi beszélgetések:</b>
-        <p style="color:#777; font-size:14px;">(Hamarosan!)</p>
+        <div style="color:#777; font-size:14px;">(Hamarosan!)</div>
     </div>
 
 </div>
 
-<!-- ❤️ Lebegő Paypal gomb -->
+<!-- ❤️ Lebegő gomb -->
 <div id="supportFloatingBtn"
      onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
      <span class="heart">❤️</span> Támogasd a SzakiChat-et
 </div>
 
-<script>
+
+<script type="module">
 /* ======================================================
-   PROFIL BETÖLTÉS LOCALSTORAGE-BÓL
+   FIREBASE IMPORT
 ====================================================== */
-let userName = localStorage.getItem("chatUser") || "Ismeretlen";
-document.getElementById("nameDisplay").innerText = userName;
+import { db, auth } from "./firebase-config.js";
+import {
+    doc, getDoc, updateDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+let uid = null;
+let userData = null;
 
 /* ======================================================
-   MEGOSZTÁS SZÁMLÁLÁS
+   FELHASZNÁLÓ BETÖLTÉSE
 ====================================================== */
-let shareCount = Number(localStorage.getItem("shareCount") || 0);
-updateShareUI();
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
 
-function addShare() {
-    shareCount++;
-    if (shareCount > 5) shareCount = 5;
-    localStorage.setItem("shareCount", shareCount);
+    uid = user.uid;
+
+    const ref = doc(db, "users", uid);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+        await setDoc(ref, {
+            name: "Ismeretlen",
+            role: "megrendelo",
+            shareCount: 0
+        }, { merge: true });
+    }
+
+    userData = snap.data();
+
+    document.getElementById("nameDisplay").innerText = userData.name || "Ismeretlen";
+
+    updateShareUI();
+});
+
+
+/* ======================================================
+   MEGOSZTÁS +1
+====================================================== */
+async function addShare() {
+    if (!userData.shareCount) userData.shareCount = 0;
+
+    if (userData.shareCount < 5) userData.shareCount++;
+    else userData.shareCount = 5;
+
+    await updateDoc(doc(db, "users", uid), {
+        shareCount: userData.shareCount
+    });
+
     updateShareUI();
 }
 
-function updateShareUI() {
-    document.getElementById("shareCountBox").innerHTML =
-        `<b>${shareCount} / 5</b>`;
 
-    if (shareCount < 5) {
+/* ======================================================
+   UI FRISSÍTÉS
+====================================================== */
+function updateShareUI() {
+    const count = userData?.shareCount || 0;
+
+    document.getElementById("shareCountBox").innerHTML = `<b>${count} / 5</b>`;
+
+    if (count < 5) {
         document.getElementById("unlockInfo").innerHTML =
-            "Elérhetőség-küldés: <b style='color:red;'>Zárolva</b>";
+            "<b style='color:red;'>Elérhetőség küldése: Zárolva</b>";
     } else {
         document.getElementById("unlockInfo").innerHTML =
-            "<b style='color:green;'>Feloldva! Küldhetsz telefonszámot a chatben.</b>";
+            "<b style='color:green;'>Feloldva! A chatben küldhetsz telefonszámot.</b>";
     }
 }
 </script>

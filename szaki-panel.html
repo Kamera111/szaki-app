@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>Szaki Panel – SzakiChat</title>
+    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+<header>
+    SzakiChat – Szaki Panel
+</header>
+
+<div class="container">
+
+    <div class="box" id="userBox">
+        Betöltés…
+    </div>
+
+    <div class="box">
+        <h3>Állapot</h3>
+        <p><b>Online státusz:</b> <span id="status">–</span></p>
+        <button id="toggleOnline" class="btn">Online váltás</button>
+    </div>
+
+    <div class="box">
+        <h3>Chat</h3>
+        <button onclick="window.location.href='chat-list.html'" class="btn" style="width:100%;">Chat megnyitása</button>
+    </div>
+
+    <!-- REKLÁMHELY -->
+    <div class="ads-box">
+        🔶 Itt jelennek majd meg a hirdetések
+    </div>
+
+    <button id="logoutBtn" class="btn" style="background:#c00; width:100%; margin-top:20px;">
+        Kijelentkezés
+    </button>
+
+</div>
+
+
+<!-- ❤️ LEBEGŐ TÁMOGATÁS GOMB -->
+<div id="supportFloatingBtn"
+     onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
+    <span class="heart">❤️</span> Támogasd a SzakiChat-et
+</div>
+
+
+<!-- FIREBASE -->
+<script type="module">
+
+import { app, db, auth } from "./firebase-config.js";
+import {
+    onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+    doc, getDoc, updateDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+// ===============================
+// BELÉPÉS ELLENŐRZÉS
+// ===============================
+const uid = localStorage.getItem("uid");
+const role = localStorage.getItem("role");
+
+if (!uid) {
+    window.location.href = "login.html";
+}
+
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    const ref = doc(db, "users", user.uid);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) {
+        document.getElementById("userBox").innerHTML = "Hiba: nincs user adat!";
+        return;
+    }
+
+    const data = snap.data();
+
+    document.getElementById("userBox").innerHTML = `
+        <h3>Üdv, ${data.email}</h3>
+        <p><b>Szerep:</b> ${data.role === "szaki" ? "Szaki" : "Megrendelő"}</p>
+    `;
+
+    document.getElementById("status").innerText =
+        data.online ? "🟢 Online" : "⚪ Offline";
+});
+
+
+// ===============================
+// ONLINE / OFFLINE VÁLTÁS
+// ===============================
+document.getElementById("toggleOnline").onclick = async () => {
+    const ref = doc(db, "users", uid);
+    const snap = await getDoc(ref);
+    const act = snap.data().online;
+
+    await updateDoc(ref, { online: !act });
+
+    document.getElementById("status").innerText =
+        !act ? "🟢 Online" : "⚪ Offline";
+};
+
+
+// ===============================
+// KIJELENTKEZÉS
+// ===============================
+document.getElementById("logoutBtn").onclick = async () => {
+    if (uid) {
+        await updateDoc(doc(db, "users", uid), { online: false });
+    }
+
+    await signOut(auth);
+    localStorage.clear();
+
+    window.location.href = "login.html";
+};
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8" />
+    <title>Megrendelő profil – SzakiChat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>Megrendelő – Profil</header>
+
+<div class="container">
+
+    <!-- NÉV – csak kiírjuk, nem módosítható -->
+    <div class="box">
+        <b>Név:</b><br>
+        <div id="nameDisplay" class="infoText"></div>
+    </div>
+
+    <!-- SZEREP -->
+    <div class="box">
+        <b>Szerep:</b><br>
+        <div class="infoText">Megrendelő</div>
+    </div>
+
+    <!-- MEGOSZTÁS KIJELZÉS -->
+    <div class="box">
+        <b>Megosztások száma:</b><br>
+        <div id="shareCountBox" style="font-size:20px; margin:8px 0;"></div>
+
+        <button class="btn" onclick="addShare()">Megosztottam! (+1)</button>
+
+        <p id="unlockInfo" style="margin-top:10px; font-size:15px;"></p>
+    </div>
+
+    <!-- CHAT ELŐZMÉNYEK (később kötjük be) -->
+    <div class="box">
+        <b>Korábbi beszélgetések:</b>
+        <p style="color:#777; font-size:14px;">(Hamarosan!)</p>
+    </div>
+
+</div>
+
+<!-- ❤️ Lebegő Paypal gomb -->
+<div id="supportFloatingBtn"
+     onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
+     <span class="heart">❤️</span> Támogasd a SzakiChat-et
+</div>
+
+<script>
+/* ======================================================
+   PROFIL BETÖLTÉS LOCALSTORAGE-BÓL
+====================================================== */
+let userName = localStorage.getItem("chatUser") || "Ismeretlen";
+document.getElementById("nameDisplay").innerText = userName;
+
+/* ======================================================
+   MEGOSZTÁS SZÁMLÁLÁS
+====================================================== */
+let shareCount = Number(localStorage.getItem("shareCount") || 0);
+updateShareUI();
+
+function addShare() {
+    shareCount++;
+    if (shareCount > 5) shareCount = 5;
+    localStorage.setItem("shareCount", shareCount);
+    updateShareUI();
+}
+
+function updateShareUI() {
+    document.getElementById("shareCountBox").innerHTML =
+        `<b>${shareCount} / 5</b>`;
+
+    if (shareCount < 5) {
+        document.getElementById("unlockInfo").innerHTML =
+            "Elérhetőség-küldés: <b style='color:red;'>Zárolva</b>";
+    } else {
+        document.getElementById("unlockInfo").innerHTML =
+            "<b style='color:green;'>Feloldva! Küldhetsz telefonszámot a chatben.</b>";
+    }
+}
+</script>
+
+</body>
+</html>

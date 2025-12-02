@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat – SzakiChat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>Chat</header>
+
+<div class="container">
+
+    <div class="box" id="chatInfo"></div>
+
+    <!-- CHAT ABLAK -->
+    <div id="chatBox" class="box" style="height:50vh; overflow-y:auto;">
+        <i>Csatlakoztál a beszélgetéshez…</i>
+    </div>
+
+    <!-- FIGYELMEZTETÉS: még nem osztott 5x -->
+    <div id="shareWarning" class="box" style="background:#fff4e6; display:none;">
+        <b>Az elérhetőségek küldése zárolva!</b><br>
+        Oszd meg az oldalt legalább <b>5 alkalommal</b> a feloldáshoz.
+    </div>
+
+    <!-- ÜZENET ÍRÁS -->
+    <div class="input-row">
+        <input type="text" id="msgInput" placeholder="Írj üzenetet…">
+        <button class="btn" id="sendBtn">Küldés</button>
+    </div>
+
+</div>
+
+
+<!-- ❤️ Lebegő adomány gomb -->
+<div id="supportFloatingBtn"
+     onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
+    <span class="heart">❤️</span> Támogasd a SzakiChat-et
+</div>
+
+
+<script type="module">
+/* ============================================================
+   FIREBASE
+============================================================ */
+import { db } from "./firebase-config.js";
+import {
+    collection, doc, addDoc, query, orderBy, onSnapshot,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+/* ============================================================
+   PARAMÉTEREK
+============================================================ */
+const params = new URLSearchParams(window.location.search);
+const partner = params.get("partner") || "Ismeretlen";
+let userName = localStorage.getItem("chatUser");
+
+if (!userName) {
+    userName = prompt("Add meg a neved:");
+    localStorage.setItem("chatUser", userName);
+}
+
+document.getElementById("chatInfo").innerHTML =
+    `<b>Te:</b> ${userName}<br>
+     <b>Szakember:</b> ${partner}`;
+
+
+// MEGOSZTÁSKORLÁT
+let shareCount = Number(localStorage.getItem("shareCount") || 0);
+if (shareCount < 5) {
+    document.getElementById("shareWarning").style.display = "block";
+}
+
+
+// Szoba ID
+const ROOM_ID = [userName.toLowerCase(), partner.toLowerCase()]
+                 .sort().join("__");
+
+// Firestore
+const msgsRef = collection(db, "chats", ROOM_ID, "uzenetek");
+
+
+/* ============================================================
+   REALTIME CHAT
+============================================================ */
+const chatBox = document.getElementById("chatBox");
+
+const q = query(msgsRef, orderBy("timestamp"));
+onSnapshot(q, (snap) => {
+    chatBox.innerHTML = "";
+    snap.forEach(docu => {
+        const d = docu.data();
+        const p = document.createElement("p");
+
+        const t = d.timestamp?.toDate().toLocaleTimeString("hu-HU", {hour:"2-digit", minute:"2-digit"}) || "";
+        const own = d.sender === userName ? "font-weight:bold;" : "";
+
+        p.innerHTML = `<span style="${own}">${d.sender}:</span> ${escape(d.text)} 
+                       <span style="color:#999;font-size:11px;">(${t})</span>`;
+
+        chatBox.appendChild(p);
+    });
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+});
+
+
+/* ============================================================
+   KÜLDÉS
+============================================================ */
+document.getElementById("sendBtn").onclick = sendMessage;
+document.getElementById("msgInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") sendMessage();
+});
+
+async function sendMessage() {
+    const input = document.getElementById("msgInput");
+    let txt = input.value.trim();
+    if (!txt) return;
+
+    // TILTÁS: elérhetőség küldése, amíg nincs 5 megosztás
+    if (shareCount < 5) {
+        const block =
+            ["06", "+36", "@", "gmail", "mail", "facebook", "messenger", "viber", "whatsapp"];
+
+        if (block.some(w => txt.toLowerCase().includes(w))) {
+            alert("Elérhetőséget csak 5 megosztás után küldhetsz!");
+            return;
+        }
+    }
+
+    await addDoc(msgsRef, {
+        sender: userName,
+        text: txt,
+        timestamp: serverTimestamp()
+    });
+
+    input.value = "";
+    input.focus();
+}
+
+/* ============================================================
+   HTML ESCAPE
+============================================================ */
+function escape(s) {
+    const div = document.createElement("div");
+    div.innerText = s;
+    return div.innerHTML;
+}
+</script>
+
+</body>
+</html>

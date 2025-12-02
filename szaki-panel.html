@@ -2,213 +2,79 @@
 <html lang="hu">
 <head>
     <meta charset="UTF-8">
-    <title>Szaki Panel – SzakiChat</title>
+    <title>Szaki profil – SzakiChat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
-
-    <style>
-        header {
-            background:#007aff;
-            color:white;
-            padding:16px;
-            font-size:22px;
-            text-align:center;
-        }
-
-        .container {
-            max-width:420px;
-            margin:25px auto;
-            background:white;
-            padding:20px;
-            border-radius:12px;
-            box-shadow:0 4px 14px rgba(0,0,0,0.08);
-        }
-
-        .box {
-            margin-bottom:28px;
-        }
-
-        .btn {
-            width:100%;
-            padding:12px;
-            background:#007aff;
-            border:none;
-            color:white;
-            font-weight:bold;
-            border-radius:8px;
-            cursor:pointer;
-        }
-
-        .btn:hover { transform:scale(1.03); }
-
-        .ads-box {
-            background:#f1f1f1;
-            padding:12px;
-            text-align:center;
-            border-radius:8px;
-            color:#888;
-            font-size:14px;
-            margin-top:18px;
-        }
-
-        /* ❤️ pulzáló szív */
-        @keyframes heartbeat {
-            0%{transform:scale(1);}
-            25%{transform:scale(1.25);}
-            40%{transform:scale(1);}
-            60%{transform:scale(1.25);}
-            100%{transform:scale(1);}
-        }
-        #supportFloatingBtn {
-            position:fixed;
-            bottom:22px;
-            right:22px;
-            background:#ff2d55;
-            color:white;
-            padding:14px 22px;
-            border-radius:40px;
-            font-weight:bold;
-            cursor:pointer;
-            display:flex;
-            align-items:center;
-            gap:10px;
-            box-shadow:0 4px 14px rgba(0,0,0,0.25);
-            z-index:9999;
-        }
-        .heart { animation:heartbeat 1.4s infinite; }
-    </style>
 </head>
 
 <body>
 
-<header>SzakiChat – Szaki Panel</header>
+<header>Szaki – Profil</header>
 
 <div class="container">
 
-    <div class="box" id="userBox">
-        <div style="text-align:center; padding:10px; color:#777;">Betöltés...</div>
-    </div>
-
+    <!-- NÉV -->
     <div class="box">
-        <h3>Állapot</h3>
-        <p><b>Online státusz:</b> <span id="status">–</span></p>
-        <button id="toggleOnline" class="btn">Online állapot váltása</button>
+        <label><b>Neved:</b></label><br>
+        <input type="text" id="nameInput" class="input" placeholder="Add meg a neved">
+        <button class="btn" id="saveNameBtn">Mentés</button>
     </div>
 
+    <!-- SZAKMA -->
     <div class="box">
-        <h3>Chat</h3>
-        <button onclick="window.location.href='chat-list.html'" class="btn">Chat megnyitása</button>
+        <label><b>Szakmád:</b></label><br>
+        <select id="szakmaSelect" class="input">
+            <option value="">– Válassz szakmát –</option>
+            <option value="Burkoló">Burkoló</option>
+            <option value="Festő">Festő</option>
+            <option value="Gipszkarton szerelő">Gipszkarton szerelő</option>
+            <option value="Villanyszerelő">Villanyszerelő</option>
+            <option value="Kőműves">Kőműves</option>
+            <option value="Víz / Gáz / Fűtés">Víz / Gáz / Fűtés</option>
+        </select>
+
+        <button class="btn" id="saveSzakmaBtn" style="margin-top:12px;">
+            Szakma mentése
+        </button>
     </div>
 
-    <!-- REKLÁMHELY -->
-    <div class="ads-box">
-        🔶 Hirdetések helye (automatikus betöltés később)
-    </div>
+    <!-- MEGOSZTÁS -->
+    <div class="box">
+        <b>Megosztások száma:</b><br>
+        <div id="shareCountBox" style="font-size:20px; margin:8px 0;">0 / 5</div>
 
-    <button id="logoutBtn" class="btn" style="background:#c00; margin-top:20px;">
-        Kijelentkezés
-    </button>
+        <button class="btn" id="addShareBtn">Megosztottam! (+1)</button>
+
+        <p id="unlockInfo" style="margin-top:10px; font-size:15px; color:#777;">
+            Elérhetőség küldése zárolva.
+        </p>
+    </div>
 
 </div>
 
-<!-- ❤️ Lebegő Támogatás gomb -->
+<!-- ❤️ Lebegő támogatás gomb -->
 <div id="supportFloatingBtn"
      onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
     <span class="heart">❤️</span> Támogasd a SzakiChat-et
 </div>
 
 
-<!-- FIREBASE LOGIKA -->
+<!-- 🔥 JAVASCRIPT LOGIKA – AUTOMATIKUSAN MŰKÖDIK -->
 <script type="module">
-import { auth, db } from "./firebase-config.js";
-
 import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    loadSzakiProfile,
+    saveNameClick,
+    saveSzakmaClick,
+    addShareClick
+} from "./szaki-profil.js";
 
-import {
-    doc,
-    getDoc,
-    updateDoc,
-    setDoc
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+// Oldal betöltésekor adatok betöltése
+loadSzakiProfile();
 
-let uid = null;
-let userData = null;
-
-/* ===============================
-   BELÉPÉS ELLENŐRZÉS + ADAT BETÖLTÉS
-=============================== */
-onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
-
-    uid = user.uid;
-
-    const ref = doc(db, "users", uid);
-    const snap = await getDoc(ref);
-
-    if (!snap.exists()) {
-        // ha nincs user dokumentum, létrehozzuk
-        await setDoc(ref, {
-            email: user.email,
-            name: "Ismeretlen",
-            role: "szaki",
-            online: false
-        });
-    }
-
-    userData = snap.data();
-
-    // Ha NEM szaki, visszadobjuk
-    if (userData.role !== "szaki") {
-        window.location.href = "megrendelo-profil.html";
-        return;
-    }
-
-    document.getElementById("userBox").innerHTML = `
-        <h3>Üdv, ${userData.name || userData.email}</h3>
-        <p><b>Email:</b> ${userData.email}</p>
-        <p><b>Szerep:</b> Szaki</p>
-    `;
-
-    document.getElementById("status").innerText =
-        userData.online ? "🟢 Online" : "⚪ Offline";
-});
-
-
-/* ===============================
-   ONLINE / OFFLINE VÁLTÁS
-=============================== */
-document.getElementById("toggleOnline").onclick = async () => {
-    if (!uid) return;
-
-    const ref = doc(db, "users", uid);
-    const snap = await getDoc(ref);
-    const current = snap.data().online;
-
-    await updateDoc(ref, { online: !current });
-
-    document.getElementById("status").innerText =
-        !current ? "🟢 Online" : "⚪ Offline";
-};
-
-
-/* ===============================
-   KIJELENTKEZÉS
-=============================== */
-document.getElementById("logoutBtn").onclick = async () => {
-    if (uid) {
-        await updateDoc(doc(db, "users", uid), { online: false });
-    }
-
-    await signOut(auth);
-    localStorage.clear();
-    window.location.href = "login.html";
-};
+// Gombok összekötése
+document.getElementById("saveNameBtn").onclick = saveNameClick;
+document.getElementById("saveSzakmaBtn").onclick = saveSzakmaClick;
+document.getElementById("addShareBtn").onclick = addShareClick;
 </script>
 
 </body>

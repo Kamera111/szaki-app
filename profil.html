@@ -52,7 +52,6 @@
             transform: scale(1.03);
         }
 
-        /* ❤️ Pulzáló szív gomb */
         @keyframes heartbeat {
             0%{transform:scale(1);}
             25%{transform:scale(1.25);}
@@ -80,6 +79,13 @@
         .heart {
             animation: heartbeat 1.4s infinite;
         }
+
+        .toggle-row {
+            display:flex;
+            align-items:center;
+            gap:12px;
+            margin-top:10px;
+        }
     </style>
 </head>
 
@@ -106,13 +112,33 @@
         <button class="btn" id="saveRoleBtn">Mentés</button>
     </div>
 
+    <!-- ⭐ ÚJ: SZAKMA + TELJES FELÚJÍTÁS ⭐ -->
+    <div class="box">
+        <label><b>Szakma:</b></label><br>
+        <select id="professionSelect" class="input">
+            <option value="">Válassz szakmát</option>
+            <option value="burkolo">Burkoló</option>
+            <option value="festő">Festő</option>
+            <option value="villanyszerelő">Villanyszerelő</option>
+            <option value="víz-gáz-fűtés">Víz-gáz-fűtésszerelő</option>
+            <option value="kőműves">Kőműves</option>
+            <option value="asztalos">Asztalos</option>
+            <option value="gipszkarton">Gipszkarton szerelő</option>
+        </select>
+
+        <div class="toggle-row">
+            <input type="checkbox" id="fullRenovationToggle">
+            <label for="fullRenovationToggle"><b>Teljes felújítást vállalok</b></label>
+        </div>
+
+        <button class="btn" id="saveProfessionBtn">Mentés</button>
+    </div>
+
     <!-- MEGOSZTÁSOK -->
     <div class="box">
         <b>Megosztások száma:</b>
         <div id="shareCountBox" style="font-size:18px; margin:8px 0;"></div>
-
         <button class="btn" onclick="addShare()">Megosztottam! (+1)</button>
-
         <p id="unlockInfo" style="margin-top:10px; font-size:14px;"></p>
     </div>
 </div>
@@ -125,103 +151,83 @@
 
 
 <script type="module">
-/* ======================================================
-   FIREBASE IMPORT
-====================================================== */
 import { db, auth } from "./firebase-config.js";
 import {
     doc, getDoc, updateDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-import {
-    onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 
-/* ======================================================
-   USER ADATOK BETÖLTÉSE FIREBASE-BŐL
-====================================================== */
 let uid = null;
 let userData = null;
 
 onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
+    if (!user) { window.location.href = "login.html"; return; }
 
     uid = user.uid;
 
     const ref = doc(db, "users", uid);
     const snap = await getDoc(ref);
 
-    if (!snap.exists()) {
+    if (!snap.exists())
         await setDoc(ref, { shareCount: 0 }, { merge: true });
-    }
 
     userData = snap.data();
 
     document.getElementById("nameInput").value = userData.name || "";
     document.getElementById("roleSelect").value = userData.role || "megrendelo";
 
+    document.getElementById("professionSelect").value = userData.profession || "";
+    document.getElementById("fullRenovationToggle").checked = userData.fullRenovation || false;
+
     updateShareUI();
 });
 
 
-/* ======================================================
-   NÉV MENTÉSE FIRESTORE-BA
-====================================================== */
-document.getElementById("saveNameBtn").onclick = async () => {
-    const name = document.getElementById("nameInput").value.trim();
-    if (!name) return alert("Írd be a neved!");
+/* ======================== MENTÉSEK ======================== */
 
-    await updateDoc(doc(db, "users", uid), { name });
+document.getElementById("saveNameBtn").onclick = async () => {
+    const name = nameInput.value.trim();
+    if (!name) return alert("Írd be a neved!");
+    await updateDoc(doc(db,"users",uid),{name});
     alert("Név elmentve!");
 };
 
-
-/* ======================================================
-   SZEREP MENTÉSE FIRESTORE-BA
-====================================================== */
 document.getElementById("saveRoleBtn").onclick = async () => {
-    const role = document.getElementById("roleSelect").value;
-
-    await updateDoc(doc(db, "users", uid), { role });
-
+    const role = roleSelect.value;
+    await updateDoc(doc(db,"users",uid),{role});
     alert("Szerep elmentve!");
 };
 
+document.getElementById("saveProfessionBtn").onclick = async () => {
+    const profession = professionSelect.value;
+    const fullRenovation = fullRenovationToggle.checked;
 
-/* ======================================================
-   MEGOSZTÁS +1
-====================================================== */
-async function addShare() {
+    await updateDoc(doc(db,"users",uid),{
+        profession,
+        fullRenovation
+    });
+
+    alert("Szakma és felújítási adatok elmentve!");
+};
+
+
+/* ================= MEGOSZTÁS + UI UPDATE ================= */
+
+async function addShare(){
     if (!userData.shareCount) userData.shareCount = 0;
-
     if (userData.shareCount < 5) userData.shareCount++;
-    else userData.shareCount = 5;
-
-    await updateDoc(doc(db, "users", uid), { shareCount: userData.shareCount });
-
+    await updateDoc(doc(db,"users",uid),{shareCount:userData.shareCount});
     updateShareUI();
 }
 
-
-/* ======================================================
-   UI FRISSÍTÉS
-====================================================== */
-function updateShareUI() {
+function updateShareUI(){
     const count = userData?.shareCount || 0;
-
-    document.getElementById("shareCountBox").innerHTML = `<b>${count} / 5</b>`;
-
-    if (count < 5) {
-        document.getElementById("unlockInfo").innerHTML =
-            "Elérhetőség küldése jelenleg <b>zárolva</b>.";
-    } else {
-        document.getElementById("unlockInfo").innerHTML =
-            "<span style='color:green; font-weight:bold;'>Feloldva! A chaten már küldhetsz elérhetőséget.</span>";
-    }
+    shareCountBox.innerHTML = `<b>${count} / 5</b>`;
+    unlockInfo.innerHTML =
+        count < 5 ?
+        "Elérhetőség küldése jelenleg <b>zárolva</b>." :
+        "<span style='color:green;font-weight:bold;'>Feloldva! Küldhetsz elérhetőséget.</span>";
 }
 </script>
 

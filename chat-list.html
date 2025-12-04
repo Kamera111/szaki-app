@@ -31,9 +31,14 @@
 
 <div id="chatList">Betöltés...</div>
 
+<!-- ❤️ Lebegő PayPal gomb -->
+<div id="supportFloatingBtn"
+     onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
+    <span class="heart">❤️</span> Támogasd a SzakiChat-et
+</div>
+
 
 <script type="module">
-
 import { auth, db } from "./firebase-config.js";
 
 import {
@@ -41,8 +46,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
-    doc, getDoc
+    doc,
+    getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 
 let uid = null;
 
@@ -54,14 +61,68 @@ onAuthStateChanged(auth, async (user) => {
 
 
 /* ============================================================
-   CHAT LISTA BETÖLTÉSE A USERS → chatList BÓL
+   CHAT LISTA BETÖLTÉSE (users → chatList)
 ============================================================ */
 async function loadChatList() {
     const listDiv = document.getElementById("chatList");
     listDiv.innerHTML = "Betöltés...";
 
     const userRef = doc(db, "users", uid);
-    const userSnap = await getDoc(userRef);
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) {
+        listDiv.innerHTML = "<p>Nincs adat.</p>";
+        return;
+    }
+
+    const data = snap.data();
+    const chatList = data.chatList || {};
+
+    if (Object.keys(chatList).length === 0) {
+        listDiv.innerHTML = "<p style='text-align:center;margin-top:30px;'>Nincs még beszélgetés.</p>";
+        return;
+    }
+
+    listDiv.innerHTML = "";
+
+    for (const chatId of Object.keys(chatList)) {
+        const entry = chatList[chatId];
+
+        // partner adatok
+        const partnerName = entry.name || "Ismeretlen";
+        const partnerOnline = entry.online || false;
+
+        // legutóbbi üzenet (chatSessions-ből)
+        const sessionRef = doc(db, "chatSessions", chatId);
+        const sessionSnap = await getDoc(sessionRef);
+
+        const lastMessage = sessionSnap.exists()
+            ? (sessionSnap.data().lastMessage || "Nincs üzenet")
+            : "Nincs üzenet";
+
+        // DIV létrehozás
+        const div = document.createElement("div");
+        div.className = "chatItem";
+        div.onclick = () => {
+            window.location.href =
+                `chat.html?chatId=${chatId}&partner=${encodeURIComponent(partnerName)}`;
+        };
+
+        div.innerHTML = `
+            <div>
+                <div class="chatName">${partnerName}</div>
+                <div class="lastMsg">${lastMessage}</div>
+            </div>
+            <div class="statusIcon">${partnerOnline ? "🟢" : "⚪"}</div>
+        `;
+
+        listDiv.appendChild(div);
+    }
+}
+</script>
+
+</body>
+</html>    const userSnap = await getDoc(userRef);
 
     if (!userSnap.exists()) {
         listDiv.innerHTML = "<p>Nincs adat.</p>";

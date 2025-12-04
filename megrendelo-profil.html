@@ -7,34 +7,211 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        body {
-            background:#f4f4f4;
-            margin:0;
-            font-family:Arial, sans-serif;
-        }
-
+        body { background:#f4f4f4; margin:0; font-family:Arial, sans-serif; }
         header {
-            background:#007aff;
-            color:white;
-            padding:16px;
-            text-align:center;
-            font-size:20px;
-            font-weight:bold;
+            background:#007aff; color:white; padding:16px;
+            text-align:center; font-size:20px; font-weight:bold;
         }
 
         .box {
-            background:white;
-            border-radius:12px;
-            padding:18px;
+            background:white; border-radius:12px; padding:18px;
             box-shadow:0 2px 10px rgba(0,0,0,0.08);
             margin:14px;
         }
 
         .infoText {
-            padding:10px 0;
-            font-size:18px;
-            font-weight:bold;
+            padding:10px 0; font-size:18px; font-weight:bold;
         }
+
+        input, select {
+            width:100%; padding:12px; border-radius:8px;
+            border:1px solid #ccc; margin-top:8px; font-size:16px;
+        }
+
+        .btn {
+            width:100%; padding:12px; margin-top:12px;
+            background:#007aff; color:white; border:none;
+            border-radius:8px; cursor:pointer; font-size:16px;
+        }
+
+        .btn:hover { transform:scale(1.03); }
+
+        /* ❤️ támogatás gomb */
+        #supportFloatingBtn{
+            position:fixed; bottom:22px; right:22px;
+            background:#ff2d55; color:white; padding:14px 22px;
+            border-radius:40px; cursor:pointer; font-weight:bold;
+            box-shadow:0 4px 12px rgba(0,0,0,0.25);
+        }
+        .heart { animation: heartbeat 1.4s infinite; }
+        @keyframes heartbeat {
+            0%{transform:scale(1);} 25%{transform:scale(1.25);}
+            40%{transform:scale(1);} 60%{transform:scale(1.25);}
+            100%{transform:scale(1);}
+        }
+    </style>
+</head>
+
+<body>
+
+<header>Megrendelő – Profil</header>
+
+<div class="container">
+
+    <!-- NÉV -->
+    <div class="box">
+        <b>Név:</b>
+        <div id="nameDisplay" class="infoText">Betöltés...</div>
+    </div>
+
+    <!-- VÁROS -->
+    <div class="box">
+        <b>Hol keresel szakembert?</b>
+        <select id="citySelect">
+            <option value="">Válassz várost</option>
+            <option>Budapest</option>
+            <option>Gödöllő</option>
+            <option>Vác</option>
+            <option>Kecskemét</option>
+            <option>Debrecen</option>
+            <option>Szeged</option>
+            <option>Pécs</option>
+            <option>Győr</option>
+        </select>
+        <button class="btn" id="saveCityBtn">Város mentése</button>
+    </div>
+
+    <!-- MEGOSZTÁS -->
+    <div class="box">
+        <b>Megosztások száma:</b>
+        <div id="shareCountBox" class="infoText">0 / 5</div>
+
+        <button class="btn" id="addShareBtn">Megosztottam! (+1)</button>
+
+        <p id="unlockInfo" style="margin-top:10px; font-size:14px;"></p>
+    </div>
+
+    <!-- SZAKI KERESÉS -->
+    <div class="box">
+        <b>Szakember keresése</b>
+        <button class="btn" onclick="window.location.href='szakma-valasztas.html'">
+            Szakma választása →
+        </button>
+    </div>
+
+    <!-- KILÉPÉS -->
+    <div class="box">
+        <button class="btn" style="background:#444;" id="logoutBtn">Kilépés</button>
+    </div>
+
+</div>
+
+<!-- ❤️ PayPal támogatás -->
+<div id="supportFloatingBtn"
+     onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
+    <span class="heart">❤️</span> Támogatás
+</div>
+
+
+<script type="module">
+// FIREBASE IMPORT
+import { auth, db } from "./firebase-config.js";
+import {
+    onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+    doc, getDoc, updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
+let uid = null;
+let shareCount = 0;
+let city = "";
+
+/* ============================================
+   FELHASZNÁLÓ BETÖLTÉSE
+============================================ */
+onAuthStateChanged(auth, async (user) => {
+    if (!user) return window.location.href = "login.html";
+
+    uid = user.uid;
+    const ref = doc(db, "users", uid);
+    const snap = await getDoc(ref);
+
+    if (!snap.exists()) return;
+
+    const data = snap.data();
+
+    document.getElementById("nameDisplay").innerText =
+        data.name || "Nincs név megadva";
+
+    shareCount = data.shareCount || 0;
+    city = data.city || "";
+
+    if (city) document.getElementById("citySelect").value = city;
+
+    updateShareUI();
+});
+
+
+/* ============================================
+   VÁROS MENTÉSE
+============================================ */
+document.getElementById("saveCityBtn").onclick = async () => {
+    const selected = document.getElementById("citySelect").value;
+    if (!selected) return alert("Válassz várost!");
+
+    await updateDoc(doc(db, "users", uid), {
+        city: selected
+    });
+
+    alert("Város mentve!");
+};
+
+
+/* ============================================
+   MEGOSZTÁS +1
+============================================ */
+document.getElementById("addShareBtn").onclick = async () => {
+    if (shareCount < 5) shareCount++;
+
+    await updateDoc(doc(db, "users", uid), {
+        shareCount
+    });
+
+    updateShareUI();
+};
+
+
+/* ============================================
+   UI FRISSÍTÉS
+============================================ */
+function updateShareUI() {
+    document.getElementById("shareCountBox").innerText = `${shareCount} / 5`;
+
+    if (shareCount >= 5) {
+        document.getElementById("unlockInfo").innerHTML =
+            "<span style='color:green; font-weight:bold;'>Feloldva! Már küldhetsz telefonszámot a chatben.</span>";
+    } else {
+        document.getElementById("unlockInfo").innerHTML =
+            "<span style='color:red;'>Elérhetőség küldése zárolva (min. 5 megosztás).</span>";
+    }
+}
+
+
+/* ============================================
+   KILÉPÉS
+============================================ */
+document.getElementById("logoutBtn").onclick = async () => {
+    await signOut(auth);
+    window.location.href = "login.html";
+};
+
+</script>
+
+</body>
+</html>        }
 
         .btn {
             margin-top:12px;

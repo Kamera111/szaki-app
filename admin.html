@@ -1,52 +1,194 @@
-// =========================================================
-//  SzakiChat – chat-create.js (Firebase Auth verzió)
-//  Chat létrehozása megrendelő és szaki között – JAVÍTVA!!
-// =========================================================
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<title>SzakiChat – Admin Panel</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-import { db, auth } from "./firebase-config.js";
+<style>
+    body {
+        margin:0;
+        font-family:Arial, sans-serif;
+        background:#f2f2f2;
+    }
+
+    header {
+        background:#222;
+        color:white;
+        padding:18px;
+        text-align:center;
+        font-size:22px;
+        font-weight:bold;
+    }
+
+    .container {
+        max-width:800px;
+        margin:20px auto;
+        padding:10px;
+    }
+
+    .userBox {
+        background:white;
+        padding:14px;
+        margin-bottom:14px;
+        border-radius:10px;
+        box-shadow:0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .titleRow {
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+    }
+
+    .role {
+        font-size:14px;
+        padding:4px 8px;
+        border-radius:6px;
+        color:white;
+    }
+
+    .szaki { background:#007aff; }
+    .user { background:#ff9500; }
+
+    .online {
+        color:#00c200;
+        font-weight:bold;
+    }
+
+    .offline {
+        color:#777;
+    }
+
+    button {
+        padding:8px 12px;
+        border:none;
+        background:#d60000;
+        color:white;
+        border-radius:8px;
+        cursor:pointer;
+        margin-top:8px;
+    }
+
+    button:hover {
+        background:#b30000;
+    }
+
+    #logoutBtn {
+        background:#555;
+        margin-top:20px;
+        width:100%;
+    }
+
+</style>
+</head>
+
+<body>
+
+<header>Admin Panel</header>
+
+<div class="container">
+    <h2>Felhasználók listája</h2>
+    <div id="usersList">Betöltés...</div>
+
+    <button id="logoutBtn">Admin kilépés</button>
+</div>
+
+
+<!-- FIREBASE SCRIPT -->
+<script type="module">
+import { auth, db } from "./firebase-config.js";
 
 import {
-    doc,
-    getDoc,
-    updateDoc,
-    serverTimestamp
+    onAuthStateChanged,
+    signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+import {
+    collection,
+    onSnapshot,
+    deleteDoc,
+    doc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import {
-    generateChatId,
-    initChatIfNeeded
-} from "./messages.js";
 
+// ===============================
+// ADMIN ELLENŐRZÉS
+// ===============================
+onAuthStateChanged(auth, async (user) => {
+    if (!user) return window.location.href = "login.html";
 
-// =========================================================
-// CHAT INDÍTÁSA (megrendelő -> szaki)
-// =========================================================
-export async function startChatWithSzaki(szakiUid) {
-
-    // 1. Bejelentkezett user kell
-    const user = auth.currentUser;
-    if (!user) {
-        alert("Hiba: nem vagy bejelentkezve!");
-        window.location.href = "login.html";
+    // Feltételezzük: admin UID = első regisztrált szaki, később állítjuk fixre!
+    if (user.email !== "szakichat@gmail.com") {
+        alert("Nincs admin jogosultságod!");
+        window.location.href = "index.html";
         return;
     }
 
-    const myUid = user.uid;
+    loadUsers();
+});
 
-    // 2. Chat létrehozása, ha még nincs
-    const chatId = await initChatIfNeeded(myUid, szakiUid);
 
-    // 3. Szaki neve később is lekérhető -> nem kell URL-ben küldeni
-    // (chat.html a szakiUid alapján fogja megkeresni)
+// ===============================
+// FELHASZNÁLÓK LISTÁJA REALTIME
+// ===============================
+function loadUsers() {
+    const listDiv = document.getElementById("usersList");
 
-    // 4. Chat session frissítése
-    await updateDoc(doc(db, "chatSessions", chatId), {
-        lastMessage: "Chat elindult",
-        lastSender: myUid,
-        lastTime: serverTimestamp()
+    onSnapshot(collection(db, "users"), (snap) => {
+        listDiv.innerHTML = "";
+
+        snap.forEach(docu => {
+            const d = docu.data();
+
+            const roleClass = d.role === "szaki" ? "szaki" : "user";
+            const onlineClass = d.online ? "online" : "offline";
+
+            listDiv.innerHTML += `
+                <div class="userBox">
+                    <div class="titleRow">
+                        <div>
+                            <b>${d.name || "Név nincs"}</b>
+                            <span class="${roleClass} role">${d.role}</span>
+                        </div>
+                        <span class="${onlineClass}">
+                            ${d.online ? "🟢 online" : "⚪ offline"}
+                        </span>
+                    </div>
+
+                    <p><b>Email:</b> ${d.email || "-"}</p>
+                    <p><b>Város:</b> ${d.city || "-"}</p>
+                    <p><b>Szakma:</b> ${d.szakma || "-"}</p>
+                    <p><b>Telefonszám:</b> ${d.phone || "-"}</p>
+
+                    <button onclick="deleteUser('${docu.id}')">Felhasználó törlése</button>
+                </div>
+            `;
+        });
     });
-
-    // 5. HELYES átirányítás – FONTOS!
-    // chatID (nagy D), partner = UID !!
-    window.location.href = `chat.html?chatID=${chatId}&partner=${szakiUid}`;
 }
+
+
+// ===============================
+// ADMIN: FELHASZNÁLÓ TÖRLÉS
+// ===============================
+window.deleteUser = async function(uid) {
+    if (!confirm("Biztosan törlöd a felhasználót?")) return;
+
+    await deleteDoc(doc(db, "users", uid));
+
+    alert("Felhasználó törölve.");
+};
+
+
+// ===============================
+// ADMIN KILÉPÉS
+// ===============================
+document.getElementById("logoutBtn").onclick = async () => {
+    await signOut(auth);
+    window.location.href = "login.html";
+};
+</script>
+
+</body>
+</html>

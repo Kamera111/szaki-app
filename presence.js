@@ -1,9 +1,11 @@
 /* ============================================================
    presence.js – SzakiChat.hu
-   Valós idejű online/offline figyelés Firebase-ben (VÉGLEGES)
+   Valós idejű online/offline figyelés Firebase-ben
+   (VÉGLEGES TISZTA VERZIÓ)
 ============================================================ */
 
 import { auth, db } from "./firebase-config.js";
+
 import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -16,9 +18,6 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* ============================================================
-   USER FIGYELÉSE
-============================================================ */
 
 onAuthStateChanged(auth, async (user) => {
     if (!user) return;
@@ -26,8 +25,11 @@ onAuthStateChanged(auth, async (user) => {
     const uid = user.uid;
     const userRef = doc(db, "users", uid);
 
-    // --- Ha a user dokumentuma nem létezik → létrehozzuk ---
+    /* ---------------------------------------------------------
+       1) LÉTEZIK-E USER DOKUMENTUM? HA NEM → LÉTREHOZZUK
+    --------------------------------------------------------- */
     const snap = await getDoc(userRef);
+
     if (!snap.exists()) {
         await setDoc(userRef, {
             online: true,
@@ -35,7 +37,9 @@ onAuthStateChanged(auth, async (user) => {
         }, { merge: true });
     }
 
-    // --- BELÉPÉS UTÁN: ONLINE ---
+    /* ---------------------------------------------------------
+       2) BELÉPÉS UTÁN: ONLINE
+    --------------------------------------------------------- */
     await updateDoc(userRef, {
         online: true,
         lastSeen: serverTimestamp()
@@ -43,57 +47,45 @@ onAuthStateChanged(auth, async (user) => {
 
     console.log("✔ presence.js: felhasználó ONLINE");
 
-    /* ============================================================
-       OLDAL ELHAGYÁSA → OFFLINE
-       (böngésző bezárás, fülváltás, app kilépés)
-    ============================================================ */
 
-    async function goOffline() {
+    /* ---------------------------------------------------------
+       3) FUNKCIÓ: OFFLINE FRISSÍTÉS
+    --------------------------------------------------------- */
+    async function setOffline() {
         try {
             await updateDoc(userRef, {
                 online: false,
                 lastSeen: serverTimestamp()
             });
-        } catch (e) {
-            console.warn("Presence offline update failed:", e);
+            console.log("⚪ OFFLINE frissítve");
+        } catch (err) {
+            console.warn("Hiba offline frissítéskor:", err);
         }
     }
 
-    // Fül bezárás, oldal elhagyás
-    window.addEventListener("beforeunload", goOffline);
 
-    // Mobil háttérbe rakás / visszatérés
-    document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden") {
-            goOffline();
-        } else {
-            updateDoc(userRef, {
-                online: true,
-                lastSeen: serverTimestamp()
-            });
-        }
+    /* ---------------------------------------------------------
+       4) OLDAL ELHAGYÁSA / BÖNGÉSZŐ BEZÁRÁSA
+    --------------------------------------------------------- */
+    window.addEventListener("beforeunload", () => {
+        setOffline();
     });
-});
+
+
+    /* ---------------------------------------------------------
+       5) LÁTHATÓSÁG VÁLTOZÁS (mobil + PC)
+          - háttérbe rakás → offline
+          - visszatérés → online
+    --------------------------------------------------------- */
     document.addEventListener("visibilitychange", async () => {
         if (document.visibilityState === "hidden") {
-            await updateDoc(userRef, {
-                online: false,
-                lastSeen: serverTimestamp()
-            });
-        }
-        if (document.visibilityState === "visible") {
+            await setOffline();
+        } else {
             await updateDoc(userRef, {
                 online: true,
                 lastSeen: serverTimestamp()
             });
+            console.log("🟢 Visszatért → ONLINE");
         }
     });
-
-    // --- BELÉPÉS UTÁN AZONNAL ONLINE ---
-    await updateDoc(userRef, {
-        online: true,
-        lastSeen: serverTimestamp()
-    });
-
-    console.log("✔ Presence.js: online státusz aktív");
 });

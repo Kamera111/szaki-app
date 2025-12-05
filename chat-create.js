@@ -8,14 +8,13 @@ import {
     doc,
     getDoc,
     updateDoc,
+    setDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 import {
-    generateChatId,
     initChatIfNeeded
 } from "./messages.js";
-
 
 // =========================================================
 // CHAT INDÍTÁSA (megrendelő -> szaki)
@@ -44,12 +43,22 @@ export async function startChatWithSzaki(szakiUid) {
         partnerName = partnerSnap.data().name || "Partner";
     }
 
-    // --- 4. Első üzenet chatSession-be ---
-    await updateDoc(doc(db, "chatSessions", chatId), {
-        lastMessage: "Chat elindult",
-        lastSender: myUid,
-        lastTime: serverTimestamp()
-    });
+    // --- 4. Első üzenet / chatSession frissítése ---
+    // updateDoc feltételezi, hogy a dokumentum létezik; ha valamiért nem, fallback setDoc-ot használunk merge-vel
+    try {
+        await updateDoc(doc(db, "chatSessions", chatId), {
+            lastMessage: "Chat elindult",
+            lastSender: myUid,
+            lastTime: serverTimestamp()
+        });
+    } catch (e) {
+        // ha updateDoc hibázik (pl. doc nem létezik), akkor létrehozzuk/merge-eljük
+        await setDoc(doc(db, "chatSessions", chatId), {
+            lastMessage: "Chat elindult",
+            lastSender: myUid,
+            lastTime: serverTimestamp()
+        }, { merge: true });
+    }
 
     // --- 5. Átirányítás a chat oldalra ---
     window.location.href = `chat.html?chatId=${chatId}&partner=${encodeURIComponent(partnerName)}`;

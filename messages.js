@@ -1,6 +1,5 @@
 // =========================================================
-//  SzakiChat – messages.js (Végleges, Javított!)
-//  Valós idejű üzenetkezelő és chat motor
+//  SzakiChat – messages.js (Javított, egyértelmű verzió)
 // =========================================================
 
 import { db } from "./firebase-config.js";
@@ -17,14 +16,12 @@ import {
     orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
 // =========================================================
 // CHAT ID GENERÁLÁS (ABC sorrend, mindenkihez ugyanaz)
 // =========================================================
 export function generateChatId(uid1, uid2) {
     return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
 }
-
 
 // =========================================================
 // CHAT LÉTREHOZÁSA – ha még nincs
@@ -56,108 +53,7 @@ export async function initChatIfNeeded(uid, partnerUid) {
             lastTime: serverTimestamp()
         });
 
-        // saját chatlista BIZTONSÁGOS frissítése
-        await updateDoc(
-            doc(db, "users", uid),
-            {
-                [`chatList.${chatId}`]: {
-                    uid: partnerUid,
-                    name: partner.name || "Ismeretlen",
-                    lastMessage: "",
-                    unread: 0
-                }
-            }
-        );
-
-        // partner chatlista BIZTONSÁGOS frissítése
-        await updateDoc(
-            doc(db, "users", partnerUid),
-            {
-                [`chatList.${chatId}`]: {
-                    uid,
-                    name: me.name || "Felhasználó",
-                    lastMessage: "",
-                    unread: 0
-                }
-            }
-        );
-    }
-
-    return chatId;
-}
-
-
-// =========================================================
-// ÜZENET KÜLDÉSE
-// =========================================================
-export async function sendMessage(chatId, senderUid, text) {
-    if (!text.trim()) return;
-
-    // üzenet mentése
-    await addDoc(collection(db, "messages", chatId, "items"), {
-        sender: senderUid,
-        text,
-        time: serverTimestamp()
-    });
-
-    // chat session frissítése
-    await updateDoc(doc(db, "chatSessions", chatId), {
-        lastMessage: text,
-        lastSender: senderUid,
-        lastTime: serverTimestamp()
-    });
-}
-
-
-// =========================================================
-// VALÓS IDEJŰ ÜZENET FIGYELÉS
-// =========================================================
-export function subscribeToMessages(chatId, callback) {
-    const q = query(
-        collection(db, "messages", chatId, "items"),
-        orderBy("time", "asc")
-    );
-
-    return onSnapshot(q, (snapshot) => {
-        const messages = [];
-        snapshot.forEach((doc) => {
-            messages.push({ id: doc.id, ...doc.data() });
-        });
-        callback(messages);
-    });
-}
-
-
-// =========================================================
-// PARTNER ADATOK
-// =========================================================
-export async function getPartnerData(uid) {
-    const ref = doc(db, "users", uid);
-    const snap = await getDoc(ref);
-    return snap.data();
-}
-    if (!snap.exists()) {
-
-        // partner adatok
-        const partnerRef = doc(db, "users", partnerUid);
-        const partnerSnap = await getDoc(partnerRef);
-        const partner = partnerSnap.exists() ? partnerSnap.data() : { name: "Ismeretlen" };
-
-        // saját adatok
-        const meRef = doc(db, "users", uid);
-        const meSnap = await getDoc(meRef);
-        const me = meSnap.exists() ? meSnap.data() : { name: "Felhasználó" };
-
-        // chat létrehozása
-        await setDoc(chatRef, {
-            chatId,
-            users: [uid, partnerUid],
-            lastMessage: "",
-            lastSender: "",
-            lastTime: serverTimestamp()
-        });
-
-        // saját chatlista bővítése
+        // saját chatlista bővítése (setDoc merge-el, hogy ne törölje a többi adatot)
         await setDoc(
             doc(db, "users", uid),
             {
@@ -193,12 +89,11 @@ export async function getPartnerData(uid) {
     return chatId;
 }
 
-
 // =========================================================
 // ÜZENET KÜLDÉSE
 // =========================================================
 export async function sendMessage(chatId, senderUid, text) {
-    if (!text.trim()) return;
+    if (!text || !text.trim()) return;
 
     // üzenet mentése
     await addDoc(collection(db, "messages", chatId, "items"), {
@@ -214,7 +109,6 @@ export async function sendMessage(chatId, senderUid, text) {
         lastTime: serverTimestamp()
     });
 }
-
 
 // =========================================================
 // VALÓS IDEJŰ ÜZENET FIGYELÉS
@@ -234,12 +128,11 @@ export function subscribeToMessages(chatId, callback) {
     });
 }
 
-
 // =========================================================
 // PARTNER ADATOK
 // =========================================================
 export async function getPartnerData(uid) {
     const ref = doc(db, "users", uid);
     const snap = await getDoc(ref);
-    return snap.data();
+    return snap.exists() ? snap.data() : null;
 }

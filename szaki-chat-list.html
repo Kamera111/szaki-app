@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<title>SzakiChat – Beszélgetések</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+    body { font-family: Arial; background:#f2f2f2; margin:0; }
+    header {
+        background:#ff8c00; color:white;
+        padding:18px; text-align:center;
+        font-size:22px; font-weight:bold;
+    }
+
+    .listBox {
+        max-width:500px; margin:20px auto;
+        background:white; padding:20px;
+        border-radius:12px;
+        box-shadow:0 4px 14px rgba(0,0,0,0.1);
+    }
+
+    .chatItem {
+        padding:14px; margin-bottom:14px;
+        border-radius:10px; background:#fafafa;
+        border:1px solid #ddd; cursor:pointer;
+        transition:0.15s;
+    }
+
+    .chatItem:hover {
+        background:#f0f0f0;
+    }
+
+    .name { font-size:18px; font-weight:bold; }
+    .info { font-size:14px; color:#666; margin-top:2px; }
+
+    /* Reklám blokk */
+    .adBox {
+        background:#fff7d6;
+        padding:12px; text-align:center;
+        border-radius:10px; margin-bottom:20px;
+        border:1px solid #e6cf88;
+        font-size:15px;
+    }
+
+    /* Lebegő támogatás gomb */
+    #supportFloatingBtn {
+        position: fixed;
+        bottom: 22px;
+        right: 22px;
+        background: #ff2d55;
+        padding: 14px 22px;
+        border-radius: 40px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex; gap: 10px;
+        align-items: center;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+    .heart {
+        animation: heartbeat 1.4s infinite;
+    }
+    @keyframes heartbeat {
+        0%{transform:scale(1);}
+        25%{transform:scale(1.25);}
+        40%{transform:scale(1);}
+        60%{transform:scale(1.25);}
+        100%{transform:scale(1);}
+    }
+</style>
+</head>
+
+<body>
+
+<header>Beszélgetéseim</header>
+
+<div class="listBox">
+
+    <div class="adBox">🔶 Hirdetési hely (Google Ads)</div>
+
+    <h3>Aktív beszélgetések</h3>
+    <div id="activeList">Betöltés…</div>
+
+    <hr style="margin:25px 0;">
+
+    <h3>Új megkeresések</h3>
+    <div id="newList">Betöltés…</div>
+
+</div>
+
+<!-- ❤️ Adomány -->
+<div id="supportFloatingBtn"
+     onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
+     <span class="heart">❤️</span> Támogasd a SzakiChat-et
+</div>
+
+<script type="module" src="szaki-chat-list.js"></script>
+</body>
+</html>

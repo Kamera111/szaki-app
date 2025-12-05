@@ -2,192 +2,203 @@
 <html lang="hu">
 <head>
 <meta charset="UTF-8">
-<title>SzakiChat – Admin Panel</title>
+<title>Bővített Admin Panel – SzakiChat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-    body {
-        margin:0;
-        font-family:Arial, sans-serif;
-        background:#f2f2f2;
-    }
+body { margin:0; background:#f4f4f4; font-family:Arial; }
+header {
+    background:#111; color:white; padding:18px;
+    font-size:22px; font-weight:bold; text-align:center;
+}
 
-    header {
-        background:#222;
-        color:white;
-        padding:18px;
-        text-align:center;
-        font-size:22px;
-        font-weight:bold;
-    }
+.container {
+    max-width:900px; margin:20px auto; padding:10px;
+}
 
-    .container {
-        max-width:800px;
-        margin:20px auto;
-        padding:10px;
-    }
+.searchBox input {
+    width:100%; padding:12px; border-radius:8px;
+    border:1px solid #ccc; font-size:16px;
+}
 
-    .userBox {
-        background:white;
-        padding:14px;
-        margin-bottom:14px;
-        border-radius:10px;
-        box-shadow:0 2px 10px rgba(0,0,0,0.1);
-    }
+.userCard {
+    background:white; padding:14px; margin-top:12px;
+    border-radius:10px; box-shadow:0 3px 10px rgba(0,0,0,0.15);
+}
 
-    .titleRow {
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-    }
+.userCard .row { margin-top:6px; }
+.userCard button {
+    padding:8px 12px; margin:4px; border:none;
+    border-radius:8px; cursor:pointer; font-weight:bold;
+}
+.btn-danger { background:#d60000; color:white; }
+.btn-action { background:#007aff; color:white; }
+.btn-premium { background:#ff9f00; color:white; }
+.btn-small { font-size:13px; }
 
-    .role {
-        font-size:14px;
-        padding:4px 8px;
-        border-radius:6px;
-        color:white;
-    }
+.tagOnline { color:green; font-weight:bold; }
+.tagOffline { color:red; font-weight:bold; }
+.tagPremium { color:#ff9f00; font-weight:bold; }
 
-    .szaki { background:#007aff; }
-    .user { background:#ff9500; }
+hr { margin:25px 0; }
 
-    .online {
-        color:#00c200;
-        font-weight:bold;
-    }
-
-    .offline {
-        color:#777;
-    }
-
-    button {
-        padding:8px 12px;
-        border:none;
-        background:#d60000;
-        color:white;
-        border-radius:8px;
-        cursor:pointer;
-        margin-top:8px;
-    }
-
-    button:hover {
-        background:#b30000;
-    }
-
-    #logoutBtn {
-        background:#555;
-        margin-top:20px;
-        width:100%;
-    }
-
+.linkBar {
+    padding:14px; background:#fff; border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+.linkBar a {
+    display:inline-block; padding:10px 14px;
+    background:#007aff; color:white; border-radius:8px;
+    margin-right:10px; margin-bottom:10px;
+    text-decoration:none;
+}
 </style>
 </head>
 
 <body>
 
-<header>Admin Panel</header>
+<header>BŐVÍTETT ADMIN PANEL</header>
 
 <div class="container">
-    <h2>Felhasználók listája</h2>
-    <div id="usersList">Betöltés...</div>
 
-    <button id="logoutBtn">Admin kilépés</button>
+    <!-- Gyorslinkek -->
+    <div class="linkBar">
+        <a href="admin-chats.html">💬 Összes chat</a>
+        <a href="admin-stats.html">📊 Statisztikák</a>
+        <a href="admin-login.html">🚪 Kilépés</a>
+    </div>
+
+    <h2>Felhasználók</h2>
+    <div class="searchBox">
+        <input type="text" id="searchInput" placeholder="Keresés név, email vagy város alapján...">
+    </div>
+
+    <div id="userList"></div>
 </div>
 
-
-<!-- FIREBASE SCRIPT -->
 <script type="module">
-import { auth, db } from "./firebase-config.js";
 
+/* FIREBASE IMPORT */
+import { db } from "./firebase-config.js";
 import {
-    onAuthStateChanged,
-    signOut
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-import {
-    collection,
-    onSnapshot,
-    deleteDoc,
-    doc
+    collection, onSnapshot,
+    doc, updateDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+/* DOM elemek */
+const userList = document.getElementById("userList");
+const searchInput = document.getElementById("searchInput");
 
-// ===============================
-// ADMIN ELLENŐRZÉS
-// ===============================
-onAuthStateChanged(auth, async (user) => {
-    if (!user) return window.location.href = "login.html";
+let users = [];
 
-    // Feltételezzük: admin UID = első regisztrált szaki, később állítjuk fixre!
-    if (user.email !== "szakichat@gmail.com") {
-        alert("Nincs admin jogosultságod!");
-        window.location.href = "index.html";
-        return;
-    }
-
-    loadUsers();
+/* ===========================================================================================
+   REALTIME FELHASZNÁLÓ LISTA
+=========================================================================================== */
+onSnapshot(collection(db, "users"), (snap) => {
+    users = [];
+    snap.forEach(d => users.push({ id: d.id, ...d.data() }));
+    render();
 });
 
+/* ===========================================================================================
+   KERESÉS
+=========================================================================================== */
+searchInput.onkeyup = render;
 
-// ===============================
-// FELHASZNÁLÓK LISTÁJA REALTIME
-// ===============================
-function loadUsers() {
-    const listDiv = document.getElementById("usersList");
+function render() {
+    const q = searchInput.value.toLowerCase();
+    userList.innerHTML = "";
 
-    onSnapshot(collection(db, "users"), (snap) => {
-        listDiv.innerHTML = "";
-
-        snap.forEach(docu => {
-            const d = docu.data();
-
-            const roleClass = d.role === "szaki" ? "szaki" : "user";
-            const onlineClass = d.online ? "online" : "offline";
-
-            listDiv.innerHTML += `
-                <div class="userBox">
-                    <div class="titleRow">
-                        <div>
-                            <b>${d.name || "Név nincs"}</b>
-                            <span class="${roleClass} role">${d.role}</span>
-                        </div>
-                        <span class="${onlineClass}">
-                            ${d.online ? "🟢 online" : "⚪ offline"}
-                        </span>
-                    </div>
-
-                    <p><b>Email:</b> ${d.email || "-"}</p>
-                    <p><b>Város:</b> ${d.city || "-"}</p>
-                    <p><b>Szakma:</b> ${d.szakma || "-"}</p>
-                    <p><b>Telefonszám:</b> ${d.phone || "-"}</p>
-
-                    <button onclick="deleteUser('${docu.id}')">Felhasználó törlése</button>
-                </div>
-            `;
-        });
-    });
+    users
+        .filter(u =>
+            u.name?.toLowerCase().includes(q) ||
+            u.email?.toLowerCase().includes(q) ||
+            u.city?.toLowerCase().includes(q)
+        )
+        .forEach(u => displayUser(u));
 }
 
+/* ===========================================================================================
+   FELHASZNÁLÓ KÁRTYA
+=========================================================================================== */
+function displayUser(u) {
 
-// ===============================
-// ADMIN: FELHASZNÁLÓ TÖRLÉS
-// ===============================
-window.deleteUser = async function(uid) {
-    if (!confirm("Biztosan törlöd a felhasználót?")) return;
+    const onlineTag = u.online ? `<span class="tagOnline">🟢 Online</span>`
+                               : `<span class="tagOffline">⚪ Offline</span>`;
 
-    await deleteDoc(doc(db, "users", uid));
+    const premiumTag = u.premium ? `<span class="tagPremium">★ Prémium</span>` : "";
 
-    alert("Felhasználó törölve.");
+    userList.innerHTML += `
+        <div class="userCard">
+            <div class="row"><b>${u.name}</b> (${u.role}) ${premiumTag}</div>
+            <div class="row">Email: ${u.email || "-"}</div>
+            <div class="row">Város: ${u.city || "-"}</div>
+            <div class="row">Szakma: ${u.szakma || "-"}</div>
+            <div class="row">${onlineTag}</div>
+
+            <div class="row">
+                <button class="btn-action btn-small"
+                    onclick="togglePremium('${u.id}', ${u.premium ? "true":"false"})">
+                    ${u.premium ? "Prémium kikapcs" : "Prémium bekapcs"}
+                </button>
+
+                <button class="btn-action btn-small"
+                    onclick="resetChats('${u.id}')">Chat számláló nullázása</button>
+
+                <button class="btn-danger btn-small"
+                    onclick="banUser('${u.id}')">Blokkolás</button>
+            </div>
+        </div>
+    `;
+}
+
+/* ===========================================================================================
+   PRÉMIUM ÁLLAPOT KEZELÉS
+=========================================================================================== */
+window.togglePremium = async function(uid, current) {
+    const ref = doc(db, "users", uid);
+    await updateDoc(ref, { premium: !current });
+
+    logAction(uid, current ? "Prémium kikapcsolva" : "Prémium bekapcsolva");
 };
 
+/* ===========================================================================================
+   CHAT COUNT NULLÁZÁS
+=========================================================================================== */
+window.resetChats = async function(uid) {
+    const ref = doc(db, "users", uid);
+    await updateDoc(ref, { chatCount: 0 });
 
-// ===============================
-// ADMIN KILÉPÉS
-// ===============================
-document.getElementById("logoutBtn").onclick = async () => {
-    await signOut(auth);
-    window.location.href = "login.html";
+    alert("Chat számláló nullázva!");
+    logAction(uid, "Chat számláló nullázva");
 };
+
+/* ===========================================================================================
+   FELHASZNÁLÓ BLOKKOLÁSA
+=========================================================================================== */
+window.banUser = async function(uid) {
+    const ref = doc(db, "users", uid);
+
+    await updateDoc(ref, { banned: true });
+
+    alert("Felhasználó blokkolva!");
+    logAction(uid, "Felhasználó blokkolva");
+};
+
+/* ===========================================================================================
+   ADMIN LOG – minden admin művelet rögzítése
+=========================================================================================== */
+async function logAction(targetUid, actionText) {
+    await setDoc(
+        doc(db, "adminLogs", Date.now().toString()),
+        {
+            target: targetUid,
+            action: actionText,
+            time: new Date().toISOString()
+        }
+    );
+}
+
 </script>
 
 </body>

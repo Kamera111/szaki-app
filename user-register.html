@@ -9,24 +9,25 @@
     body { font-family: Arial; background:#f2f2f2; margin:0; }
     header {
         background:#007aff; color:white; text-align:center;
-        padding:20px; font-size:26px; font-weight:bold;
+        padding:18px; font-size:24px; font-weight:bold;
     }
     .box {
-        max-width:520px; background:white; margin:20px auto;
-        padding:22px; border-radius:14px;
-        box-shadow:0 4px 16px rgba(0,0,0,0.12);
+        max-width:480px; background:white;
+        margin:20px auto; padding:20px;
+        border-radius:12px;
+        box-shadow:0 4px 12px rgba(0,0,0,0.15);
     }
-    label { font-weight:bold; margin-top:14px; display:block; font-size:16px; }
-    input {
+    label { font-weight:bold; margin-top:12px; display:block; }
+    input, select {
         width:100%; padding:12px; margin-top:6px;
-        border-radius:8px; border:1px solid #cfcfcf;
-        background:#eef4ff; font-size:16px;
+        border-radius:8px; border:1px solid #ccc;
+        font-size:17px; background:#eef3ff;
     }
     .btn {
-        width:100%; padding:14px; margin-top:22px;
+        width:100%; padding:14px; margin-top:24px;
         background:#007aff; color:white;
-        border:none; border-radius:10px;
-        font-size:20px; cursor:pointer; font-weight:bold;
+        border:none; border-radius:8px;
+        font-size:18px; cursor:pointer; font-weight:bold;
     }
     .warn { font-size:13px; color:#777; margin-top:4px; }
 </style>
@@ -39,29 +40,31 @@
 <div class="box">
 
     <label>Név (pl.: Nagy Zoltán)</label>
-    <input id="name" type="text" placeholder="Csak keresztnév vagy monogram">
+    <input id="name" type="text" placeholder="Írd be a keresztnevedet">
+
     <div class="warn">⚠️ Telefonszám, email, FB/Viber/Instagram név beírása TILOS a név mezőbe!</div>
 
-    <label>Milyen szakembert keresel?</label>
-    <input id="profession" type="text" placeholder="pl.: festő, burkoló, kőműves">
+    <label style="margin-top:20px;">Milyen szakembert keresel?</label>
+    <input id="profession" type="text" placeholder="Pl.: festő, burkoló, vízszerelő">
 
-    <label>Hol keresel szakembert?</label>
+    <label style="margin-top:20px;">Hol keresel szakembert?</label>
     <input id="city" type="text" placeholder="pl.: Budapest">
 
-    <label>Email</label>
+    <label style="margin-top:20px;">Email</label>
     <input id="email" type="email" placeholder="Email cím">
 
     <label>Jelszó</label>
     <input id="pass1" type="password" placeholder="Jelszó">
 
     <label>Jelszó újra</label>
-    <input id="pass2" type="password" placeholder="Jelszó újra">
+    <input id="pass2" type="password" placeholder="Jelszó ismét">
 
-    <label>Telefonszám</label>
+    <label style="margin-top:20px;">Telefonszám</label>
     <input id="phone" type="text" placeholder="+36...">
 
     <button class="btn" onclick="registerUser()">Regisztráció</button>
 </div>
+
 
 <!-- ❤️ Adomány gomb -->
 <div id="supportFloatingBtn"
@@ -71,12 +74,20 @@
         background:#ff2d55; padding:14px 22px; border-radius:40px;
         color:white; font-weight:bold; cursor:pointer;
         display:flex; gap:10px; align-items:center;
-        box-shadow:0 4px 14px rgba(0,0,0,0.25);">
+        box-shadow:0 4px 14px rgba(0,0,0,0.25);
+     ">
     ❤️ Támogasd a SzakiChat-et
 </div>
 
+
+
+<!-- ================================
+        FIREBASE + REGISTER LOGIKA
+================================ -->
 <script type="module">
-import { auth, db } from "./firebase-config.js";
+
+import { app, auth, db } from "./firebase.js";
+
 import {
     createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -85,7 +96,8 @@ import {
     setDoc, doc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// tiltott minták
+
+// TILTOTT minták – telefonszám, email, fb név
 const blocked = [
     /\d{6,}/,
     /@/,
@@ -98,15 +110,19 @@ function containsBlocked(t) {
     return blocked.some(r => r.test(t));
 }
 
+
+// =============================
+//   REGISZTRÁCIÓ MEGRENDELŐ
+// =============================
 window.registerUser = async function() {
 
-    const name = nameInput.value.trim();
-    const job = profession.value.trim();
-    const city = cityInput.value.trim();
-    const email = emailInput.value.trim();
-    const pass1 = pass1Input.value;
-    const pass2 = pass2Input.value;
-    const phone = phoneInput.value.trim();
+    const name = document.getElementById("name").value.trim();
+    const job  = document.getElementById("profession").value.trim();
+    const city = document.getElementById("city").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const pass1 = document.getElementById("pass1").value;
+    const pass2 = document.getElementById("pass2").value;
+    const phone = document.getElementById("phone").value.trim();
 
     if (!name || !job || !city || !email || !pass1 || !pass2 || !phone) {
         alert("Minden mező kötelező!");
@@ -123,6 +139,7 @@ window.registerUser = async function() {
         return;
     }
 
+
     try {
         const userCred = await createUserWithEmailAndPassword(auth, email, pass1);
         const uid = userCred.user.uid;
@@ -133,8 +150,8 @@ window.registerUser = async function() {
             profession: job,
             city,
             phone,
-            shareCount: 0,
-            online: false
+            online: false,
+            shareCount: 0
         });
 
         alert("Sikeres regisztráció!");
@@ -144,7 +161,7 @@ window.registerUser = async function() {
         console.error(err);
         alert("Hiba történt: " + err.message);
     }
-}
+};
 </script>
 
 </body>

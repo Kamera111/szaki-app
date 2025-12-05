@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<title>Admin – Chat megtekintés</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family:Arial; margin:0; background:#f2f2f2; }
+header {
+    background:#222; color:white; padding:16px;
+    font-size:20px; text-align:center;
+}
+.msgBox {
+    max-width:600px; margin:20px auto;
+    background:white; padding:14px;
+    border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.15);
+}
+.msg {
+    padding:10px; margin-bottom:10px;
+    border-radius:8px; background:#ececec;
+}
+.me { background:#c8e0ff; }
+</style>
+</head>
+
+<body>
+
+<header>Admin – Chat tartalom</header>
+
+<div class="msgBox" id="msgBox">Betöltés…</div>
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import {
+    collection, query, orderBy, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const params = new URLSearchParams(window.location.search);
+const chatID = params.get("chatID");
+
+const msgDiv = document.getElementById("msgBox");
+
+const q = query(
+    collection(db, "messages", chatID, "items"),
+    orderBy("time", "asc")
+);
+
+onSnapshot(q, (snap) => {
+    msgDiv.innerHTML = "";
+
+    snap.forEach(m => {
+        const d = m.data();
+
+        msgDiv.innerHTML += `
+            <div class="msg ${d.sender === 'admin' ? 'me' : ''}">
+                <b>${d.sender}</b><br>
+                ${d.text || ""}
+            </div>
+        `;
+    });
+});
+</script>
+
+</body>
+</html>

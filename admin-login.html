@@ -6,57 +6,92 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-    margin:0; background:#f2f2f2; font-family:Arial;
-}
-.container {
-    max-width:400px; margin:60px auto;
-    background:white; padding:22px;
-    border-radius:12px; box-shadow:0 4px 14px rgba(0,0,0,0.2);
-}
-input {
-    width:100%; padding:12px; margin-top:10px;
-    border-radius:8px; border:1px solid #ccc;
-    font-size:16px;
-}
-button {
-    width:100%; padding:12px;
-    margin-top:16px; border:none;
-    border-radius:8px; background:#007aff; color:white;
-    font-size:18px; cursor:pointer;
-}
-button:hover { background:#0065d4; }
-h2 { text-align:center; color:#007aff; }
+    body {
+        margin:0;
+        font-family:Arial,sans-serif;
+        background:#f2f2f2;
+        display:flex;
+        justify-content:center;
+        padding-top:40px;
+    }
+
+    .box {
+        background:white;
+        padding:30px;
+        border-radius:20px;
+        box-shadow:0 4px 18px rgba(0,0,0,0.15);
+        width:360px;
+        text-align:center;
+    }
+
+    h2 {
+        color:#007aff;
+        margin-bottom:20px;
+    }
+
+    input {
+        width:100%;
+        padding:14px;
+        border-radius:10px;
+        font-size:16px;
+        border:1px solid #ccc;
+        margin-top:12px;
+    }
+
+    button {
+        width:100%;
+        padding:14px;
+        margin-top:20px;
+        background:#007aff;
+        border:none;
+        font-size:18px;
+        color:white;
+        border-radius:12px;
+        cursor:pointer;
+    }
+
+    button:hover {
+        transform:scale(1.02);
+    }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="box">
     <h2>Admin Belépés</h2>
 
-    <input id="email" type="email" placeholder="Admin email">
-    <input id="pass" type="password" placeholder="Jelszó">
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Jelszó">
 
     <button onclick="adminLogin()">Belépés</button>
 </div>
 
 <script type="module">
-import { auth } from "./firebase-config.js";
+import { auth, db } from "./firebase-config.js";
 import { signInWithEmailAndPassword } 
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { doc, getDoc } 
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-window.adminLogin = async function() {
+window.adminLogin = async function () {
     const email = document.getElementById("email").value.trim();
-    const pass = document.getElementById("pass").value;
+    const pass  = document.getElementById("password").value;
 
-    if (!email || !pass) return alert("Töltsd ki a mezőket!");
+    if (!email || !pass) {
+        alert("Minden mező kötelező!");
+        return;
+    }
 
     try {
-        const cred = await signInWithEmailAndPassword(auth, email, pass);
+        const res = await signInWithEmailAndPassword(auth, email, pass);
+        const uid = res.user.uid;
 
-        if (email !== "admin@szakichat.hu") {
-            alert("Nem admin vagy!");
+        const ref = doc(db, "users", uid);
+        const snap = await getDoc(ref);
+
+        if (!snap.exists() || snap.data().role !== "admin") {
+            alert("Nincs admin jogosultság!");
             return;
         }
 
@@ -67,5 +102,6 @@ window.adminLogin = async function() {
     }
 };
 </script>
+
 </body>
 </html>

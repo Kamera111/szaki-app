@@ -17,7 +17,7 @@
         box-shadow:0 4px 14px rgba(0,0,0,0.1);
     }
     label { font-weight:bold; margin-top:10px; display:block; }
-    input, select {
+    input {
         width:100%; padding:10px; margin-top:6px;
         border-radius:8px; border:1px solid #ccc;
         font-size:16px;
@@ -32,7 +32,7 @@
 </style>
 </head>
 
-<body>
+<body autocomplete="off">
 
 <header>Megrendelő regisztráció</header>
 
@@ -41,10 +41,10 @@
     <label>Név (pl.: Nagy Zoltán)</label>
     <input id="name" type="text" placeholder="Keresztnév vagy monogram" autocomplete="off">
 
-    <div class="warn">⚠️ Telefonszám, email, FB/Viber/Instagram név beírása TILOS a név mezőbe!</div>
+    <div class="warn">⚠️ Telefonszám, email, FB/Viber/Instagram név beírása TILOS!</div>
 
     <label style="margin-top:20px;">Milyen szakembert keresel?</label>
-    <input id="profession" type="text" placeholder="pl.: festő, burkoló, vízvezeték-szerelő" autocomplete="off">
+    <input id="profession" type="text" placeholder="pl.: festő, burkoló" autocomplete="off">
 
     <label style="margin-top:20px;">Hol keresel szakembert?</label>
     <input id="city" type="text" placeholder="pl.: Budapest" autocomplete="off">
@@ -64,8 +64,20 @@
     <button class="btn" onclick="registerUser()">Regisztráció</button>
 </div>
 
+<!-- ❤️ Lebegő adomány gomb -->
+<div id="supportFloatingBtn"
+     onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')"
+     style="
+        position: fixed; bottom: 22px; right: 22px;
+        background:#ff2d55; padding:14px 22px; border-radius:40px;
+        color:white; font-weight:bold; cursor:pointer;
+        display:flex; gap:10px; align-items:center;
+        box-shadow:0 4px 14px rgba(0,0,0,0.25);">
+    ❤️ Támogasd a SzakiChat-et
+</div>
+
 <script type="module">
-import { app, auth, db } from "./firebase-config.js";
+import { app, auth, db } from "./firebase.js";
 import {
     createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -75,7 +87,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 window.registerUser = async function() {
-    const name = nameInput.value.trim();
+
+    const name = name.value.trim();
     const job = profession.value.trim();
     const cityValue = city.value.trim();
     const emailValue = email.value.trim();
@@ -103,7 +116,6 @@ window.registerUser = async function() {
             city: cityValue,
             phone: phoneValue,
             shareCount: 0,
-            favorites: [],
             created: Date.now()
         });
 
@@ -111,6 +123,7 @@ window.registerUser = async function() {
         window.location.href = "user-chat-list.html";
 
     } catch (e) {
+        console.error(e);
         alert("Hiba: " + e.message);
     }
 }

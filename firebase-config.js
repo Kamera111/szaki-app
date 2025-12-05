@@ -3,8 +3,11 @@
 ============================================================ */
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+
 import {
-    getAuth
+    getAuth,
+    setPersistence,
+    browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
@@ -29,19 +32,12 @@ const firebaseConfig = {
 /* ============================================================
    INITIALIZÁLÁS
 ============================================================ */
-
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-/* ============================================================
-   NINCS TARTÓSÍTÁS – NEM HASZNÁLUNK LOCALSTORAGE-ET
-============================================================ */
-
-// setPersistence(auth, browserLocalPersistence);  ❌ TÖRÖLVEexport const db = getFirestore(app);
-
 
 /* ============================================================
-   TARTÓS BEJELENTKEZÉS
+   TARTÓS BEJELENTKEZÉS – EZ KELL A MULTI ESZKÖZHÖZ!
 ============================================================ */
 setPersistence(auth, browserLocalPersistence);

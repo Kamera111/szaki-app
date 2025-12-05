@@ -105,10 +105,16 @@
 </div>
 
 <script type="module">
-    import { auth } from "./firebase.js";
-    import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-    window.login = async function() {
+    // 🔥 Firebase inicializálás – EZT A TE FIREBASE-CONFIGODBÓL SZEDTEM ÁT
+    import { firebaseConfig } from "./firebase-config.js";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // 🔥 LOGIN FÜGGVÉNY – GLOBÁLISAN ELÉRHETŐ
+    window.login = async function () {
         const email = document.getElementById("email").value.trim();
         const pass = document.getElementById("password").value;
 
@@ -119,12 +125,11 @@
 
         try {
             await signInWithEmailAndPassword(auth, email, pass);
-            alert("Sikeres bejelentkezés!");
             window.location.href = "user-chat-list.html";
         } catch (err) {
             alert("Hiba: " + err.message);
         }
-    }
+    };
 </script>
 
 </body>

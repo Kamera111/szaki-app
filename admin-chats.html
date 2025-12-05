@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<title>Admin – Összes Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body { font-family:Arial; background:#f2f2f2; margin:0; }
+header {
+    background:#222; color:white; padding:18px;
+    text-align:center; font-size:22px; font-weight:bold;
+}
+.chatBox {
+    max-width:800px; margin:20px auto;
+    background:white; padding:18px;
+    border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+}
+.chatItem {
+    padding:12px; border:1px solid #ccc;
+    border-radius:10px; margin-bottom:12px;
+    cursor:pointer; background:#fafafa;
+}
+.chatItem:hover { background:#f0f0f0; }
+</style>
+</head>
+
+<body>
+
+<header>Admin – Összes Chat</header>
+
+<div class="chatBox" id="chatList">Betöltés…</div>
+
+<script type="module">
+import { db } from "./firebase-config.js";
+import {
+    collection, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const listDiv = document.getElementById("chatList");
+
+onSnapshot(collection(db, "chatSessions"), (snap) => {
+    listDiv.innerHTML = "";
+
+    snap.forEach(docu => {
+        const d = docu.data();
+
+        listDiv.innerHTML += `
+            <div class="chatItem"
+                onclick="window.location.href='admin-chat-view.html?chatID=${d.chatId}'">
+                <b>${d.chatId}</b><br>
+                Utolsó üzenet: ${d.lastMessage || "-"}<br>
+                Idő: ${d.lastTime ? new Date(d.lastTime.seconds*1000).toLocaleString() : "-"}
+            </div>
+        `;
+    });
+});
+</script>
+
+</body>
+</html>

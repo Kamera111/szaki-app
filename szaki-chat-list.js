@@ -1,8 +1,8 @@
 // ======================================================
-// SzakiChat – szaki-chat-list.js (VÉGLEGES)
+// SzakiChat – szaki-chat-list.js (VÉGLEGES, JAVÍTVA)
 // ======================================================
 
-import { db, auth } from "./firebase.js";
+import { db, auth } from "./firebase-config.js";
 
 import {
     doc, getDoc,
@@ -18,8 +18,9 @@ let uid = null;
 let szakiData = null;
 let blocked = [];
 
+
 // ======================================================
-// BELÉPÉS ELLENŐRZÉS
+// BELÉPÉS ELLENŐRZÉSE
 // ======================================================
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -37,6 +38,7 @@ onAuthStateChanged(auth, async (user) => {
 
     watchChats();
 });
+
 
 // ======================================================
 // CHAT LISTÁK REALTIME
@@ -57,14 +59,14 @@ function watchChats() {
         snap.forEach(docu => {
             const c = docu.data();
 
-            // Ha blokkolva van → nem listázzuk
+            // Blokkolt felhasználó nem listázható
             if (blocked.includes(c.userID)) return;
 
             const isActive = c.accepted === true;
 
             const item = `
-                <div class="chatItem" onclick="openChat('${docu.id}', '${c.userID}')">
-                    <div class="name">${c.userDisplay}</div>
+                <div class="chatItem" onclick="openChat('${c.userID}')">
+                    <div class="name">${c.userName || c.name || "Ismeretlen"}</div>
                     <div class="info">${c.lastMessage || "— nincs üzenet —"}</div>
                 </div>
             `;
@@ -73,14 +75,18 @@ function watchChats() {
             else newDiv.innerHTML += item;
         });
 
-        if (activeDiv.innerHTML.trim() === "") activeDiv.innerHTML = "<i>Nincs aktív beszélgetés.</i>";
-        if (newDiv.innerHTML.trim() === "") newDiv.innerHTML = "<i>Nincs új megkeresés.</i>";
+        if (activeDiv.innerHTML.trim() === "")
+            activeDiv.innerHTML = "<i>Nincs aktív beszélgetés.</i>";
+
+        if (newDiv.innerHTML.trim() === "")
+            newDiv.innerHTML = "<i>Nincs új megkeresés.</i>";
     });
 }
 
+
 // ======================================================
-// CHAT MEGNYITÁSA
+// CHAT MEGNYITÁSA – JAVÍTVA
 // ======================================================
-window.openChat = function(chatID, partnerID) {
-    window.location.href = `szaki-chat.html?chat=${chatID}&partner=${partnerID}`;
+window.openChat = function(partnerID) {
+    window.location.href = `szaki-chat.html?partner=${partnerID}`;
 };

@@ -6,60 +6,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-    body { font-family: Arial; background:#f2f2f2; margin:0; }
+    body { font-family: Arial, sans-serif; background:#f2f2f2; margin:0; }
     header {
         background:#007aff; color:white; text-align:center;
-        padding:18px; font-size:22px; font-weight:bold;
+        padding:18px; font-size:24px; font-weight:bold;
     }
     .box {
-        max-width:480px; background:white; margin:20px auto;
-        padding:18px; border-radius:12px;
-        box-shadow:0 4px 14px rgba(0,0,0,0.1);
+        max-width:520px; background:white; margin:25px auto;
+        padding:22px; border-radius:14px;
+        box-shadow:0 4px 14px rgba(0,0,0,0.12);
     }
-    label { font-weight:bold; margin-top:10px; display:block; }
+    label { font-weight:bold; margin-top:12px; display:block; }
     input {
-        width:100%; padding:10px; margin-top:6px;
+        width:100%; padding:12px; margin-top:6px;
         border-radius:8px; border:1px solid #ccc;
         font-size:16px;
+        background:#eef3ff;
+    }
+    select {
+        width:100%; padding:12px; margin-top:6px;
+        border-radius:8px; border:1px solid #ccc;
+        font-size:16px; background:white;
     }
     .btn {
-        width:100%; padding:12px; margin-top:18px;
+        width:100%; padding:14px; margin-top:25px;
         background:#007aff; color:white;
-        border:none; border-radius:8px;
-        font-size:18px; cursor:pointer; font-weight:bold;
+        border:none; border-radius:10px;
+        font-size:20px; cursor:pointer; font-weight:bold;
     }
+    .btn:hover { opacity:0.9; }
     .warn { font-size:13px; color:#777; margin-top:4px; }
 </style>
 </head>
 
-<body autocomplete="off">
+<body>
 
 <header>Megrendelő regisztráció</header>
 
 <div class="box">
 
     <label>Név (pl.: Nagy Zoltán)</label>
-    <input id="name" type="text" placeholder="Keresztnév vagy monogram" autocomplete="off">
+    <input id="name" type="text" placeholder="Add meg neved">
 
-    <div class="warn">⚠️ Telefonszám, email, FB/Viber/Instagram név beírása TILOS!</div>
+    <div class="warn">⚠️ Telefonszám, email, FB/Viber/Instagram név beírása TILOS a név mezőbe!</div>
 
     <label style="margin-top:20px;">Milyen szakembert keresel?</label>
-    <input id="profession" type="text" placeholder="pl.: festő, burkoló" autocomplete="off">
+    <input id="profession" type="text" placeholder="pl.: festő, burkoló, gipszkarton">
 
     <label style="margin-top:20px;">Hol keresel szakembert?</label>
-    <input id="city" type="text" placeholder="pl.: Budapest" autocomplete="off">
+    <input id="city" type="text" placeholder="pl.: Budapest, Eger, Győr">
 
     <label style="margin-top:20px;">Email</label>
-    <input id="email" type="email" placeholder="Email cím" autocomplete="off">
+    <input id="email" type="email" placeholder="Email cím">
 
     <label>Jelszó</label>
-    <input id="pass1" type="password" placeholder="Jelszó" autocomplete="new-password">
+    <input id="pass1" type="password" placeholder="Jelszó">
 
     <label>Jelszó újra</label>
-    <input id="pass2" type="password" placeholder="Jelszó ismét" autocomplete="new-password">
+    <input id="pass2" type="password" placeholder="Jelszó ismét">
 
     <label style="margin-top:20px;">Telefonszám</label>
-    <input id="phone" type="text" placeholder="+36..." autocomplete="off">
+    <input id="phone" type="text" placeholder="+36...">
 
     <button class="btn" onclick="registerUser()">Regisztráció</button>
 </div>
@@ -86,18 +93,35 @@ import {
     setDoc, doc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+// Tiltott minták
+const blocked = [
+    /\d{6,}/, 
+    /@/, 
+    /(facebook|fb|messenger|viber|whatsapp|instagram|insta)/i,
+    /www\./i
+];
+
+function containsBlocked(text) {
+    return blocked.some(r => r.test(text));
+}
+
 window.registerUser = async function() {
 
-    const name = name.value.trim();
-    const job = profession.value.trim();
-    const cityValue = city.value.trim();
-    const emailValue = email.value.trim();
-    const passA = pass1.value;
-    const passB = pass2.value;
-    const phoneValue = phone.value.trim();
+    const nameValue = document.getElementById("name").value.trim();
+    const professionValue = document.getElementById("profession").value.trim();
+    const cityValue = document.getElementById("city").value.trim();
+    const emailValue = document.getElementById("email").value.trim();
+    const passA = document.getElementById("pass1").value;
+    const passB = document.getElementById("pass2").value;
+    const phoneValue = document.getElementById("phone").value.trim();
 
-    if (!name || !job || !cityValue || !emailValue || !passA || !passB || !phoneValue) {
+    if (!nameValue || !professionValue || !cityValue || !emailValue || !passA || !passB || !phoneValue) {
         alert("Minden mező kötelező!");
+        return;
+    }
+
+    if (containsBlocked(nameValue)) {
+        alert("A név mezőbe nem írható telefonszám, email vagy közösségi azonosító!");
         return;
     }
 
@@ -107,12 +131,12 @@ window.registerUser = async function() {
     }
 
     try {
-        const cred = await createUserWithEmailAndPassword(auth, emailValue, passA);
+        const user = await createUserWithEmailAndPassword(auth, emailValue, passA);
 
-        await setDoc(doc(db, "users", cred.user.uid), {
+        await setDoc(doc(db, "users", user.user.uid), {
             role: "user",
-            name,
-            profession: job,
+            name: nameValue,
+            profession: professionValue,
             city: cityValue,
             phone: phoneValue,
             shareCount: 0,
@@ -122,9 +146,9 @@ window.registerUser = async function() {
         alert("Sikeres regisztráció!");
         window.location.href = "user-chat-list.html";
 
-    } catch (e) {
-        console.error(e);
-        alert("Hiba: " + e.message);
+    } catch (err) {
+        console.error(err);
+        alert("Hiba történt: " + err.message);
     }
 }
 </script>

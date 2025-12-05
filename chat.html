@@ -1,237 +1,273 @@
 <!DOCTYPE html>
 <html lang="hu">
 <head>
-    <meta charset="UTF-8">
-    <title>Chat – SzakiChat</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>SzakiChat – Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <style>
-        body {
-            margin:0;
-            background:#f5f5f5;
-            font-family:Arial, sans-serif;
-            display:flex;
-            flex-direction:column;
-            height:100vh;
-        }
+<style>
+    body { font-family:Arial; margin:0; background:#f2f2f2; }
 
-        #chatHeader {
-            background:#007aff;
-            color:white;
-            padding:14px;
-            font-size:18px;
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-        }
+    header {
+        background:#007aff; color:white;
+        padding:14px; font-size:20px; font-weight:bold;
+        display:flex; justify-content:space-between; align-items:center;
+    }
 
-        #messages {
-            flex:1;
-            overflow-y:auto;
-            padding:16px;
-        }
+    #onlineDot {
+        font-size:20px;
+    }
 
-        .msg {
-            max-width:75%;
-            padding:10px 14px;
-            border-radius:12px;
-            margin-bottom:12px;
-            word-wrap:break-word;
-            font-size:15px;
-            box-shadow:0 2px 6px rgba(0,0,0,0.08);
-        }
+    #chatBox {
+        max-width:480px; margin:0 auto;
+        height:70vh; overflow-y:auto;
+        background:white; padding:14px;
+        border-radius:12px; margin-top:10px;
+        box-shadow:0 4px 12px rgba(0,0,0,0.1);
+    }
 
-        .me { background:#007aff; color:white; margin-left:auto; }
-        .other { background:white; color:black; margin-right:auto; }
+    .msg {
+        padding:10px 14px; margin:8px 0;
+        border-radius:10px; max-width:75%;
+        line-height:1.4; word-wrap:break-word;
+    }
+    .me { background:#d1e7ff; margin-left:auto; }
+    .other { background:#ececec; margin-right:auto; }
 
-        #inputBar {
-            padding:10px;
-            background:white;
-            border-top:1px solid #ddd;
-            display:flex;
-        }
+    .inputArea {
+        max-width:480px; margin:10px auto;
+        display:flex; gap:6px;
+    }
 
-        #msgInput {
-            flex:1;
-            padding:10px;
-            border:1px solid #ccc;
-            border-radius:8px;
-        }
+    input[type=text] {
+        flex:1; padding:10px;
+        border-radius:8px; border:1px solid #ccc;
+    }
 
-        #sendBtn {
-            background:#007aff;
-            color:white;
-            padding:10px 16px;
-            border:none;
-            border-radius:8px;
-            margin-left:8px;
-        }
+    button {
+        padding:10px 12px; border:none;
+        border-radius:8px; cursor:pointer;
+        font-size:16px; background:#007aff; color:white;
+    }
 
-        #lockWarning {
-            display:none;
-            text-align:center;
-            background:#ffe5e5;
-            padding:8px;
-            color:#a10000;
-            font-weight:bold;
-        }
-    </style>
+    .mic { background:#4caf50; }
+    .imgBtn { background:#ff9800; }
+
+    .imgThumb {
+        max-width:180px;
+        border-radius:8px;
+        margin-top:6px;
+    }
+
+    /* ❤️ Adomány gomb */
+    #supportFloatingBtn {
+        position: fixed; bottom:22px; right:22px;
+        background:#ff2d55; padding:14px 22px;
+        border-radius:40px; color:white;
+        font-weight:bold; cursor:pointer;
+        display:flex; gap:10px; align-items:center;
+        box-shadow:0 4px 14px rgba(0,0,0,0.25);
+    }
+    .heart { animation: heartbeat 1.4s infinite; }
+    @keyframes heartbeat {
+        0%{transform:scale(1);}
+        25%{transform:scale(1.25);}
+        40%{transform:scale(1);}
+        60%{transform:scale(1.25);}
+        100%{transform:scale(1);}
+    }
+</style>
 </head>
 
 <body>
 
-<div id="chatHeader">
-    <div id="partnerName">Chat</div>
-    <div id="partnerStatus">⚪</div>
+<header>
+    <span id="partnerName">Chat</span>
+    <span id="onlineDot">⚪</span>
+</header>
+
+<div id="chatBox">Betöltés…</div>
+
+<div class="inputArea">
+    <input id="msgInput" type="text" placeholder="Írj üzenetet…">
+    <button onclick="sendMessage()">➤</button>
+    <button class="mic" onclick="startDictation()">🎤</button>
 </div>
 
-<div id="lockWarning">🔒 Elérhetőség küldése zárolva 5 megosztás alatt!</div>
-
-<div id="messages">Betöltés...</div>
-
-<div id="inputBar">
-    <input id="msgInput" type="text" placeholder="Írj üzenetet...">
-    <button id="sendBtn">Küldés</button>
+<div class="inputArea">
+    <input type="file" id="imgUpload">
+    <button class="imgBtn" onclick="sendImage()">📸</button>
 </div>
 
-<!-- ❤️ Támogatás -->
+<!-- ❤️ Adomány -->
 <div id="supportFloatingBtn"
      onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
-     <span class="heart">❤️</span> Támogasd a SzakiChat-et
+    <span class="heart">❤️</span> Támogasd a SzakiChat-et
 </div>
+
 
 <script type="module">
 
-/* FIREBASE */
-import { db, auth } from "./firebase-config.js";
+/* ===================================================
+   FIREBASE IMPORT
+=================================================== */
+import { auth, db } from "./firebase.js";
 
 import {
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
-    doc, getDoc, setDoc, updateDoc,
-    collection, addDoc, query, orderBy, onSnapshot
+    doc, getDoc, updateDoc,
+    onSnapshot, arrayUnion
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
-// ----------------------------------------------------------------
-// URL PARAMÉTEREK
-// ----------------------------------------------------------------
+/* ===================================================
+   PARAMÉTEREK
+=================================================== */
 const params = new URLSearchParams(window.location.search);
 const chatID = params.get("chatID");
 const partnerID = params.get("partner");
 
-let uid = null;
-let userData = null;
-let partnerData = null;
+const chatRef = doc(db, "chats", chatID);
+const partnerRef = doc(db, "users", partnerID);
+
+let myUID = null;
+let myName = "";
+let partnerName = "";
+let partnerOnline = false;
 
 
-// ----------------------------------------------------------------
-// AUTH → BETÖLTJÜK A SAJÁT ADATOKAT FIRESTOREBŐL
-// ----------------------------------------------------------------
+/* ===================================================
+   BELÉPÉS ELLENŐRZÉSE + ADATOK
+=================================================== */
 onAuthStateChanged(auth, async (user) => {
     if (!user) return window.location.href = "login.html";
+    myUID = user.uid;
 
-    uid = user.uid;
+    const mySnap = await getDoc(doc(db, "users", myUID));
+    myName = mySnap.data().name;
 
-    const meRef = doc(db, "users", uid);
-    const meSnap = await getDoc(meRef);
-    userData = meSnap.data();
+    const partnerSnap = await getDoc(partnerRef);
+    partnerName = partnerSnap.data().name;
+    document.getElementById("partnerName").innerText = partnerName;
 
-    const pRef = doc(db, "users", partnerID);
-    const pSnap = await getDoc(pRef);
-    partnerData = pSnap.data();
-
-    // Fejléc frissítése
-    document.getElementById("partnerName").innerText =
-        partnerData.displayName || partnerData.name || partnerData.email;
-
-    document.getElementById("partnerStatus").innerText =
-        partnerData.online ? "🟢" : "⚪";
-
-    loadMessages();
+    loadChat();
+    watchPartnerOnline();
 });
 
 
-// ----------------------------------------------------------------
-// ÜZENETEK REALTIME BETÖLTÉSE FIRESTORE-BÓL
-// ----------------------------------------------------------------
-function loadMessages() {
-    const msgBox = document.getElementById("messages");
-    msgBox.innerHTML = "Betöltés...";
+/* ===================================================
+   PARTNER ONLINE FIGYELÉSE
+=================================================== */
+function watchPartnerOnline() {
+    onSnapshot(partnerRef, (snap) => {
+        const d = snap.data();
+        partnerOnline = d.online;
 
-    const q = query(
-        collection(db, "chats", chatID, "messages"),
-        orderBy("timestamp", "asc")
-    );
-
-    onSnapshot(q, (snap) => {
-        msgBox.innerHTML = "";
-
-        snap.forEach((d) => {
-            const m = d.data();
-
-            const div = document.createElement("div");
-            div.className = "msg " + (m.sender === uid ? "me" : "other");
-            div.innerText = m.text;
-
-            msgBox.appendChild(div);
-        });
-
-        msgBox.scrollTop = msgBox.scrollHeight;
+        document.getElementById("onlineDot").innerText =
+            partnerOnline ? "🟢" : "⚪";
     });
 }
 
 
-// ----------------------------------------------------------------
-// ÜZENET KÜLDÉSE
-// ----------------------------------------------------------------
-document.getElementById("sendBtn").onclick = sendMessage;
+/* ===================================================
+   CHAT BETÖLTÉSE REALTIME
+=================================================== */
+function loadChat() {
+    const box = document.getElementById("chatBox");
 
-document.getElementById("msgInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") sendMessage();
-});
+    onSnapshot(chatRef, (snap) => {
+        if (!snap.exists()) return;
 
-async function sendMessage() {
-    const input = document.getElementById("msgInput");
-    const text = input.value.trim();
+        const data = snap.data();
+        const msgs = data.messages || [];
+
+        box.innerHTML = "";
+
+        msgs.forEach(m => {
+            if (m.type === "img") {
+                box.innerHTML += `
+                    <div class="msg ${m.from === myUID ? "me" : "other"}">
+                        <img src="${m.url}" class="imgThumb">
+                    </div>
+                `;
+            } else {
+                box.innerHTML += `
+                    <div class="msg ${m.from === myUID ? "me" : "other"}">
+                        ${m.text}
+                    </div>
+                `;
+            }
+        });
+
+        box.scrollTop = box.scrollHeight;
+    });
+}
+
+
+/* ===================================================
+   ÜZENET KÜLDÉSE
+=================================================== */
+window.sendMessage = async function() {
+    const inp = document.getElementById("msgInput");
+    const text = inp.value.trim();
     if (!text) return;
 
-    // 5 MEGOSZTÁS ALATT TILTJUK A TELEFON / EMAIL FORMÁKAT
-    if (userData?.shareCount < 5 && looksLikeContact(text)) {
-        document.getElementById("lockWarning").style.display = "block";
+    await updateDoc(chatRef, {
+        messages: arrayUnion({
+            from: myUID,
+            text,
+            type: "text",
+            time: Date.now()
+        }),
+        lastMessage: text
+    });
+
+    inp.value = "";
+};
+
+
+/* ===================================================
+   KÉP KÜLDÉSE (előnézet + későbbi Storage kompatibilis)
+=================================================== */
+window.sendImage = async function() {
+    const file = document.getElementById("imgUpload").files[0];
+    if (!file) return alert("Nincs kiválasztva kép!");
+
+    const fakeUrl = URL.createObjectURL(file);
+
+    await updateDoc(chatRef, {
+        messages: arrayUnion({
+            from: myUID,
+            url: fakeUrl,
+            type: "img",
+            time: Date.now()
+        }),
+        lastMessage: "📸 Kép csatolva"
+    });
+};
+
+
+/* ===================================================
+   DIKTÁLÁS – 🎤 Hang → Szöveg
+=================================================== */
+window.startDictation = function () {
+    if (!("webkitSpeechRecognition" in window)) {
+        alert("A böngésző nem támogatja a diktálást.");
         return;
     }
 
-    await addDoc(collection(db, "chats", chatID, "messages"), {
-        text,
-        sender: uid,
-        timestamp: Date.now()
-    });
-
-    await updateDoc(doc(db, "chats", chatID), {
-        lastMessage: text,
-        lastTimestamp: Date.now()
-    });
-
-    input.value = "";
-}
-
-
-// ----------------------------------------------------------------
-// TELEFON / EMAIL minták
-// ----------------------------------------------------------------
-function looksLikeContact(text) {
-    // telefonszám
-    if (/[0-9]{6,}/.test(text)) return true;
-
-    // email cím
-    if (text.includes("@")) return true;
-
-    return false;
-}
+    const rec = new webkitSpeechRecognition();
+    rec.lang = "hu-HU";
+    rec.continuous = false;
+    rec.onresult = e => {
+        document.getElementById("msgInput").value =
+            e.results[0][0].transcript;
+    };
+    rec.start();
+};
 
 </script>
 

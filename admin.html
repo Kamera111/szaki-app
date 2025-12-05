@@ -1,79 +1,52 @@
-<!DOCTYPE html>
-<html lang="hu">
-<head>
-<meta charset="UTF-8">
-<title>SzakiChat Admin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
+// =========================================================
+//  SzakiChat – chat-create.js (Firebase Auth verzió)
+//  Chat létrehozása megrendelő és szaki között – JAVÍTVA!!
+// =========================================================
 
-<style>
-    body {
-        margin:0;
-        font-family:Arial;
-        background:#f4f4f4;
+import { db, auth } from "./firebase-config.js";
+
+import {
+    doc,
+    getDoc,
+    updateDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+import {
+    generateChatId,
+    initChatIfNeeded
+} from "./messages.js";
+
+
+// =========================================================
+// CHAT INDÍTÁSA (megrendelő -> szaki)
+// =========================================================
+export async function startChatWithSzaki(szakiUid) {
+
+    // 1. Bejelentkezett user kell
+    const user = auth.currentUser;
+    if (!user) {
+        alert("Hiba: nem vagy bejelentkezve!");
+        window.location.href = "login.html";
+        return;
     }
-    header {
-        background:#d40000;
-        color:white;
-        padding:16px;
-        text-align:center;
-        font-size:22px;
-        font-weight:bold;
-    }
-    .box {
-        background:white;
-        margin:14px;
-        padding:18px;
-        border-radius:12px;
-        box-shadow:0 2px 10px rgba(0,0,0,0.08);
-    }
-    .userRow, .chatRow {
-        padding:12px;
-        background:#fff;
-        border-radius:10px;
-        margin-bottom:10px;
-        box-shadow:0 2px 6px rgba(0,0,0,0.06);
-    }
-    .btn {
-        padding:8px 12px;
-        background:#007aff;
-        color:white;
-        border:none;
-        border-radius:6px;
-        cursor:pointer;
-        font-size:14px;
-        margin-top:8px;
-    }
-    .btn-del {
-        background:#d40000;
-    }
-    .btn:hover {
-        opacity:0.9;
-    }
-</style>
-</head>
 
-<body>
+    const myUid = user.uid;
 
-<header>SzakiChat ADMIN PANEL</header>
+    // 2. Chat létrehozása, ha még nincs
+    const chatId = await initChatIfNeeded(myUid, szakiUid);
 
-<div class="box">
-    <h3>Admin ellenőrzés</h3>
-    <p id="adminStatus">Betöltés...</p>
-</div>
+    // 3. Szaki neve később is lekérhető -> nem kell URL-ben küldeni
+    // (chat.html a szakiUid alapján fogja megkeresni)
 
-<div class="box">
-    <h3>Felhasználók</h3>
-    <div id="userList">Betöltés...</div>
-</div>
+    // 4. Chat session frissítése
+    await updateDoc(doc(db, "chatSessions", chatId), {
+        lastMessage: "Chat elindult",
+        lastSender: myUid,
+        lastTime: serverTimestamp()
+    });
 
-<div class="box">
-    <h3>Chat szobák</h3>
-    <div id="chatList">Betöltés...</div>
-</div>
-
-
-<script type="module" src="admin.js"></script>
-
-</body>
-</html>
+    // 5. HELYES átirányítás – FONTOS!
+    // chatID (nagy D), partner = UID !!
+    window.location.href = `chat.html?chatID=${chatId}&partner=${szakiUid}`;
+}

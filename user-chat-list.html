@@ -38,7 +38,6 @@
         margin-top:16px;
     }
 
-    /* ❤️ Támogatás gomb */
     #supportFloatingBtn {
         position: fixed; bottom:22px; right:22px;
         background:#ff2d55; padding:14px 22px;
@@ -73,7 +72,6 @@
     <button class="btn btnExit" onclick="logout()">Kijelentkezés</button>
 </div>
 
-<!-- ❤️ Adomány -->
 <div id="supportFloatingBtn"
      onclick="window.open('https://www.paypal.com/donate/?hosted_button_id=QGU3WXVSCH22A','_blank')">
     <span class="heart">❤️</span> Támogasd a SzakiChat-et
@@ -83,9 +81,9 @@
 <script type="module">
 
 /* ===========================================
-   FIREBASE IMPORT
+   FIREBASE IMPORT — JAVÍTVA!
 =========================================== */
-import { auth, db } from "./firebase.js";
+import { auth, db } from "./firebase-config.js";
 
 import {
     onAuthStateChanged,
@@ -121,7 +119,6 @@ async function loadChats() {
     const box = document.getElementById("chatList");
     box.innerHTML = "Betöltés…";
 
-    // Megrendelő chatjei
     const q = query(
         collection(db, "chats"),
         where("userID", "==", uid)
@@ -140,7 +137,6 @@ async function loadChats() {
         const c = docu.data();
         const chatID = docu.id;
 
-        // Szaki adatai
         const sRef = doc(db, "users", c.szakiID);
         const sSnap = await getDoc(sRef);
         const szaki = sSnap.data();
